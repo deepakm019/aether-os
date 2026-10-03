@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#121316">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; frame-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <title>Aether OS | Standalone Local Storage</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            background: #121316;
+            color: #e3e3e3;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+        }
+
+        .notice {
+            padding: 9px 16px;
+            background: #202226;
+            color: #c4c7c5;
+            font-size: 0.8rem;
+            line-height: 1.45;
+            text-align: center;
+        }
+
+        .notice strong { color: #a8c7fa; }
+
+        iframe {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="notice">
+        <strong>Standalone local-storage mode.</strong>
+        Vault data remains encrypted. Browser local-storage limits may restrict large vaults.
+        This mode keeps its data separate from the main app's IndexedDB vault.
+    </div>
+    <iframe src="./index.html?storage=local" title="Aether OS in standalone local-storage mode"></iframe>
+</body>
+</html>

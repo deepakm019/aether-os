@@ -1,7 +1,9 @@
-const CACHE_NAME = 'aether-os-v5.7';
+const CACHE_NAME = 'aether-os-v5.9';
 const APP_SHELL = [
     new URL('./', self.location.href).href,
     new URL('./index.html', self.location.href).href,
+    new URL('./index.html?storage=local', self.location.href).href,
+    new URL('./standalone.html', self.location.href).href,
     new URL('./manifest.json', self.location.href).href
 ];
 const CACHEABLE_URLS = new Set(APP_SHELL);

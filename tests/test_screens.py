@@ -29,6 +29,46 @@ def test_every_screen_renders_from_navigation(app_page: Page, view: str, heading
     expect(app_page.locator("#content h2").first).to_have_text(heading)
 
 
+def test_pathway_steps_fit_iphone_touch_targets(app_page: Page) -> None:
+    app_page.set_viewport_size({"width": 393, "height": 852})
+    app_page.locator('#bottom-nav .bnav-item[data-view="pathways"]').click()
+    step = app_page.locator(".pathway-step-item").nth(1)
+    checkbox = step.locator('input[type="checkbox"]')
+    action = step.locator(".pathway-step-actions button")
+
+    expect(step).to_be_visible()
+    expect(checkbox).to_be_visible()
+    expect(action).to_be_visible()
+    layout = app_page.evaluate(
+        """() => {
+            const content = document.getElementById('content');
+            const step = document.querySelectorAll('.pathway-step-item')[1];
+            const label = step.querySelector('.pathway-step-label');
+            const checkbox = step.querySelector('input[type="checkbox"]');
+            const action = step.querySelector('.pathway-step-actions button');
+            return {
+                noHorizontalOverflow: content.scrollWidth <= content.clientWidth,
+                labelHeight: label.getBoundingClientRect().height,
+                checkboxWidth: checkbox.getBoundingClientRect().width,
+                checkboxHeight: checkbox.getBoundingClientRect().height,
+                checkboxAppearance: getComputedStyle(checkbox).webkitAppearance,
+                actionHeight: action.getBoundingClientRect().height,
+                actionHasRoom: action.getBoundingClientRect().right <= content.getBoundingClientRect().right
+            };
+        }"""
+    )
+    assert layout["noHorizontalOverflow"]
+    assert layout["labelHeight"] >= 44
+    assert layout["checkboxWidth"] == 22
+    assert layout["checkboxHeight"] == 22
+    assert layout["checkboxAppearance"] == "none"
+    assert layout["actionHeight"] >= 44
+    assert layout["actionHasRoom"]
+
+    checkbox.check()
+    expect(checkbox).to_be_checked()
+
+
 def test_new_vault_rejects_short_passphrases(app_url: str, browser) -> None:
     page = browser.new_page()
     page.goto(app_url, wait_until="domcontentloaded")
@@ -120,7 +160,14 @@ def test_service_worker_caches_only_the_local_app_shell(app_page: Page) -> None:
     )
     assert cached_urls
     assert all(urlparse(url).netloc == urlparse(app_page.url).netloc for url in cached_urls)
-    assert all(any(url.endswith(path) for path in ("/", "/index.html", "/manifest.json")) for url in cached_urls)
+    app_shell_paths = (
+        "/",
+        "/index.html",
+        "/index.html?storage=local",
+        "/manifest.json",
+        "/standalone.html",
+    )
+    assert all(any(url.endswith(path) for path in app_shell_paths) for url in cached_urls)
 
 
 def test_mobile_bottom_navigation_and_sidebar_work(app_page: Page) -> None:

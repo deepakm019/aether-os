@@ -59,6 +59,44 @@ def test_timer_and_theme_controls_work(app_page: Page) -> None:
     app_page.get_by_role("button", name="Start Stopwatch").click()
     expect(app_page.locator("#global-timer-pill")).to_be_visible()
     expect(app_page.locator("#chrono-actions-row")).to_contain_text("Pause Timer")
+    expect(app_page.locator("#chrono-view-clock")).to_have_text("00:01", timeout=3000)
 
     app_page.locator("#theme-btn").click()
     expect(app_page.locator("html")).to_have_attribute("data-theme", "light")
+
+
+def test_standalone_mode_uses_encrypted_local_storage(app_page: Page, app_url: str) -> None:
+    standalone_url = app_url.replace("index.html", "standalone.html")
+    app_page.goto(standalone_url)
+    standalone_app = app_page.frame_locator("iframe")
+    expect(standalone_app.get_by_role("heading", name="Aether Vault Core")).to_be_visible()
+
+    result = standalone_app.locator("body").evaluate(
+        """async () => {
+            const passphrase = 'standalone-storage-test-passphrase';
+            const marker = 'private-roundtrip-marker';
+            const envelope = await WebCrypto.encrypt({ marker }, passphrase);
+            try {
+                await StorageEngine.set(DB_KEY, envelope);
+                const stored = localStorage.getItem(StorageEngine.localStorageKey(DB_KEY));
+                const decrypted = await WebCrypto.decrypt(await StorageEngine.get(DB_KEY), passphrase);
+                return {
+                    localOnly: StorageEngine.localOnly,
+                    indexedDbDisabled: await StorageEngine.init() === null,
+                    separateKey: StorageEngine.localStorageKey(DB_KEY) !== DB_KEY,
+                    encryptedAtRest: stored !== null && !stored.includes(marker),
+                    roundTrip: decrypted.marker === marker
+                };
+            } finally {
+                await StorageEngine.remove(DB_KEY);
+            }
+        }"""
+    )
+
+    assert result == {
+        "localOnly": True,
+        "indexedDbDisabled": True,
+        "separateKey": True,
+        "encryptedAtRest": True,
+        "roundTrip": True,
+    }

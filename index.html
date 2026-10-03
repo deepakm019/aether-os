@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Aether OS is a private, client-side encrypted productivity, kinetic, and capital tracking workspace.">
     <meta name="theme-color" content="#121316">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
     <title>Aether OS | Autonomous Local-First Workspace</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23004a77' width='100' height='100' rx='20'/><text fill='%23a8c7fa' x='50' y='68' font-size='52' font-family='sans-serif' text-anchor='middle'>A</text></svg>">
     <link rel="manifest" href="./manifest.json">
@@ -204,6 +204,38 @@
             border-color: var(--md-sys-color-primary);
             box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
         }
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            display: inline-grid;
+            place-content: center;
+            flex: 0 0 22px;
+            width: 22px;
+            min-width: 22px;
+            height: 22px;
+            min-height: 22px;
+            margin: 0;
+            padding: 0;
+            border: 2px solid var(--md-sys-color-outline);
+            border-radius: 5px;
+            background: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-primary);
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        input[type="checkbox"]:checked {
+            border-color: var(--md-sys-color-primary);
+            background-color: var(--md-sys-color-primary);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 8 3.2 3.2L13 4.5' fill='none' stroke='%23041e49' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.2'/%3E%3C/svg%3E");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 16px 16px;
+        }
+        input[type="checkbox"]:focus-visible {
+            outline: 2px solid var(--md-sys-color-primary);
+            outline-offset: 2px;
+        }
 
         #auth-screen {
             position: fixed; inset: 0; background: var(--md-sys-color-background); z-index: 5000;
@@ -284,7 +316,8 @@
         }
 
         #backup-reminder-banner {
-            display: none; background: var(--md-sys-color-warning-container); color: var(--md-sys-color-warning);
+            display: none; flex-shrink: 0;
+            background: var(--md-sys-color-warning-container); color: var(--md-sys-color-warning);
             border-bottom: 1px solid var(--md-sys-color-outline-variant); padding: 8px 16px;
             font-size: 0.78rem; font-weight: 500; align-items: center; justify-content: space-between;
         }
@@ -561,6 +594,45 @@
 
         .mobile-only { display: none !important; }
 
+        .pathway-step-item {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            min-width: 0;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            background: var(--md-sys-color-surface-container);
+        }
+        .pathway-step-label {
+            display: flex;
+            flex: 1 1 180px;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            min-height: 44px;
+            font-size: 0.84rem;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .pathway-step-label > span {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+        .pathway-step-actions {
+            display: flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: flex-end;
+            min-height: 44px;
+        }
+        .pathway-step-actions button {
+            min-height: 44px;
+        }
+
         @media (max-width: 960px) {
             #sidebar {
                 position: fixed; left: 0; top: 0; bottom: 0;
@@ -604,20 +676,6 @@
 <body>
 
     <div id="toast-container"></div>
-
-    <!-- Backup Reminder Banner -->
-    <div id="backup-reminder-banner">
-        <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined" style="font-size:18px;">warning</span>
-            <span id="backup-reminder-text">Vault snapshot export recommended.</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <button class="sm primary" onclick="App.exportVault()" style="height:26px; padding:2px 10px;">Export Now</button>
-            <button class="sm icon-btn" onclick="document.getElementById('backup-reminder-banner').style.display='none'" style="min-width:24px; min-height:24px;">
-                <span class="material-symbols-outlined" style="font-size:16px;">close</span>
-            </button>
-        </div>
-    </div>
 
     <!-- Auth Master Screen -->
     <div id="auth-screen">
@@ -789,6 +847,19 @@
                     </button>
                 </div>
             </header>
+
+            <div id="backup-reminder-banner">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined" style="font-size:18px;">warning</span>
+                    <span id="backup-reminder-text">Vault snapshot export recommended.</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="sm primary" onclick="App.exportVault()" style="height:26px; padding:2px 10px;">Export Now</button>
+                    <button class="sm icon-btn" onclick="document.getElementById('backup-reminder-banner').style.display='none'" style="min-width:24px; min-height:24px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">close</span>
+                    </button>
+                </div>
+            </div>
 
             <main id="content"></main>
         </div>
@@ -1275,12 +1346,20 @@
             }
         };
 
-        /* Asynchronous IndexedDB Engine */
+        /* Encrypted browser storage; standalone mode uses a separate localStorage namespace. */
         const StorageEngine = {
             dbName: 'AetherVaultDB',
             storeName: 'vault_store',
             db: null,
+            localOnly: new URLSearchParams(location.search).get('storage') === 'local',
+            localStorageKey(key) {
+                return this.localOnly ? `${key}_standalone` : key;
+            },
+            get backupTimestampKey() {
+                return this.localStorageKey('aether_last_export_ts');
+            },
             async init() {
+                if (this.localOnly) return null;
                 if (this.db) return this.db;
                 return new Promise((resolve, reject) => {
                     const req = indexedDB.open(this.dbName, 1);
@@ -1315,6 +1394,15 @@
                     throw new Error('Refusing to persist vault data that is not encrypted.');
                 }
 
+                if (this.localOnly) {
+                    try {
+                        localStorage.setItem(this.localStorageKey(key), serialized);
+                    } catch {
+                        throw new Error('Unable to save the encrypted vault to local storage. The browser may have blocked storage or its quota may be full.');
+                    }
+                    return;
+                }
+
                 try {
                     await this.init();
                     return new Promise((resolve, reject) => {
@@ -1332,6 +1420,7 @@
                 }
             },
             async get(key) {
+                if (this.localOnly) return localStorage.getItem(this.localStorageKey(key));
                 try {
                     await this.init();
                     return new Promise((resolve) => {
@@ -1345,6 +1434,10 @@
                 }
             },
             async remove(key) {
+                if (this.localOnly) {
+                    localStorage.removeItem(this.localStorageKey(key));
+                    return;
+                }
                 try {
                     await this.init();
                     return new Promise((resolve) => {
@@ -1358,9 +1451,10 @@
                 }
             },
             async purgeAllData() {
-                localStorage.removeItem(DB_KEY);
-                localStorage.removeItem(SNAP_KEY);
-                localStorage.removeItem('aether_last_export_ts');
+                localStorage.removeItem(this.localStorageKey(DB_KEY));
+                localStorage.removeItem(this.localStorageKey(SNAP_KEY));
+                localStorage.removeItem(this.backupTimestampKey);
+                if (this.localOnly) return;
                 await this.init();
                 await new Promise((resolve, reject) => {
                     const tx = this.db.transaction([this.storeName], 'readwrite');
@@ -1370,7 +1464,7 @@
                 });
             },
             checkBackupStatus() {
-                const last = localStorage.getItem('aether_last_export_ts');
+                const last = localStorage.getItem(this.backupTimestampKey);
                 const banner = document.getElementById('backup-reminder-banner');
                 const text = document.getElementById('backup-reminder-text');
                 if (!banner) return;
@@ -1392,8 +1486,12 @@
                         <h4><span class="material-symbols-outlined" style="font-size:18px;">lock</span> 1. Local Data & Network Requests</h4>
                         <p>Workspace records are processed in this browser and are not sent to an Aether application server. The app has no account service, sync service, analytics, or third-party runtime assets. When you open or update the hosted site, GitHub Pages and its infrastructure receive the web request and may process ordinary connection and server-log data under GitHub's terms and privacy notices. This static site cannot control that hosting-side processing.</p>
                         <ul>
-                            <li><strong>Local Storage:</strong> Vault and checkpoint records are encrypted by the browser before being written to IndexedDB. localStorage may be used as a fallback for the encrypted vault envelopes; it also stores a non-sensitive backup-reminder timestamp.</li>
-                            <li><strong>App-Shell Cache:</strong> The service worker may cache the same-origin app shell (HTML and manifest) to support offline loading. This cache contains app files, not vault records.</li>
+                            <li><strong>Browser Storage:</strong> ${StorageEngine.localOnly
+                                ? 'Standalone mode stores encrypted vault and checkpoint envelopes in localStorage under separate standalone keys; it does not use IndexedDB.'
+                                : 'Vault and checkpoint records are encrypted by the browser before being written to IndexedDB. localStorage may be used as a fallback for the encrypted vault envelopes; it also stores a non-sensitive backup-reminder timestamp.'}</li>
+                            <li><strong>App-Shell Cache:</strong> ${StorageEngine.localOnly
+                                ? 'Standalone mode does not register a service worker. This page still requires the app file in the same folder.'
+                                : 'The service worker may cache the same-origin app shell (HTML and manifest) to support offline loading. This cache contains app files, not vault records.'}</li>
                             <li><strong>No App Telemetry:</strong> The app code does not intentionally send workspace records or passphrases to a service, and it does not set tracking cookies. This is not a guarantee about the browser, extensions, hosting platform, or the device.</li>
                             <li><strong>GitHub Pages Origin:</strong> GitHub Pages projects under one <code>github.io</code> hostname share the same browser origin even when their repository paths differ. Another project on that origin can access this app's browser storage. Use a dedicated custom domain/origin for sensitive data, and keep less-trusted Pages projects off that origin.</li>
                         </ul>
@@ -1412,7 +1510,9 @@
 
                     <div class="legal-block">
                         <h4><span class="material-symbols-outlined" style="font-size:18px;">cloud_off</span> 3. Browser Storage Quotas & Eviction Risks</h4>
-                        <p>The app stores encrypted vault/checkpoint envelopes in browser-managed <code>IndexedDB</code>, with a <code>localStorage</code> fallback when IndexedDB is unavailable. Browser storage is not permanent or guaranteed to be available.</p>
+                        <p>${StorageEngine.localOnly
+                            ? 'Standalone mode stores encrypted vault/checkpoint envelopes in browser-managed localStorage. Its quota is typically smaller than IndexedDB, so large vaults or snapshots may fail to save. Browser storage is not permanent or guaranteed to be available.'
+                            : 'The app stores encrypted vault/checkpoint envelopes in browser-managed IndexedDB, with a localStorage fallback when IndexedDB is unavailable. Browser storage is not permanent or guaranteed to be available.'}</p>
                         <ul>
                             <li><strong>Loss Risk:</strong> Browser settings, private browsing, storage quotas, device failure, profile removal, or browser/platform policies may erase or make local data unavailable.</li>
                             <li><strong>Backups:</strong> Exported backup files are separate files on your device and remain your responsibility. Store them securely; anyone who obtains a backup and its passphrase may access its contents.</li>
@@ -1718,7 +1818,17 @@
                     ChronoEngine.worker.onmessage = () => {
                         if (ChronoEngine.isRunning) ChronoEngine.tick();
                     };
-                } catch (e) {}
+                    ChronoEngine.worker.onerror = (error) => {
+                        console.error('Chrono worker failed; using the main-thread timer.', error);
+                        ChronoEngine.worker.terminate();
+                        ChronoEngine.worker = null;
+                        if (ChronoEngine.isRunning && !ChronoEngine.fallbackInterval) {
+                            ChronoEngine.fallbackInterval = setInterval(ChronoEngine.tick, 500);
+                        }
+                    };
+                } catch (error) {
+                    console.error('Chrono worker could not be created; using the main-thread timer.', error);
+                }
             },
 
             tick: () => {
@@ -2658,14 +2768,16 @@
                                 <div class="card-header"><h3 style="font-size: 1rem; font-weight:600;">${esc(pw.title)}</h3></div>
                                 <div class="flex-col gap-2">
                                     ${pw.steps.map((s, stepIndex) => `
-                                        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--md-sys-color-surface-container); padding:10px 14px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
-                                            <label class="flex items-center gap-2" style="font-size:0.84rem; cursor:pointer; flex:1;">
+                                <div class="pathway-step-item">
+                                    <label class="pathway-step-label">
                                                 <input type="checkbox" ${s.done ? 'checked' : ''} data-action="pathway-toggle" data-pathway-index="${pathwayIndex}" data-step-index="${stepIndex}">
                                                 <span style="${s.done ? 'text-decoration:line-through; opacity:0.6;' : ''}">${esc(s.title)}</span>
                                             </label>
-                                            ${!s.done ? `<button class="sm primary" data-action="pathway-execute" data-pathway-index="${pathwayIndex}" data-step-index="${stepIndex}">${esc(s.actionLabel)}</button>` : `<span style="font-size:0.75rem; color:var(--md-sys-color-success); font-weight:600;">Done</span>`}
-                                        </div>
-                                    `).join('')}
+                                    <div class="pathway-step-actions">
+                                        ${!s.done ? `<button class="sm primary" data-action="pathway-execute" data-pathway-index="${pathwayIndex}" data-step-index="${stepIndex}">${esc(s.actionLabel)}</button>` : `<span style="font-size:0.75rem; color:var(--md-sys-color-success); font-weight:600;">Done</span>`}
+                                    </div>
+                                </div>
+                                `).join('')}
                                 </div>
                             </div>
                         `).join('')}
@@ -2924,7 +3036,7 @@
             instances: { workoutChart: null },
 
             initPWA: () => {
-                if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+                if (!StorageEngine.localOnly && 'serviceWorker' in navigator && location.protocol.startsWith('http')) {
                     navigator.serviceWorker.register('./sw.js').catch(err => {
                         console.warn('SW registration bypassed:', err);
                     });
@@ -3017,7 +3129,7 @@
                     vault: encVault,
                     snapshots: encSnaps
                 };
-                localStorage.setItem('aether_last_export_ts', String(Date.now()));
+                localStorage.setItem(StorageEngine.backupTimestampKey, String(Date.now()));
                 StorageEngine.checkBackupStatus();
 
                 const blob = new Blob([JSON.stringify(backupBundle, null, 2)], { type: 'application/json' });
