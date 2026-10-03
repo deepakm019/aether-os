@@ -103,7 +103,7 @@ def test_standalone_mode_uses_encrypted_local_storage(app_page: Page, app_url: s
     standalone_url = app_url.replace("index.html", "standalone.html")
     app_page.goto(standalone_url)
     standalone_app = app_page.frame_locator("iframe")
-    expect(standalone_app.get_by_role("heading", name="Aether Vault Core")).to_be_visible()
+    expect(standalone_app.get_by_role("heading", name="AstralSurge Vault Core")).to_be_visible()
 
     result = standalone_app.locator("body").evaluate(
         """async () => {

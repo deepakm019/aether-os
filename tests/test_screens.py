@@ -154,7 +154,7 @@ def test_service_worker_caches_only_the_local_app_shell(app_page: Page) -> None:
     cached_urls = app_page.evaluate(
         """async () => {
             const keys = await caches.keys();
-            const cache = await caches.open(keys.find(key => key.startsWith('aether-os-')));
+            const cache = await caches.open(keys.find(key => key.startsWith('astralsurge-os-')));
             return (await cache.keys()).map(request => request.url);
         }"""
     )

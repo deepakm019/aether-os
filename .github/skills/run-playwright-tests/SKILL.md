@@ -1,9 +1,9 @@
 ---
 name: run-playwright-tests
-description: Install the development test dependencies and run the Playwright browser tests for Aether OS.
+description: Install the development test dependencies and run the Playwright browser tests for AstralSurge OS.
 ---
 
-# Run Aether OS browser tests
+# Run AstralSurge OS browser tests
 
 Use this skill when asked to execute, diagnose, or extend the app's Playwright end-to-end tests.
 

@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="Aether OS is a private, client-side encrypted productivity, kinetic, and capital tracking workspace.">
+    <meta name="description" content="AstralSurge OS is a private, client-side encrypted productivity, kinetic, and capital tracking workspace.">
     <meta name="theme-color" content="#121316">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
-    <title>Aether OS | Autonomous Local-First Workspace</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23004a77' width='100' height='100' rx='20'/><text fill='%23a8c7fa' x='50' y='68' font-size='52' font-family='sans-serif' text-anchor='middle'>A</text></svg>">
+    <title>AstralSurge OS | Autonomous Local-First Workspace</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23004a77' width='100' height='100' rx='20'/><text fill='%23a8c7fa' x='50' y='68' font-size='52' font-family='sans-serif' text-anchor='middle'>S</text></svg>">
     <link rel="manifest" href="./manifest.json">
 
     <style>
@@ -713,7 +713,7 @@
             <div style="display:flex; justify-content:center; margin-bottom:12px;">
                 <span class="material-symbols-outlined" style="font-size:36px; color:var(--md-sys-color-primary);">shield_lock</span>
             </div>
-            <h2 style="font-weight:600; margin-bottom: 4px;">Aether Vault Core</h2>
+            <h2 style="font-weight:600; margin-bottom: 4px;">AstralSurge Vault Core</h2>
             <p class="text-muted" style="margin-bottom: 20px;">AES-256-GCM Web Crypto Encrypted Workspace</p>
 
             <div class="flex gap-2" style="margin-bottom: 18px; background: var(--md-sys-color-surface-container); padding: 4px; border-radius: var(--radius-pill);">
@@ -768,7 +768,7 @@
             <div class="logo-wrap">
                 <div class="logo-title">
                     <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">apps</span>
-                    <span>Aether OS</span>
+                    <span>AstralSurge OS</span>
                     <span class="logo-badge">v5.4 PWA</span>
                 </div>
                 <button class="sm icon-btn mobile-only" onclick="UI.toggleSidebar(false)">
@@ -1516,7 +1516,7 @@
                 return `
                     <div class="legal-block">
                         <h4><span class="material-symbols-outlined" style="font-size:18px;">lock</span> 1. Local Data & Network Requests</h4>
-                        <p>Workspace records are processed in this browser and are not sent to an Aether application server. The app has no account service, sync service, analytics, or third-party runtime assets. When you open or update the hosted site, GitHub Pages and its infrastructure receive the web request and may process ordinary connection and server-log data under GitHub's terms and privacy notices. This static site cannot control that hosting-side processing.</p>
+                        <p>Workspace records are processed in this browser and are not sent to an AstralSurge application server. The app has no account service, sync service, analytics, or third-party runtime assets. When you open or update the hosted site, GitHub Pages and its infrastructure receive the web request and may process ordinary connection and server-log data under GitHub's terms and privacy notices. This static site cannot control that hosting-side processing.</p>
                         <ul>
                             <li><strong>Browser Storage:</strong> ${StorageEngine.localOnly
                                 ? 'Standalone mode stores encrypted vault and checkpoint envelopes in localStorage under separate standalone keys; it does not use IndexedDB.'
@@ -2175,7 +2175,7 @@
             },
 
             copySummary: (score, focusHrs, workoutCount, pts) => {
-                const md = `### Aether OS Weekly Executive Debrief\n- **Operational Score:** ${score}%\n- **Focus Time:** ${focusHrs} hours\n- **Workouts Executed:** ${workoutCount} sessions\n- **Story Points Delivered:** ${pts} pts\n- **Generated On:** ${new Date().toLocaleDateString()}`;
+                const md = `### AstralSurge OS Weekly Executive Debrief\n- **Operational Score:** ${score}%\n- **Focus Time:** ${focusHrs} hours\n- **Workouts Executed:** ${workoutCount} sessions\n- **Story Points Delivered:** ${pts} pts\n- **Generated On:** ${new Date().toLocaleDateString()}`;
                 navigator.clipboard.writeText(md).then(() => {
                     Toast.show('Debrief markdown copied to clipboard!', 'success');
                 });
@@ -3061,7 +3061,7 @@
                 modal.style.display = 'flex';
             },
             confirmPurgeAllData: () => {
-                UI.confirm('Delete Local App Data', 'This removes the Aether vault and checkpoints stored for this site in this browser, plus the backup reminder. It does not delete exported files, browser or device backups, hosting logs, or other copies. Proceed?', async () => {
+                UI.confirm('Delete Local App Data', 'This removes the AstralSurge vault and checkpoints stored for this site in this browser, plus the backup reminder. It does not delete exported files, browser or device backups, hosting logs, or other copies. Proceed?', async () => {
                     await StorageEngine.purgeAllData();
                     location.reload();
                 });
@@ -3216,7 +3216,7 @@
                 const encVault = await StorageEngine.get(DB_KEY);
                 const encSnaps = await StorageEngine.get(SNAP_KEY);
                 const backupBundle = {
-                    app: "Aether OS",
+                    app: "AstralSurge OS",
                     version: "5.4",
                     exportedAt: new Date().toISOString(),
                     vault: encVault,
@@ -3229,7 +3229,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `aether_complete_backup_${Date.now()}.json`;
+                a.download = `astralsurge_complete_backup_${Date.now()}.json`;
                 a.click();
                 URL.revokeObjectURL(url);
                 Toast.show('Complete backup bundle exported!', 'success');

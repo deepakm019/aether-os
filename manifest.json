@@ -1,13 +1,13 @@
 {
-  "name": "Aether OS",
-  "short_name": "Aether",
+  "name": "AstralSurge OS",
+  "short_name": "AstralSurge",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#121316",
   "theme_color": "#121316",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23004a77' width='100' height='100' rx='20'/><text fill='%23a8c7fa' x='50' y='68' font-size='52' font-family='sans-serif' text-anchor='middle'>A</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23004a77' width='100' height='100' rx='20'/><text fill='%23a8c7fa' x='50' y='68' font-size='52' font-family='sans-serif' text-anchor='middle'>S</text></svg>",
       "sizes": "192x192 512x512",
       "type": "image/svg+xml"
     }

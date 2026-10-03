@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aether-os-v5.9';
+const CACHE_NAME = 'astralsurge-os-v5.10';
 const APP_SHELL = [
     new URL('./', self.location.href).href,
     new URL('./index.html', self.location.href).href,
@@ -17,7 +17,7 @@ self.addEventListener('activate', event => {
     event.waitUntil((async () => {
         const keys = await caches.keys();
         await Promise.all(keys
-            .filter(key => key.startsWith('aether-os-') && key !== CACHE_NAME)
+            .filter(key => (key.startsWith('astralsurge-os-') || key.startsWith('aether-os-')) && key !== CACHE_NAME)
             .map(key => caches.delete(key)));
     })());
 });
