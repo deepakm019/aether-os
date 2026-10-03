@@ -1,0 +1,3351 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Aether OS is a private, client-side encrypted productivity, kinetic, and capital tracking workspace.">
+    <meta name="theme-color" content="#121316">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <title>Aether OS | Autonomous Local-First Workspace</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23004a77' width='100' height='100' rx='20'/><text fill='%23a8c7fa' x='50' y='68' font-size='52' font-family='sans-serif' text-anchor='middle'>A</text></svg>">
+    <link rel="manifest" href="./manifest.json">
+
+    <style>
+        :root[data-theme="dark"] {
+            --md-sys-color-background: #121316;
+            --md-sys-color-surface: #1a1c1e;
+            --md-sys-color-surface-container: #202226;
+            --md-sys-color-surface-container-high: #2a2c31;
+            --md-sys-color-surface-variant: #34373c;
+            --md-sys-color-outline: #3c4043;
+            --md-sys-color-outline-variant: #282a2d;
+            
+            --md-sys-color-primary: #a8c7fa;
+            --md-sys-color-on-primary: #041e49;
+            --md-sys-color-primary-container: #004a77;
+            --md-sys-color-on-primary-container: #c2e7ff;
+            
+            --md-sys-color-text-main: #e3e3e3;
+            --md-sys-color-text-secondary: #c4c7c5;
+            --md-sys-color-text-muted: #8e918f;
+            
+            --md-sys-color-success: #81c995;
+            --md-sys-color-success-container: rgba(129, 201, 149, 0.15);
+            --md-sys-color-warning: #fdd663;
+            --md-sys-color-warning-container: rgba(253, 214, 99, 0.15);
+            --md-sys-color-error: #f28b82;
+            --md-sys-color-error-container: rgba(242, 139, 130, 0.15);
+            --md-sys-color-info: #78d9ec;
+
+            --heatmap-cell-0: #25282c;
+            --heatmap-cell-1: #0e3759;
+            --heatmap-cell-2: #16568a;
+            --heatmap-cell-3: #2b77b8;
+            --heatmap-cell-4: #a8c7fa;
+            
+            --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4);
+            --elevation-2: 0 4px 8px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
+            --elevation-3: 0 8px 24px rgba(0, 0, 0, 0.5);
+            --glass-header: rgba(26, 28, 30, 0.9);
+        }
+
+        :root[data-theme="light"] {
+            --md-sys-color-background: #f8fafd;
+            --md-sys-color-surface: #ffffff;
+            --md-sys-color-surface-container: #f0f4f9;
+            --md-sys-color-surface-container-high: #e9eef6;
+            --md-sys-color-surface-variant: #e0e2ec;
+            --md-sys-color-outline: #dadce0;
+            --md-sys-color-outline-variant: #eef0f4;
+            
+            --md-sys-color-primary: #0b57d0;
+            --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-primary-container: #d3e3fd;
+            --md-sys-color-on-primary-container: #041e49;
+            
+            --md-sys-color-text-main: #1f1f1f;
+            --md-sys-color-text-secondary: #444746;
+            --md-sys-color-text-muted: #747775;
+            
+            --md-sys-color-success: #188038;
+            --md-sys-color-success-container: #e6f4ea;
+            --md-sys-color-warning: #e37400;
+            --md-sys-color-warning-container: #fef7e0;
+            --md-sys-color-error: #d93025;
+            --md-sys-color-error-container: #fce8e6;
+            --md-sys-color-info: #0288d1;
+
+            --heatmap-cell-0: #eef0f4;
+            --heatmap-cell-1: #c2e7ff;
+            --heatmap-cell-2: #7fc2ff;
+            --heatmap-cell-3: #338cf0;
+            --heatmap-cell-4: #0b57d0;
+            
+            --elevation-1: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+            --elevation-2: 0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15);
+            --elevation-3: 0 8px 28px rgba(60,64,67,.28);
+            --glass-header: rgba(255, 255, 255, 0.9);
+        }
+
+        :root {
+            --font-sans: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-mono: 'Roboto Mono', ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+            --nav-width: 272px;
+            --topbar-height: 64px;
+            --radius-xs: 4px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-pill: 9999px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--md-sys-color-background);
+            color: var(--md-sys-color-text-main);
+            height: 100vh;
+            height: 100dvh;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .material-symbols-outlined {
+            font-family: var(--font-sans);
+            font-size: 20px;
+            font-weight: 600;
+            display: inline-block;
+            vertical-align: middle;
+            user-select: none;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--md-sys-color-outline); border-radius: var(--radius-pill); }
+
+        h1, h2, h3, h4 { font-weight: 500; letter-spacing: -0.015em; line-height: 1.3; }
+        .text-muted { color: var(--md-sys-color-text-muted); font-size: 0.8125rem; }
+        .text-secondary { color: var(--md-sys-color-text-secondary); font-size: 0.875rem; }
+        .text-mono { font-family: var(--font-mono); }
+        .flex { display: flex; } .flex-col { display: flex; flex-direction: column; }
+        .items-center { align-items: center; } .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .gap-1 { gap: 4px; } .gap-2 { gap: 8px; } .gap-3 { gap: 12px; } .gap-4 { gap: 16px; }
+
+        button, label.btn-label {
+            background: var(--md-sys-color-surface);
+            color: var(--md-sys-color-text-main);
+            border: 1px solid var(--md-sys-color-outline);
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            font-family: var(--font-sans);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            min-height: 38px;
+            user-select: none;
+        }
+        button:hover, label.btn-label:hover {
+            background: var(--md-sys-color-surface-container-high);
+            border-color: var(--md-sys-color-outline);
+        }
+        button:active, label.btn-label:active { transform: scale(0.98); }
+        
+        button.primary {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border-color: transparent;
+            box-shadow: var(--elevation-1);
+        }
+        button.primary:hover { opacity: 0.94; box-shadow: var(--elevation-2); }
+
+        button.tonal {
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            border-color: transparent;
+        }
+        button.tonal:hover { filter: brightness(0.96); }
+
+        button.danger {
+            background: var(--md-sys-color-error-container);
+            color: var(--md-sys-color-error);
+            border-color: transparent;
+        }
+        button.danger:hover { background: var(--md-sys-color-error); color: #fff; }
+
+        button.sm, label.btn-label.sm { padding: 4px 12px; font-size: 0.75rem; min-height: 30px; border-radius: var(--radius-pill); }
+        button.icon-btn { padding: 8px; border-radius: 50%; min-width: 34px; min-height: 34px; border: none; background: transparent; }
+        button.icon-btn:hover { background: var(--md-sys-color-surface-container-high); }
+
+        input, select, textarea {
+            background: var(--md-sys-color-surface);
+            color: var(--md-sys-color-text-main);
+            border: 1px solid var(--md-sys-color-outline);
+            padding: 9px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-family: var(--font-sans);
+            width: 100%;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
+        }
+
+        #auth-screen {
+            position: fixed; inset: 0; background: var(--md-sys-color-background); z-index: 5000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 16px;
+        }
+        .auth-card {
+            background: var(--md-sys-color-surface); padding: 36px 32px; border: 1px solid var(--md-sys-color-outline);
+            border-radius: 24px; width: 100%; max-width: 440px; box-shadow: var(--elevation-2); text-align: center;
+        }
+
+        #app { display: none; width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+
+        #sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(3px); z-index: 1990; display: none;
+        }
+        #sidebar {
+            width: var(--nav-width); background: var(--md-sys-color-surface); border-right: 1px solid var(--md-sys-color-outline-variant);
+            display: flex; flex-direction: column; padding: 16px 12px; flex-shrink: 0; z-index: 2000;
+            height: 100%; overflow-y: auto; transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .logo-wrap {
+            padding: 6px 12px 18px 12px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant); margin-bottom: 12px;
+        }
+        .logo-title {
+            font-size: 1.05rem; font-weight: 600; color: var(--md-sys-color-text-main); display: flex; align-items: center; gap: 8px;
+        }
+        .logo-badge {
+            background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);
+            font-size: 0.6875rem; padding: 2px 8px; border-radius: var(--radius-pill); font-weight: 600;
+        }
+        .nav-label {
+            font-size: 0.6875rem; text-transform: uppercase; color: var(--md-sys-color-text-muted);
+            font-weight: 600; letter-spacing: 0.06em; padding: 12px 14px 6px 14px;
+        }
+        .nav-item {
+            padding: 10px 16px; border-radius: var(--radius-pill); cursor: pointer;
+            color: var(--md-sys-color-text-secondary); font-size: 0.84rem; font-weight: 500;
+            transition: all 0.15s ease; display: flex; align-items: center; gap: 14px; margin-bottom: 3px;
+        }
+        .nav-item:hover { background: var(--md-sys-color-surface-container); color: var(--md-sys-color-text-main); }
+        .nav-item.active {
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            font-weight: 600;
+        }
+        .nav-item.active .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1;
+            color: var(--md-sys-color-on-primary-container);
+        }
+
+        .rpg-card {
+            margin-top: auto; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant);
+            padding: 14px 16px; border-radius: var(--radius-md); margin-bottom: 12px;
+        }
+        .xp-track { width: 100%; height: 5px; background: var(--md-sys-color-outline-variant); border-radius: var(--radius-pill); margin: 8px 0; overflow: hidden; }
+        .xp-progress { height: 100%; background: var(--md-sys-color-primary); width: 0%; transition: width 0.4s ease; border-radius: var(--radius-pill); }
+
+        #main-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; overflow: hidden; }
+        
+        #topbar {
+            height: var(--topbar-height); border-bottom: 1px solid var(--md-sys-color-outline-variant);
+            background: var(--glass-header); backdrop-filter: blur(12px);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; flex-shrink: 0; z-index: 100; gap: 16px;
+        }
+        .topbar-search-bar {
+            flex: 1; max-width: 580px; background: var(--md-sys-color-surface-container);
+            border-radius: var(--radius-pill); display: flex; align-items: center;
+            padding: 6px 16px; cursor: pointer; transition: background 0.15s ease, box-shadow 0.15s ease;
+            border: 1px solid transparent;
+        }
+        .topbar-search-bar:hover {
+            background: var(--md-sys-color-surface-container-high);
+            border-color: var(--md-sys-color-outline);
+        }
+
+        #backup-reminder-banner {
+            display: none; background: var(--md-sys-color-warning-container); color: var(--md-sys-color-warning);
+            border-bottom: 1px solid var(--md-sys-color-outline-variant); padding: 8px 16px;
+            font-size: 0.78rem; font-weight: 500; align-items: center; justify-content: space-between;
+        }
+
+        #content {
+            flex: 1; overflow-y: auto; padding: 24px 28px; background: var(--md-sys-color-background);
+            -webkit-overflow-scrolling: touch; padding-bottom: 40px;
+        }
+
+        .card {
+            background: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--radius-md); padding: 20px; box-shadow: var(--elevation-1);
+            transition: box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+        .card:hover { border-color: var(--md-sys-color-outline); }
+        .card-header { margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+
+        .pill {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 8px; border-radius: var(--radius-pill); font-size: 0.72rem; font-weight: 500;
+        }
+        .pill.high { background: var(--md-sys-color-error-container); color: var(--md-sys-color-error); }
+        .pill.med { background: var(--md-sys-color-warning-container); color: var(--md-sys-color-warning); }
+        .pill.low { background: var(--md-sys-color-success-container); color: var(--md-sys-color-success); }
+        .pill.info { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+
+        .chip {
+            background: var(--md-sys-color-surface);
+            border: 1px solid var(--md-sys-color-outline);
+            color: var(--md-sys-color-text-secondary);
+            padding: 5px 14px;
+            border-radius: var(--radius-pill);
+            font-size: 0.78rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            min-height: 32px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+        }
+        .chip:hover { background: var(--md-sys-color-surface-container); color: var(--md-sys-color-text-main); }
+        .chip.active {
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            border-color: transparent;
+            font-weight: 600;
+        }
+
+        .chrono-hero {
+            background: var(--md-sys-color-surface-container);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .chrono-clock-display {
+            font-size: clamp(2.8rem, 6vw, 4.4rem);
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin: 14px 0 16px 0;
+            color: var(--md-sys-color-text-main);
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--md-sys-color-surface);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            padding: 16px 18px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--elevation-1);
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            display: grid;
+            grid-template-rows: minmax(0, 1fr) auto;
+            align-items: center;
+            justify-content: center;
+        }
+        .chart-wrapper canvas { display: block; width: 100%; height: 100%; }
+        .chart-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; font-size: 0.75rem; color: var(--md-sys-color-text-secondary); }
+        .chart-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+        .chart-legend-swatch { width: 9px; height: 9px; border-radius: 50%; }
+
+        .timer-glow {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 5px 14px; border-radius: var(--radius-pill); background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container); font-weight: 600; font-size: 0.75rem;
+            cursor: pointer;
+        }
+        .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--md-sys-color-primary); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.85); } 100% { opacity: 1; transform: scale(1); } }
+
+        /* Kanban Board & Mobile Segmentation */
+        .kanban-mobile-tabs {
+            display: none; margin-bottom: 12px; gap: 6px; overflow-x: auto; padding-bottom: 4px;
+        }
+        .kanban-board {
+            display: flex; gap: 16px; height: calc(100vh - 180px);
+            overflow-x: auto; padding-bottom: 8px;
+        }
+        .kanban-col {
+            background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--radius-md); width: 310px; display: flex; flex-direction: column; flex-shrink: 0;
+            transition: opacity 0.2s ease;
+        }
+        .kanban-header {
+            padding: 14px 16px; border-bottom: 1px solid var(--md-sys-color-outline-variant); font-size: 0.84rem;
+            font-weight: 600; display: flex; justify-content: space-between; align-items: center;
+        }
+        .kanban-tasks { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .task-card {
+            background: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline-variant); padding: 12px 14px;
+            border-radius: var(--radius-sm); font-size: 0.84rem; cursor: pointer; box-shadow: var(--elevation-1);
+            transition: all 0.15s ease;
+        }
+        .task-card:hover { border-color: var(--md-sys-color-outline); transform: translateY(-1px); }
+        .drag-handle { cursor: grab; font-size: 0.72rem; color: var(--md-sys-color-text-muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+
+        .fast-input-box {
+            display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--md-sys-color-outline-variant); background: var(--md-sys-color-surface-container);
+        }
+        .fast-input-box input {
+            padding: 6px 12px; font-size: 0.8rem; height: 32px; border-radius: var(--radius-pill);
+        }
+
+        /* Slide-out Inspector Drawer */
+        #task-drawer-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px);
+            z-index: 5490; display: none;
+        }
+        #task-drawer-overlay.active { display: block; }
+        #task-drawer {
+            position: fixed; top: 0; right: 0; bottom: 0; width: 420px; max-width: 92vw;
+            background: var(--md-sys-color-surface); border-left: 1px solid var(--md-sys-color-outline);
+            box-shadow: var(--elevation-3); z-index: 5500; transform: translateX(100%);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; padding: 24px; overflow-y: auto;
+        }
+        #task-drawer.open { transform: translateX(0); }
+
+        /* Modal Sheets */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center;
+            z-index: 6000; padding: 16px;
+        }
+        .modal-card {
+            background: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline);
+            border-radius: 20px; width: 100%; max-width: 580px; max-height: 90vh;
+            overflow-y: auto; padding: 24px 28px; box-shadow: var(--elevation-3); position: relative;
+        }
+
+        /* Privacy, Security & Use Notices */
+        .legal-block {
+            background: var(--md-sys-color-surface-container);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+            margin-bottom: 14px;
+        }
+        .legal-block h4 {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--md-sys-color-primary);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legal-block p, .legal-block ul {
+            font-size: 0.8125rem;
+            color: var(--md-sys-color-text-secondary);
+            line-height: 1.5;
+        }
+        .legal-block ul {
+            margin-left: 20px;
+            margin-top: 6px;
+        }
+        .legal-block li {
+            margin-bottom: 4px;
+        }
+
+        #bottom-nav {
+            display: none; position: fixed; bottom: 0; left: 0; right: 0;
+            height: calc(60px + env(safe-area-inset-bottom)); background: var(--glass-header);
+            backdrop-filter: blur(16px); border-top: 1px solid var(--md-sys-color-outline-variant);
+            z-index: 1980; justify-content: space-around; align-items: flex-start;
+            padding: 0 8px env(safe-area-inset-bottom);
+        }
+        .bnav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--md-sys-color-text-muted); font-size: 0.68rem; font-weight: 500; text-decoration: none;
+            gap: 2px; cursor: pointer; flex: 1; height: 60px;
+        }
+        .bnav-item.active { color: var(--md-sys-color-primary); font-weight: 600; }
+        .bnav-item.active .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+
+        #cmd-palette { max-width: 600px; padding: 0; overflow: hidden; border-radius: 20px; }
+        #cmd-search {
+            width: 100%; border: none; border-bottom: 1px solid var(--md-sys-color-outline-variant);
+            padding: 16px 20px; font-size: 0.95rem; background: var(--md-sys-color-surface);
+            box-shadow: none; border-radius: 0;
+        }
+        .cmd-results { max-height: 360px; overflow-y: auto; padding: 8px; }
+        .cmd-item {
+            padding: 10px 14px; border-radius: var(--radius-sm); display: flex;
+            align-items: center; justify-content: space-between; cursor: pointer;
+            font-size: 0.84rem; font-weight: 500;
+        }
+        .cmd-item:hover, .cmd-item.selected {
+            background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-primary);
+        }
+
+        #toast-container {
+            position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+        }
+        .toast {
+            pointer-events: auto; background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-text-main);
+            border: 1px solid var(--md-sys-color-outline); padding: 12px 18px; border-radius: var(--radius-pill);
+            box-shadow: var(--elevation-2); font-size: 0.8125rem; font-weight: 500; display: flex;
+            align-items: center; gap: 10px; animation: slideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes slideIn { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .kbd {
+            background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline);
+            padding: 2px 6px; border-radius: var(--radius-xs); font-family: var(--font-mono);
+            font-size: 0.6875rem; color: var(--md-sys-color-text-muted);
+        }
+
+        /* Activity Heatmap Grid Styles */
+        .heatmap-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+        }
+        .heatmap-grid {
+            display: grid;
+            grid-template-rows: repeat(7, 12px);
+            grid-auto-flow: column;
+            grid-auto-columns: 12px;
+            gap: 4px;
+        }
+        .heatmap-cell {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            background-color: var(--heatmap-cell-0);
+            cursor: pointer;
+            transition: transform 0.1s ease, filter 0.1s ease;
+        }
+        .heatmap-cell:hover {
+            transform: scale(1.3);
+            filter: brightness(1.2);
+            z-index: 10;
+        }
+        .heatmap-cell[data-level="1"] { background-color: var(--heatmap-cell-1); }
+        .heatmap-cell[data-level="2"] { background-color: var(--heatmap-cell-2); }
+        .heatmap-cell[data-level="3"] { background-color: var(--heatmap-cell-3); }
+        .heatmap-cell[data-level="4"] { background-color: var(--heatmap-cell-4); }
+
+        .mobile-only { display: none !important; }
+
+        @media (max-width: 960px) {
+            #sidebar {
+                position: fixed; left: 0; top: 0; bottom: 0;
+                transform: translateX(-100%);
+                box-shadow: var(--elevation-3);
+            }
+            #sidebar.open { transform: translateX(0); }
+            #sidebar-overlay.active { display: block; }
+            .mobile-only { display: inline-flex !important; }
+            .desktop-hide { display: none !important; }
+            #content { padding: 16px; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+            #topbar { padding: 0 14px; }
+            #bottom-nav { display: flex; }
+            #toast-container { bottom: calc(74px + env(safe-area-inset-bottom)); right: 16px; left: 16px; }
+
+            .modal-overlay { align-items: flex-end; padding: 0; }
+            .modal-card {
+                border-radius: 24px 24px 0 0; max-height: 85vh; border-bottom: none;
+                animation: sheetUp 0.25s ease-out;
+            }
+            @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        }
+
+        @media (max-width: 768px) {
+            .kanban-mobile-tabs { display: flex; }
+            .kanban-board { overflow-x: hidden; position: relative; }
+            .kanban-col { width: 100%; display: none; }
+            .kanban-col.active-mobile-col { display: flex; }
+            #task-drawer { width: 100vw; max-width: 100vw; }
+        }
+
+        @media (max-width: 640px) {
+            .auth-card { padding: 24px 18px; }
+            .chrono-hero { padding: 18px; }
+            .btn-group-responsive { flex-direction: column; width: 100%; }
+            .btn-group-responsive button, .btn-group-responsive label.btn-label { width: 100%; }
+            .kanban-board { height: calc(100vh - 210px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <!-- Backup Reminder Banner -->
+    <div id="backup-reminder-banner">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined" style="font-size:18px;">warning</span>
+            <span id="backup-reminder-text">Vault snapshot export recommended.</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button class="sm primary" onclick="App.exportVault()" style="height:26px; padding:2px 10px;">Export Now</button>
+            <button class="sm icon-btn" onclick="document.getElementById('backup-reminder-banner').style.display='none'" style="min-width:24px; min-height:24px;">
+                <span class="material-symbols-outlined" style="font-size:16px;">close</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Auth Master Screen -->
+    <div id="auth-screen">
+        <div class="auth-card">
+            <div style="display:flex; justify-content:center; margin-bottom:12px;">
+                <span class="material-symbols-outlined" style="font-size:36px; color:var(--md-sys-color-primary);">shield_lock</span>
+            </div>
+            <h2 style="font-weight:600; margin-bottom: 4px;">Aether Vault Core</h2>
+            <p class="text-muted" style="margin-bottom: 20px;">AES-256-GCM Web Crypto Encrypted Workspace</p>
+
+            <div class="flex gap-2" style="margin-bottom: 18px; background: var(--md-sys-color-surface-container); padding: 4px; border-radius: var(--radius-pill);">
+                <button id="tab-fetch" class="primary sm" style="flex: 1;" onclick="App.setAuthMode('fetch')">Fetch by Key</button>
+                <button id="tab-new" class="sm" style="flex: 1; background: transparent; border: none;" onclick="App.setAuthMode('new')">Login as New</button>
+            </div>
+
+            <div id="auth-panel-fetch">
+                <input type="password" id="fetch-key" placeholder="Enter Vault Master Passphrase" style="margin-bottom: 14px;">
+                <div class="flex gap-2 btn-group-responsive">
+                    <button class="primary" style="flex: 1;" onclick="App.fetchByKey()">Unlock Workspace</button>
+                    <button style="flex: 1;" onclick="App.loadDemoData()">Load Demo</button>
+                </div>
+                <div style="margin-top: 16px; border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 14px;">
+                    <label class="btn-label sm" style="width: 100%;">
+                        <span class="material-symbols-outlined">upload_file</span> Import Backup Bundle
+                        <input type="file" accept=".json,.enc" style="display:none;" onchange="App.importVaultFile(this.files[0])">
+                    </label>
+                </div>
+                <p class="text-muted" style="margin-top: 10px; font-size: 0.75rem;">PBKDF2 password-based key derivation.</p>
+            </div>
+
+            <div id="auth-panel-new" style="display: none;">
+                <input type="password" id="new-key" placeholder="Define a long, unique passphrase" autocomplete="new-password" style="margin-bottom: 8px;">
+                <p class="text-muted" style="margin-bottom: 14px; font-size: 0.75rem;">Use at least 16 characters; a unique phrase of four or more unrelated words is recommended.</p>
+                <div class="flex gap-2 btn-group-responsive">
+                    <button class="primary" style="flex: 1;" onclick="App.loginAsNew()">Initialize New Vault</button>
+                    <button class="tonal" style="flex: 1;" onclick="App.fetchFromNewInput()">Fetch by This Key</button>
+                </div>
+            </div>
+            <p id="auth-error" style="color: var(--md-sys-color-error); margin-top: 12px; font-size: 0.78rem; display: none;"></p>
+        </div>
+
+        <div style="margin-top: 16px; text-align: center;">
+            <p id="github-pages-origin-warning" class="legal-block" role="status" hidden style="max-width: 560px; margin: 0 auto 12px; text-align: left; color: var(--md-sys-color-warning);">
+                GitHub Pages origin warning: repository sites for the same account share browser storage across URL paths. A less-trusted project on that account may access this app's encrypted vault. For sensitive data, use a dedicated custom domain/origin and do not host untrusted Pages projects on it. Never enter your passphrase on a page you do not trust.
+            </p>
+            <p class="text-muted" style="font-size: 0.75rem;">
+                Read the app's
+                <a href="#privacy-security-notices" onclick="event.preventDefault(); UI.openModal('legal-modal')" style="color: var(--md-sys-color-primary); text-decoration: underline;">
+                    Privacy, Security & Use Notices
+                </a>.
+            </p>
+        </div>
+    </div>
+
+    <!-- Main OS Shell -->
+    <div id="app">
+        <div id="sidebar-overlay" onclick="UI.toggleSidebar(false)"></div>
+
+        <aside id="sidebar">
+            <div class="logo-wrap">
+                <div class="logo-title">
+                    <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">apps</span>
+                    <span>Aether OS</span>
+                    <span class="logo-badge">v5.4 PWA</span>
+                </div>
+                <button class="sm icon-btn mobile-only" onclick="UI.toggleSidebar(false)">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="nav-label">Core Engine</div>
+            <div class="nav-item active" data-view="pathways">
+                <span class="material-symbols-outlined">explore</span>
+                <span>Guided Pathways</span>
+            </div>
+            <div class="nav-item" data-view="dashboard">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Command Center</span>
+            </div>
+
+            <div class="nav-label">Kinetic & Focus</div>
+            <div class="nav-item" data-view="workout">
+                <span class="material-symbols-outlined">fitness_center</span>
+                <span>Kinetic Lab</span>
+            </div>
+            <div class="nav-item" data-view="timeview">
+                <span class="material-symbols-outlined">timer</span>
+                <span>Chrono Distro</span>
+            </div>
+
+            <div class="nav-label">Agile & Operations</div>
+            <div class="nav-item" data-view="stories">
+                <span class="material-symbols-outlined">menu_book</span>
+                <span>Stories & Epics</span>
+            </div>
+            <div class="nav-item" data-view="projects">
+                <span class="material-symbols-outlined">view_kanban</span>
+                <span>Kanban Pipeline</span>
+            </div>
+            <div class="nav-item" data-view="audit">
+                <span class="material-symbols-outlined">receipt_long</span>
+                <span>Audit Stream</span>
+            </div>
+
+            <div class="nav-label">Capital & Intellect</div>
+            <div class="nav-item" data-view="finance">
+                <span class="material-symbols-outlined">account_balance</span>
+                <span>Financial Ledger</span>
+            </div>
+            <div class="nav-item" data-view="brain">
+                <span class="material-symbols-outlined">psychology</span>
+                <span>Second Brain</span>
+            </div>
+            <div class="nav-item" data-view="snapshots">
+                <span class="material-symbols-outlined">history</span>
+                <span>Checkpoints</span>
+            </div>
+
+            <div class="nav-label">Governance</div>
+            <div class="nav-item" data-view="legal">
+                <span class="material-symbols-outlined">gavel</span>
+                <span>Legal & Privacy</span>
+            </div>
+
+            <div class="rpg-card">
+                <div class="flex justify-between items-center">
+                    <span style="font-weight: 600; font-size: 0.825rem;">Level <span id="ui-level">1</span></span>
+                    <span class="text-muted" style="font-size: 0.72rem;"><span id="ui-xp">0</span> / <span id="ui-next-xp">1000</span> XP</span>
+                </div>
+                <div class="xp-track"><div class="xp-progress" id="ui-xp-fill"></div></div>
+                <div class="text-muted" style="font-size: 0.72rem;" id="ui-title">Novice Strategist</div>
+            </div>
+        </aside>
+
+        <div id="main-wrapper">
+            <header id="topbar">
+                <div class="flex items-center gap-2">
+                    <button class="icon-btn mobile-only" onclick="UI.toggleSidebar(true)">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                    <div class="topbar-search-bar" onclick="CommandPalette.open()">
+                        <span class="material-symbols-outlined text-muted" style="margin-right: 8px;">search</span>
+                        <span class="text-muted" style="font-size: 0.84rem; flex: 1;">Search commands, workouts, or notes...</span>
+                        <span class="kbd desktop-hide">⌘K</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <div id="global-timer-pill" class="timer-glow" style="display: none;" onclick="App.router('timeview')">
+                        <div class="pulse-dot"></div>
+                        <span id="global-timer-label">Tracking</span>
+                        <span id="global-timer-clock" class="text-mono">00:00</span>
+                    </div>
+
+                    <select id="currency-select" onchange="FinanceEngine.setCurrency(this.value)" class="desktop-hide" style="width: auto; padding: 6px 10px; font-size: 0.78rem; font-weight: 600; border-radius: var(--radius-pill);">
+                        <option value="INR">₹ INR</option>
+                        <option value="USD">$ USD</option>
+                        <option value="EUR">€ EUR</option>
+                        <option value="GBP">£ GBP</option>
+                    </select>
+
+                    <button class="icon-btn" id="theme-btn" onclick="UI.toggleTheme()" title="Toggle Theme">
+                        <span class="material-symbols-outlined">dark_mode</span>
+                    </button>
+
+                    <button class="primary sm" onclick="UI.openModal('task-modal')">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+                        <span>Create</span>
+                    </button>
+                </div>
+            </header>
+
+            <main id="content"></main>
+        </div>
+
+        <!-- Task Slide-out Inspector Drawer -->
+        <div id="task-drawer-overlay" onclick="TaskDrawer.close()"></div>
+        <div id="task-drawer">
+            <div class="flex justify-between items-center" style="margin-bottom: 20px;">
+                <span class="pill info" id="drawer-task-status-pill">Inbox</span>
+                <div class="flex gap-1">
+                    <button class="sm danger icon-btn" onclick="TaskDrawer.deleteCurrent()">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                    <button class="sm icon-btn" onclick="TaskDrawer.close()">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-col gap-3" style="flex: 1;">
+                <div>
+                    <label class="text-muted" style="font-size: 0.75rem; display:block; margin-bottom:4px;">Task Title</label>
+                    <input type="text" id="drawer-task-title" onchange="TaskDrawer.saveField('title', this.value)">
+                </div>
+
+                <div class="flex gap-2">
+                    <div style="flex:1;">
+                        <label class="text-muted" style="font-size: 0.75rem; display:block; margin-bottom:4px;">Status</label>
+                        <select id="drawer-task-status" onchange="TaskDrawer.saveField('status', this.value)">
+                            <option value="inbox">Inbox</option>
+                            <option value="todo">To Do</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="done">Completed</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;">
+                        <label class="text-muted" style="font-size: 0.75rem; display:block; margin-bottom:4px;">Priority</label>
+                        <select id="drawer-task-priority" onchange="TaskDrawer.saveField('priority', this.value)">
+                            <option value="low">Low</option>
+                            <option value="med">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-muted" style="font-size: 0.75rem; display:block; margin-bottom:4px;">Details & Execution Context</label>
+                    <textarea id="drawer-task-desc" rows="4" onchange="TaskDrawer.saveField('desc', this.value)"></textarea>
+                </div>
+
+                <div style="background:var(--md-sys-color-surface-container); padding:12px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
+                    <div class="flex justify-between items-center" style="margin-bottom: 8px;">
+                        <span class="text-muted" style="font-size:0.75rem; font-weight:600;">Subtasks / Acceptance</span>
+                        <button class="sm tonal" style="height:24px; padding:2px 8px; font-size:0.7rem;" onclick="TaskDrawer.addSubtaskPrompt()">+ Add</button>
+                    </div>
+                    <div id="drawer-subtasks-list" class="flex-col gap-1"></div>
+                </div>
+
+                <div style="margin-top:auto; padding-top:16px; border-top:1px solid var(--md-sys-color-outline-variant);">
+                    <div class="flex justify-between items-center">
+                        <span class="text-muted" id="drawer-task-time">0m Logged</span>
+                        <button class="primary sm" onclick="TaskDrawer.launchTimer()">
+                            <span class="material-symbols-outlined">play_arrow</span> Focus Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Bottom Nav -->
+        <nav id="bottom-nav">
+            <div class="bnav-item" data-view="pathways" onclick="App.router('pathways')">
+                <span class="material-symbols-outlined">explore</span>
+                <span>Pathways</span>
+            </div>
+            <div class="bnav-item" data-view="workout" onclick="App.router('workout')">
+                <span class="material-symbols-outlined">fitness_center</span>
+                <span>Kinetic</span>
+            </div>
+            <div class="bnav-item" data-view="projects" onclick="App.router('projects')">
+                <span class="material-symbols-outlined">view_kanban</span>
+                <span>Kanban</span>
+            </div>
+            <div class="bnav-item" data-view="finance" onclick="App.router('finance')">
+                <span class="material-symbols-outlined">account_balance</span>
+                <span>Finance</span>
+            </div>
+            <div class="bnav-item" onclick="UI.toggleSidebar(true)">
+                <span class="material-symbols-outlined">menu</span>
+                <span>More</span>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="legal-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card" style="max-width: 720px; max-height: 85vh;">
+            <div class="flex justify-between items-center" style="margin-bottom: 16px;">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">shield</span>
+                    <h3 style="font-weight: 600;">Privacy, Security & Use Notices</h3>
+                </div>
+                <button class="sm icon-btn" onclick="UI.closeModals()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <p class="text-muted" style="margin-bottom: 14px; font-size: 0.75rem;">
+                Last reviewed: 4 October 2026 | Client-side encrypted storage
+            </p>
+
+            <div id="legal-content-container">
+                <!-- Injected via LegalModule.renderLegalBlocks() -->
+            </div>
+
+            <div class="flex gap-2 btn-group-responsive" style="margin-top: 16px;">
+                <button class="primary" style="flex:1;" onclick="UI.closeModals()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="cmd-modal" onclick="if(event.target===this) CommandPalette.close()">
+        <div class="modal-card" id="cmd-palette">
+            <input type="text" id="cmd-search" placeholder="Type a command, workout, or view... (ESC to exit)" oninput="CommandPalette.filter(this.value)">
+            <div class="cmd-results" id="cmd-results"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="retro-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card" style="max-width: 640px;">
+            <div class="flex justify-between items-center" style="margin-bottom: 16px;">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">analytics</span>
+                    <h3 style="font-weight: 600;">Executive Weekly Retrospective</h3>
+                </div>
+                <button class="sm icon-btn" onclick="UI.closeModals()"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div id="retro-content"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="workout-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card">
+            <h3 style="margin-bottom: 16px; font-weight: 600;">Log Kinetic Training Session</h3>
+            <div class="flex-col gap-3">
+                <input type="text" id="wo-title" placeholder="Session Focus (e.g. Upper Body Compound, 5k Run)">
+                <div class="flex gap-2 btn-group-responsive">
+                    <select id="wo-type">
+                        <option value="Strength">Strength & Hypertrophy</option>
+                        <option value="Cardio">Zone 2 Cardio / Aerobic</option>
+                        <option value="HIIT">High-Intensity Conditioning</option>
+                        <option value="Mobility">Mobility & Structural Recovery</option>
+                    </select>
+                    <input type="number" id="wo-duration" placeholder="Duration (mins)" value="45" style="max-width: 150px;">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center" style="margin-bottom: 6px;">
+                        <label class="text-muted" style="font-size:0.75rem;">Strain Rating (RPE 1-10)</label>
+                        <strong style="color:var(--md-sys-color-primary);" id="wo-rpe-val">8</strong>
+                    </div>
+                    <input type="range" id="wo-rpe" min="1" max="10" value="8" oninput="document.getElementById('wo-rpe-val').innerText = this.value">
+                </div>
+                <textarea id="wo-notes" placeholder="Sets, reps, loads, or pacing data..." rows="3"></textarea>
+                <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px;">
+                    <button class="primary" style="flex:1;" onclick="WorkoutEngine.addWorkout()">Commit (+100 XP)</button>
+                    <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="task-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card">
+            <h3 style="margin-bottom: 16px; font-weight: 600;">New Action Item</h3>
+            <div class="flex-col gap-3">
+                <input type="text" id="task-title" placeholder="Task title...">
+                <textarea id="task-desc" placeholder="Execution pointers and context..." rows="3"></textarea>
+                <div class="flex gap-2 btn-group-responsive">
+                    <select id="task-status">
+                        <option value="inbox">📥 Inbox (Triage)</option>
+                        <option value="todo">📋 To Do (Active)</option>
+                        <option value="in_progress">⚡ In Progress</option>
+                    </select>
+                    <select id="task-priority">
+                        <option value="low">Low Priority</option>
+                        <option value="med" selected>Medium Priority</option>
+                        <option value="high">High Priority</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px;">
+                    <button class="primary" style="flex:1;" onclick="Data.addTask()">Save Item (+25 XP)</button>
+                    <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="tx-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card">
+            <h3 style="margin-bottom: 16px; font-weight: 600;">Record Transaction</h3>
+            <div class="flex-col gap-3">
+                <input type="text" id="tx-desc" placeholder="Description (e.g. Health insurance, Clean Fuel)">
+                <div class="flex gap-2 btn-group-responsive">
+                    <input type="number" id="tx-amount" placeholder="Amount">
+                    <select id="tx-category">
+                        <option value="Housing">Housing</option>
+                        <option value="Food">Food / Fuel</option>
+                        <option value="Tech">Tech</option>
+                        <option value="Discretionary">Discretionary</option>
+                        <option value="Income">Direct Income (+)</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px;">
+                    <button class="primary" style="flex:1;" onclick="FinanceEngine.addTransaction()">Log Entry</button>
+                    <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="story-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card">
+            <h3 style="margin-bottom: 16px; font-weight: 600;">Draft Work Story</h3>
+            <div class="flex-col gap-3">
+                <input type="text" id="story-title" placeholder="As a [User], I need [Feature] so that [Benefit]...">
+                <div class="flex gap-2 btn-group-responsive">
+                    <input type="text" id="story-epic" placeholder="Epic label (e.g. Kinetic, Infrastructure)" style="flex:1;">
+                    <select id="story-points" style="min-width: 120px;">
+                        <option value="1">1 Point</option>
+                        <option value="2">2 Points</option>
+                        <option value="3" selected>3 Points</option>
+                        <option value="5">5 Points</option>
+                        <option value="8">8 Points</option>
+                    </select>
+                </div>
+                <textarea id="story-ac" placeholder="Acceptance criteria (one per line)..." rows="4"></textarea>
+                <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px;">
+                    <button class="primary" style="flex:1;" onclick="WorkStoryEngine.addStory()">Commit Story (+50 XP)</button>
+                    <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="diff-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card">
+            <div class="flex justify-between items-center" style="margin-bottom: 16px;">
+                <h3 style="font-weight: 600;">Snapshot Comparison & Diff</h3>
+                <button class="sm icon-btn" onclick="UI.closeModals()"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div id="diff-content" class="flex-col gap-3"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="note-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card">
+            <h3 style="margin-bottom: 16px; font-weight: 600;">Second Brain Note</h3>
+            <div class="flex-col gap-3">
+                <input type="text" id="note-title" placeholder="Concept headline...">
+                <textarea id="note-content" placeholder="Synthesize architectural ideas..." rows="6"></textarea>
+                <input type="text" id="note-tags" placeholder="Tags (comma-separated, e.g. workout, engineering)">
+                <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px;">
+                    <button class="primary" style="flex:1;" onclick="Data.saveNote()">Save Note (+35 XP)</button>
+                    <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirm-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card" style="max-width: 420px;">
+            <h3 id="confirm-title" style="margin-bottom: 8px; font-weight: 600;">Confirm Action</h3>
+            <p id="confirm-msg" class="text-secondary" style="margin-bottom: 20px; font-size: 0.85rem;"></p>
+            <div class="flex gap-2 btn-group-responsive">
+                <button id="confirm-btn-yes" class="danger" style="flex:1;">Proceed</button>
+                <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const esc = (str) => {
+            if (str === null || str === undefined) return '';
+            const p = document.createElement('p');
+            p.textContent = String(str);
+            return p.innerHTML;
+        };
+
+        const IconSystem = {
+            glyphs: {
+                account_balance: '▤', add: '+', analytics: '▥', apps: '▦', badge: '●',
+                balance: '⚖', bolt: '⚡', check: '✓', close: '×', cloud_off: '☁',
+                check_circle: '✓', content_copy: '▣', copyright: '©', dark_mode: '☾', dashboard: '▦',
+                delete: '⌫', delete_forever: '⌫', directions_run: '➤', download: '↓',
+                error: '!', info: 'ⓘ',
+                explore: '◎', fitness_center: '⚒', gavel: '⚒', history: '↶',
+                hub: '◎', key_off: '⚿', light_mode: '☼', lock: '▣', menu: '☰',
+                menu_book: '▤', payments: '$', person_alert: '⚠', play_arrow: '▶',
+                policy: '§', psychology: '◉', receipt_long: '▤', restart_alt: '↻',
+                save: '▣', shield: '◈', shield_lock: '◈', timer: '◷',
+                upload_file: '↑', view_kanban: '▤', warning: '⚠', pause: 'Ⅱ'
+            },
+            observer: null,
+            render(root = document) {
+                if (root instanceof Element && root.matches('.material-symbols-outlined')) {
+                    this.renderIcon(root);
+                }
+                root.querySelectorAll?.('.material-symbols-outlined').forEach(icon => this.renderIcon(icon));
+            },
+            renderIcon(icon) {
+                if (icon.dataset.iconRendered) return;
+                const name = icon.textContent.trim();
+                icon.dataset.iconRendered = 'true';
+                icon.setAttribute('aria-hidden', 'true');
+                icon.textContent = this.glyphs[name] || '•';
+            },
+            init() {
+                if (this.observer) return;
+                this.render(document.body);
+                this.observer = new MutationObserver(records => {
+                    records.forEach(record => record.addedNodes.forEach(node => {
+                        if (node instanceof Element) this.render(node);
+                    }));
+                });
+                this.observer.observe(document.body, { childList: true, subtree: true });
+            }
+        };
+
+        /* Contextual Haptic Engine */
+        const Haptics = {
+            tap: () => { if (navigator.vibrate) navigator.vibrate(12); },
+            dragDrop: () => { if (navigator.vibrate) navigator.vibrate([25, 30, 25]); },
+            taskDone: () => { if (navigator.vibrate) navigator.vibrate([30, 50, 40]); },
+            timerComplete: () => { if (navigator.vibrate) navigator.vibrate([120, 80, 200, 80, 350]); },
+            error: () => { if (navigator.vibrate) navigator.vibrate([40, 40, 40]); }
+        };
+
+        /* Web Crypto API (AES-256-GCM + PBKDF2) */
+        const WebCrypto = {
+            async deriveKey(passphrase, salt, iterations) {
+                const enc = new TextEncoder();
+                const keyMaterial = await crypto.subtle.importKey(
+                    'raw', enc.encode(passphrase), { name: 'PBKDF2' }, false, ['deriveKey']
+                );
+                return crypto.subtle.deriveKey(
+                    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+                    keyMaterial,
+                    { name: 'AES-GCM', length: 256 },
+                    false,
+                    ['encrypt', 'decrypt']
+                );
+            },
+            md5(bytes) {
+                const bitLength = bytes.length * 8;
+                const paddedLength = (Math.floor((bytes.length + 8) / 64) + 1) * 64;
+                const padded = new Uint8Array(paddedLength);
+                padded.set(bytes);
+                padded[bytes.length] = 0x80;
+                const view = new DataView(padded.buffer);
+                view.setUint32(paddedLength - 8, bitLength >>> 0, true);
+                view.setUint32(paddedLength - 4, Math.floor(bitLength / 0x100000000), true);
+
+                const shifts = [
+                    7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
+                    5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
+                    4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
+                    6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21
+                ];
+                const constants = Array.from({ length: 64 }, (_, i) =>
+                    Math.floor(Math.abs(Math.sin(i + 1)) * 0x100000000) >>> 0);
+                const state = new Uint32Array([0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476]);
+                const words = new Uint32Array(16);
+                for (let offset = 0; offset < paddedLength; offset += 64) {
+                    for (let i = 0; i < 16; i++) words[i] = view.getUint32(offset + i * 4, true);
+                    let [a, b, c, d] = state;
+                    for (let i = 0; i < 64; i++) {
+                        let f;
+                        let g;
+                        if (i < 16) {
+                            f = (b & c) | (~b & d);
+                            g = i;
+                        } else if (i < 32) {
+                            f = (d & b) | (~d & c);
+                            g = (5 * i + 1) % 16;
+                        } else if (i < 48) {
+                            f = b ^ c ^ d;
+                            g = (3 * i + 5) % 16;
+                        } else {
+                            f = c ^ (b | ~d);
+                            g = (7 * i) % 16;
+                        }
+                        const sum = (a + f + constants[i] + words[g]) >>> 0;
+                        const shift = shifts[i];
+                        const rotated = ((sum << shift) | (sum >>> (32 - shift))) >>> 0;
+                        [a, b, c, d] = [d, (b + rotated) >>> 0, b, c];
+                    }
+                    state[0] = (state[0] + a) >>> 0;
+                    state[1] = (state[1] + b) >>> 0;
+                    state[2] = (state[2] + c) >>> 0;
+                    state[3] = (state[3] + d) >>> 0;
+                }
+
+                const digest = new Uint8Array(16);
+                const digestView = new DataView(digest.buffer);
+                state.forEach((word, i) => digestView.setUint32(i * 4, word, true));
+                return digest;
+            },
+            async decryptLegacy(cipherEnvelope, passphrase) {
+                const decoded = Uint8Array.from(atob(cipherEnvelope), char => char.charCodeAt(0));
+                if (decoded.length < 32 || new TextDecoder().decode(decoded.subarray(0, 8)) !== 'Salted__') {
+                    throw new Error('Unsupported encrypted vault format.');
+                }
+
+                const salt = decoded.subarray(8, 16);
+                const password = new TextEncoder().encode(passphrase);
+                const material = new Uint8Array(48);
+                let previous = new Uint8Array();
+                let offset = 0;
+                while (offset < material.length) {
+                    const input = new Uint8Array(previous.length + password.length + salt.length);
+                    input.set(previous);
+                    input.set(password, previous.length);
+                    input.set(salt, previous.length + password.length);
+                    previous = this.md5(input);
+                    const size = Math.min(previous.length, material.length - offset);
+                    material.set(previous.subarray(0, size), offset);
+                    offset += size;
+                }
+
+                const key = await crypto.subtle.importKey('raw', material.subarray(0, 32), 'AES-CBC', false, ['decrypt']);
+                const plaintext = await crypto.subtle.decrypt(
+                    { name: 'AES-CBC', iv: material.subarray(32, 48) },
+                    key,
+                    decoded.subarray(16)
+                );
+                return JSON.parse(new TextDecoder().decode(plaintext));
+            },
+            async encrypt(dataObj, passphrase) {
+                const iterations = 600000;
+                const salt = crypto.getRandomValues(new Uint8Array(16));
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const key = await this.deriveKey(passphrase, salt, iterations);
+                const encoded = new TextEncoder().encode(JSON.stringify(dataObj));
+                const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
+                return JSON.stringify({
+                    v: 3,
+                    kdf: 'PBKDF2-SHA-256',
+                    iterations,
+                    salt: Array.from(salt),
+                    iv: Array.from(iv),
+                    data: Array.from(new Uint8Array(ciphertext))
+                });
+            },
+            async decrypt(cipherEnvelope, passphrase) {
+                let parsed;
+                try {
+                    parsed = JSON.parse(cipherEnvelope);
+                } catch {
+                    return this.decryptLegacy(cipherEnvelope, passphrase);
+                }
+                if (!parsed || (parsed.v !== 2 && parsed.v !== 3) ||
+                    !Array.isArray(parsed.salt) || parsed.salt.length !== 16 ||
+                    !Array.isArray(parsed.iv) || parsed.iv.length !== 12 ||
+                    !Array.isArray(parsed.data) || parsed.data.length < 16 ||
+                    (parsed.v === 3 && (parsed.kdf !== 'PBKDF2-SHA-256' || parsed.iterations !== 600000))) {
+                    throw new Error('Unsupported encrypted vault format.');
+                }
+                const salt = new Uint8Array(parsed.salt);
+                const iv = new Uint8Array(parsed.iv);
+                const ciphertext = new Uint8Array(parsed.data);
+                const key = await this.deriveKey(passphrase, salt, parsed.v === 2 ? 100000 : parsed.iterations);
+                const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+                return JSON.parse(new TextDecoder().decode(decrypted));
+            },
+            isCurrentEnvelope(cipherEnvelope) {
+                try {
+                    const parsed = JSON.parse(cipherEnvelope);
+                    return parsed?.v === 3 &&
+                        parsed.kdf === 'PBKDF2-SHA-256' &&
+                        parsed.iterations === 600000;
+                } catch {
+                    return false;
+                }
+            }
+        };
+
+        /* Asynchronous IndexedDB Engine */
+        const StorageEngine = {
+            dbName: 'AetherVaultDB',
+            storeName: 'vault_store',
+            db: null,
+            async init() {
+                if (this.db) return this.db;
+                return new Promise((resolve, reject) => {
+                    const req = indexedDB.open(this.dbName, 1);
+                    req.onupgradeneeded = (e) => {
+                        const d = e.target.result;
+                        if (!d.objectStoreNames.contains(this.storeName)) d.createObjectStore(this.storeName);
+                    };
+                    req.onsuccess = (e) => { this.db = e.target.result; resolve(this.db); };
+                    req.onerror = () => reject(req.error);
+                });
+            },
+            async set(key, val) {
+                if (key !== DB_KEY && key !== SNAP_KEY) {
+                    throw new Error('Refusing to store data under an unexpected key.');
+                }
+                const serialized = typeof val === 'string' ? val : JSON.stringify(val);
+                let envelope;
+                try {
+                    envelope = JSON.parse(serialized);
+                } catch {
+                    envelope = null;
+                }
+                const isAesGcmEnvelope = (envelope?.v === 2 ||
+                    (envelope?.v === 3 && envelope.kdf === 'PBKDF2-SHA-256' && envelope.iterations === 600000)) &&
+                    Array.isArray(envelope.salt) && envelope.salt.length === 16 &&
+                    Array.isArray(envelope.iv) && envelope.iv.length === 12 &&
+                    Array.isArray(envelope.data) && envelope.data.length >= 16 &&
+                    [envelope.salt, envelope.iv, envelope.data].every(bytes =>
+                        bytes.every(byte => Number.isInteger(byte) && byte >= 0 && byte <= 255));
+                const isLegacyEnvelope = typeof val === 'string' && val.startsWith('U2FsdGVkX1');
+                if (!isAesGcmEnvelope && !isLegacyEnvelope) {
+                    throw new Error('Refusing to persist vault data that is not encrypted.');
+                }
+
+                try {
+                    await this.init();
+                    return new Promise((resolve, reject) => {
+                        const tx = this.db.transaction([this.storeName], 'readwrite');
+                        tx.objectStore(this.storeName).put(serialized, key);
+                        tx.oncomplete = () => resolve();
+                        tx.onerror = () => reject(tx.error);
+                    });
+                } catch {
+                    try {
+                        localStorage.setItem(key, serialized);
+                    } catch {
+                        throw new Error('Unable to save the encrypted vault to local storage.');
+                    }
+                }
+            },
+            async get(key) {
+                try {
+                    await this.init();
+                    return new Promise((resolve) => {
+                        const tx = this.db.transaction([this.storeName], 'readonly');
+                        const req = tx.objectStore(this.storeName).get(key);
+                        req.onsuccess = () => resolve(req.result || localStorage.getItem(key));
+                        req.onerror = () => resolve(localStorage.getItem(key));
+                    });
+                } catch (e) {
+                    return localStorage.getItem(key);
+                }
+            },
+            async remove(key) {
+                try {
+                    await this.init();
+                    return new Promise((resolve) => {
+                        const tx = this.db.transaction([this.storeName], 'readwrite');
+                        tx.objectStore(this.storeName).delete(key);
+                        tx.oncomplete = () => { localStorage.removeItem(key); resolve(); };
+                        tx.onerror = () => { localStorage.removeItem(key); resolve(); };
+                    });
+                } catch (e) {
+                    localStorage.removeItem(key);
+                }
+            },
+            async purgeAllData() {
+                localStorage.removeItem(DB_KEY);
+                localStorage.removeItem(SNAP_KEY);
+                localStorage.removeItem('aether_last_export_ts');
+                await this.init();
+                await new Promise((resolve, reject) => {
+                    const tx = this.db.transaction([this.storeName], 'readwrite');
+                    tx.objectStore(this.storeName).clear();
+                    tx.oncomplete = resolve;
+                    tx.onerror = () => reject(tx.error);
+                });
+            },
+            checkBackupStatus() {
+                const last = localStorage.getItem('aether_last_export_ts');
+                const banner = document.getElementById('backup-reminder-banner');
+                const text = document.getElementById('backup-reminder-text');
+                if (!banner) return;
+                const days = last ? Math.floor((Date.now() - Number(last)) / 86400000) : 8;
+                if (days >= 7) {
+                    text.innerText = last ? `Last backup was ${days} days ago. Eviction risk active.` : 'No export on record. Eviction risk active.';
+                    banner.style.display = 'flex';
+                } else {
+                    banner.style.display = 'none';
+                }
+            }
+        };
+
+        /* Privacy, Security & Use Notices */
+        const LegalModule = {
+            renderLegalBlocks: () => {
+                return `
+                    <div class="legal-block">
+                        <h4><span class="material-symbols-outlined" style="font-size:18px;">lock</span> 1. Local Data & Network Requests</h4>
+                        <p>Workspace records are processed in this browser and are not sent to an Aether application server. The app has no account service, sync service, analytics, or third-party runtime assets. When you open or update the hosted site, GitHub Pages and its infrastructure receive the web request and may process ordinary connection and server-log data under GitHub's terms and privacy notices. This static site cannot control that hosting-side processing.</p>
+                        <ul>
+                            <li><strong>Local Storage:</strong> Vault and checkpoint records are encrypted by the browser before being written to IndexedDB. localStorage may be used as a fallback for the encrypted vault envelopes; it also stores a non-sensitive backup-reminder timestamp.</li>
+                            <li><strong>App-Shell Cache:</strong> The service worker may cache the same-origin app shell (HTML and manifest) to support offline loading. This cache contains app files, not vault records.</li>
+                            <li><strong>No App Telemetry:</strong> The app code does not intentionally send workspace records or passphrases to a service, and it does not set tracking cookies. This is not a guarantee about the browser, extensions, hosting platform, or the device.</li>
+                            <li><strong>GitHub Pages Origin:</strong> GitHub Pages projects under one <code>github.io</code> hostname share the same browser origin even when their repository paths differ. Another project on that origin can access this app's browser storage. Use a dedicated custom domain/origin for sensitive data, and keep less-trusted Pages projects off that origin.</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4><span class="material-symbols-outlined" style="font-size:18px;">key_off</span> 2. Encryption & Passphrase</h4>
+                        <p>New vault and checkpoint writes use the browser's Web Crypto API: PBKDF2 with SHA-256 (600,000 iterations) derives an AES-256-GCM key from your passphrase and a random salt. The iteration count and KDF identifier are stored in the versioned encrypted envelope; the prior AES-GCM envelope (100,000 iterations) remains readable and is upgraded after a successful unlock. The key is not intentionally persisted by the app. Older OpenSSL-format AES-CBC vaults are accepted only for compatibility and are re-encrypted in the current format after a successful unlock.</p>
+                        <ul>
+                            <li><strong>Passphrase Strength:</strong> New vaults require at least 16 characters. Length alone does not guarantee strength; use a long, unique passphrase, preferably four or more unrelated words, and do not reuse a password.</li>
+                            <li><strong>Passphrase Recovery:</strong> There is no app-side passphrase recovery or escrow. If you lose the passphrase, the app may be unable to decrypt your vault; keep a secure backup and protect the passphrase.</li>
+                            <li><strong>Scope of Protection:</strong> Encryption protects saved envelopes at rest against casual inspection. It does not protect plaintext while the vault is unlocked, a weak or disclosed passphrase, a compromised device/browser, malicious extensions, or malicious code delivered by the hosting origin. The current Content Security Policy allows inline script and style, limits third-party origins, and is not a complete defense against same-origin script injection.</li>
+                            <li><strong>Cryptographic Limits:</strong> Legacy AES-CBC compatibility data does not have the same authenticated-encryption guarantees as new AES-GCM data. Do not use the legacy format for new vaults or backups. A captured encrypted envelope can be attacked offline, so a weak passphrase remains vulnerable even when the KDF work factor is higher.</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4><span class="material-symbols-outlined" style="font-size:18px;">cloud_off</span> 3. Browser Storage Quotas & Eviction Risks</h4>
+                        <p>The app stores encrypted vault/checkpoint envelopes in browser-managed <code>IndexedDB</code>, with a <code>localStorage</code> fallback when IndexedDB is unavailable. Browser storage is not permanent or guaranteed to be available.</p>
+                        <ul>
+                            <li><strong>Loss Risk:</strong> Browser settings, private browsing, storage quotas, device failure, profile removal, or browser/platform policies may erase or make local data unavailable.</li>
+                            <li><strong>Backups:</strong> Exported backup files are separate files on your device and remain your responsibility. Store them securely; anyone who obtains a backup and its passphrase may access its contents.</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4><span class="material-symbols-outlined" style="font-size:18px;">badge</span> 4. Privacy & Data Management</h4>
+                        <p>Privacy and data-protection laws vary by location and circumstances. This informational notice is not legal advice and does not determine whether a particular law applies or whether any person has a specific legal role or obligation.</p>
+                        <ul>
+                            <li><strong>Local App Data:</strong> You can review, export, change, or delete data in this browser using the app's features. Deleting browser data does not delete data in an exported backup, browser/OS backup, or other copy you made.</li>
+                            <li><strong>Hosted Website:</strong> Requests to GitHub Pages are subject to the hosting provider's policies and retention practices. The app's local purge control cannot delete hosting logs or files outside this browser's app storage.</li>
+                            <li><strong>Your Responsibilities:</strong> You are responsible for protecting your device, browser profile, passphrase, and exported files. Seek qualified advice about legal rights and obligations that apply to you.</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4><span class="material-symbols-outlined" style="font-size:18px;">fitness_center</span> 5. Physical Fitness & Health Disclaimer</h4>
+                        <p>The <strong>Kinetic Performance Lab</strong>, RPE calculators, and volume estimators are educational tracking tools only.</p>
+                        <ul>
+                            <li><strong>Not Medical Advice:</strong> Nothing contained in this workspace constitutes sports medicine, orthopedic assessment, physical therapy, or diagnosis.</li>
+                            <li><strong>Assumption of Risk:</strong> Consult a certified physician before undertaking physical training. You assume all voluntary risks of injury, illness, or strain.</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4><span class="material-symbols-outlined" style="font-size:18px;">payments</span> 6. Financial & Investment Disclaimer</h4>
+                        <p>The <strong>Wealth & Capital Ledger</strong> and compound interest forecasting tools are heuristic computational calculators provided solely for personal budgeting.</p>
+                        <ul>
+                            <li><strong>Not Professional Financial Counsel:</strong> This application does not provide investment, portfolio management, legal, tax, or accounting advice.</li>
+                            <li><strong>Hypothetical Estimates:</strong> Projections do not guarantee future yields, market liquidity, or inflation adjustments. Consult a certified financial planner (CFP) or chartered accountant.</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4><span class="material-symbols-outlined" style="font-size:18px;">hub</span> 7. Local Assets & Transport-Level Network Metadata</h4>
+                        <p>The application uses code included in the hosted page, system fonts, browser-provided Canvas and Web Crypto APIs, and Unicode symbols. It does not fetch runtime scripts, stylesheets, fonts, analytics, or workspace data from third-party asset services.</p>
+                        <ul>
+                            <li><strong>Hosting Metadata:</strong> GitHub Pages receives ordinary connection metadata when you request the hosted site.</li>
+                            <li><strong>Offline Use:</strong> After the app shell has been cached, the service worker can serve it offline. Initial deployment and later updates require a connection to the Pages host.</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4><span class="material-symbols-outlined" style="font-size:18px;">copyright</span> 8. Project License & Dependencies</h4>
+                        <ul>
+                            <li><strong>External Runtime Dependencies:</strong> None. The application uses browser-provided Web Crypto, Canvas, IndexedDB, system fonts, and Unicode symbols.</li>
+                            <li><strong>Project License:</strong> This repository does not include a license file. These notices do not grant permission to reuse, modify, or redistribute the project's code; contact the project owner for permission.</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        };
+
+        const DB_KEY = 'aether_os_state';
+        const SNAP_KEY = 'aether_os_snaps';
+        const MAX_SNAPSHOTS = 8;
+        let masterPassphrase = null;
+
+        let State = {
+            theme: 'dark',
+            currency: 'INR',
+            user: { level: 1, xp: 0, title: 'Novice Strategist' },
+            tasks: [],
+            stories: [],
+            timeLogs: [],
+            workouts: [],
+            activityFeed: [],
+            finances: {
+                monthlyIncome: 95000,
+                targetSavingsRate: 35,
+                budgets: [
+                    { category: 'Housing', limit: 30000 },
+                    { category: 'Food', limit: 14000 },
+                    { category: 'Tech', limit: 8000 },
+                    { category: 'Discretionary', limit: 10000 }
+                ],
+                transactions: []
+            },
+            pathways: [
+                {
+                    id: 'pw_kinetic',
+                    title: 'Peak Physical Architecture',
+                    desc: 'Progressive overload, aerobic engine building, and structural recovery.',
+                    steps: [
+                        { id: 'pw_k1', title: 'Execute 45-min Compound Hypertrophy session', done: true, activityType: 'workout', actionLabel: 'Log Workout' },
+                        { id: 'pw_k2', title: 'Run 30-min Zone 2 Aerobic flush or ruck', done: false, activityType: 'time', actionLabel: 'Start Stopwatch' },
+                        { id: 'pw_k3', title: 'Document structural mobility & sleep recovery protocol', done: false, activityType: 'note', actionLabel: 'Document Protocol' }
+                    ]
+                },
+                {
+                    id: 'pw_work',
+                    title: 'High-Velocity Agile Engineering',
+                    desc: 'Sprint stories with acceptance criteria verification.',
+                    steps: [
+                        { id: 'pw_w1', title: 'Draft Acceptance Criteria for priority epics', done: true, activityType: 'story', actionLabel: 'Open Stories' },
+                        { id: 'pw_w2', title: 'Log 90 minutes of continuous deep execution', done: false, activityType: 'time', actionLabel: 'Start Stopwatch' },
+                        { id: 'pw_w3', title: 'Document technical architectural decisions', done: false, activityType: 'note', actionLabel: 'Second Brain' }
+                    ]
+                },
+                {
+                    id: 'pw_emergency',
+                    title: 'Capital Liquidity Blueprint',
+                    desc: 'Build 3-month survival and liquidity runways.',
+                    steps: [
+                        { id: 'p1', title: 'Audit 3 months of bank statements', done: true, activityType: 'task', actionLabel: 'Audit Pipeline' },
+                        { id: 'p2', title: 'Cut 2 redundant cloud subscriptions', done: true, activityType: 'task', actionLabel: 'Review SaaS' },
+                        { id: 'p3', title: 'Stash liquid capital into high-yield vault', done: false, activityType: 'finance', actionLabel: 'Allocate Vault' }
+                    ]
+                }
+            ],
+            notes: []
+        };
+
+        const DEFAULT_INITIAL_STATE = JSON.parse(JSON.stringify(State));
+        let Snapshots = [];
+        const normalizeWorkspaceState = loadedState => {
+            if (!loadedState || typeof loadedState !== 'object' || Array.isArray(loadedState)) {
+                throw new Error('The decrypted vault does not contain a valid workspace.');
+            }
+            for (const field of ['user', 'finances']) {
+                if (loadedState[field] !== undefined &&
+                    (!loadedState[field] || typeof loadedState[field] !== 'object' || Array.isArray(loadedState[field]))) {
+                    throw new Error(`The decrypted vault has invalid ${field} data.`);
+                }
+            }
+
+            const arrayFields = ['tasks', 'stories', 'timeLogs', 'workouts', 'activityFeed', 'pathways', 'notes'];
+            for (const field of arrayFields) {
+                if (loadedState[field] !== undefined && !Array.isArray(loadedState[field])) {
+                    throw new Error(`The decrypted vault has invalid ${field} data.`);
+                }
+                if (Array.isArray(loadedState[field]) &&
+                    loadedState[field].some(item => !item || typeof item !== 'object' || Array.isArray(item))) {
+                    throw new Error(`The decrypted vault has invalid ${field} entries.`);
+                }
+            }
+
+            const finances = loadedState.finances || {};
+            for (const field of ['budgets', 'transactions']) {
+                if (finances[field] !== undefined &&
+                    (!Array.isArray(finances[field]) ||
+                        finances[field].some(item => !item || typeof item !== 'object' || Array.isArray(item)))) {
+                    throw new Error(`The decrypted vault has invalid financial ${field}.`);
+                }
+            }
+
+            const normalized = {
+                ...JSON.parse(JSON.stringify(DEFAULT_INITIAL_STATE)),
+                ...loadedState,
+                user: { ...DEFAULT_INITIAL_STATE.user, ...(loadedState.user || {}) },
+                finances: { ...DEFAULT_INITIAL_STATE.finances, ...finances }
+            };
+            for (const pathway of normalized.pathways) {
+                if (pathway.steps !== undefined && !Array.isArray(pathway.steps)) {
+                    throw new Error('The decrypted vault has invalid pathway steps.');
+                }
+                if (!pathway.steps) pathway.steps = [];
+                if (pathway.steps.some(step => !step || typeof step !== 'object' || Array.isArray(step))) {
+                    throw new Error('The decrypted vault has invalid pathway entries.');
+                }
+            }
+            return normalized;
+        };
+
+        const Toast = {
+            show: (msg, type = 'info') => {
+                Haptics.tap();
+                const container = document.getElementById('toast-container');
+                const el = document.createElement('div');
+                el.className = 'toast';
+                const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
+                el.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px;">${icon}</span> <span>${esc(msg)}</span>`;
+                container.appendChild(el);
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(10px)';
+                    setTimeout(() => el.remove(), 250);
+                }, 3000);
+            }
+        };
+
+        /* Task Inspector Drawer Controller */
+        const TaskDrawer = {
+            currentTaskId: null,
+            open: (taskId) => {
+                const task = State.tasks.find(t => t.id === taskId);
+                if (!task) return;
+                TaskDrawer.currentTaskId = taskId;
+                Haptics.tap();
+
+                document.getElementById('drawer-task-title').value = task.title;
+                document.getElementById('drawer-task-desc').value = task.desc || '';
+                document.getElementById('drawer-task-status').value = task.status;
+                document.getElementById('drawer-task-priority').value = task.priority;
+                document.getElementById('drawer-task-status-pill').innerText = task.status.toUpperCase();
+                document.getElementById('drawer-task-time').innerText = `${task.timeSpent || 0}m Logged`;
+
+                TaskDrawer.renderSubtasks(task);
+                document.getElementById('task-drawer-overlay').classList.add('active');
+                document.getElementById('task-drawer').classList.add('open');
+            },
+            close: () => {
+                document.getElementById('task-drawer-overlay').classList.remove('active');
+                document.getElementById('task-drawer').classList.remove('open');
+                TaskDrawer.currentTaskId = null;
+            },
+            saveField: (field, value) => {
+                const task = State.tasks.find(t => t.id === TaskDrawer.currentTaskId);
+                if (!task) return;
+                task[field] = value;
+                if (field === 'status') {
+                    document.getElementById('drawer-task-status-pill').innerText = value.toUpperCase();
+                    if (value === 'done') Haptics.taskDone();
+                }
+                Data.save();
+                App.refreshCurrentView();
+            },
+            renderSubtasks: (task) => {
+                const list = document.getElementById('drawer-subtasks-list');
+                list.innerHTML = (task.subtasks || []).map((s, idx) => `
+                    <div class="flex justify-between items-center" style="font-size:0.8rem; padding:4px 0;">
+                        <label class="flex items-center gap-2" style="cursor:pointer; flex:1;">
+                            <input type="checkbox" ${s.done ? 'checked' : ''} onchange="TaskDrawer.toggleSubtask(${idx})">
+                            <span style="${s.done ? 'text-decoration:line-through; opacity:0.6;' : ''}">${esc(s.title)}</span>
+                        </label>
+                        <button class="sm danger icon-btn" style="min-width:22px; min-height:22px; padding:2px;" onclick="TaskDrawer.deleteSubtask(${idx})">
+                            <span class="material-symbols-outlined" style="font-size:14px;">close</span>
+                        </button>
+                    </div>
+                `).join('') || '<div class="text-muted" style="font-size:0.75rem;">No subtasks added.</div>';
+            },
+            toggleSubtask: (idx) => {
+                const task = State.tasks.find(t => t.id === TaskDrawer.currentTaskId);
+                if (!task || !task.subtasks[idx]) return;
+                task.subtasks[idx].done = !task.subtasks[idx].done;
+                Haptics.tap();
+                Data.save();
+                TaskDrawer.renderSubtasks(task);
+            },
+            addSubtaskPrompt: () => {
+                const title = prompt('New Subtask:');
+                if (!title) return;
+                const task = State.tasks.find(t => t.id === TaskDrawer.currentTaskId);
+                if (!task) return;
+                if (!task.subtasks) task.subtasks = [];
+                task.subtasks.push({ id: 'st_' + Date.now(), title: title.trim(), done: false });
+                Haptics.tap();
+                Data.save();
+                TaskDrawer.renderSubtasks(task);
+            },
+            deleteSubtask: (idx) => {
+                const task = State.tasks.find(t => t.id === TaskDrawer.currentTaskId);
+                if (!task || !task.subtasks) return;
+                task.subtasks.splice(idx, 1);
+                Data.save();
+                TaskDrawer.renderSubtasks(task);
+            },
+            deleteCurrent: () => {
+                if (!TaskDrawer.currentTaskId) return;
+                UI.confirm('Delete Task', 'Remove this task permanently?', () => {
+                    State.tasks = State.tasks.filter(t => t.id !== TaskDrawer.currentTaskId);
+                    Data.save();
+                    TaskDrawer.close();
+                    App.refreshCurrentView();
+                    Toast.show('Task deleted');
+                });
+            },
+            launchTimer: () => {
+                if (!TaskDrawer.currentTaskId) return;
+                ChronoEngine.startForTask(TaskDrawer.currentTaskId);
+                TaskDrawer.close();
+            }
+        };
+
+        /* Focus Chrono Engine with Timestamp Deltas + Web Worker */
+        const ChronoEngine = {
+            worker: null,
+            startTime: null,
+            accumulatedMs: 0,
+            seconds: 0,
+            activeCategory: 'Deep Work',
+            isRunning: false,
+            boundTaskId: null,
+            boundTaskTitle: null,
+            fallbackInterval: null,
+
+            initWorker: () => {
+                if (ChronoEngine.worker) return;
+                try {
+                    const workerBlob = new Blob([`
+                        let t = null;
+                        self.onmessage = (e) => {
+                            if (e.data === 'start') {
+                                if (!t) t = setInterval(() => self.postMessage('tick'), 250);
+                            } else if (e.data === 'stop') {
+                                clearInterval(t);
+                                t = null;
+                            }
+                        };
+                    `], { type: 'application/javascript' });
+                    ChronoEngine.worker = new Worker(URL.createObjectURL(workerBlob));
+                    ChronoEngine.worker.onmessage = () => {
+                        if (ChronoEngine.isRunning) ChronoEngine.tick();
+                    };
+                } catch (e) {}
+            },
+
+            tick: () => {
+                if (!ChronoEngine.isRunning || !ChronoEngine.startTime) return;
+                const now = Date.now();
+                const totalMs = ChronoEngine.accumulatedMs + (now - ChronoEngine.startTime);
+                ChronoEngine.seconds = Math.floor(totalMs / 1000);
+                ChronoEngine.updateDisplays();
+            },
+
+            setCategory: (category) => {
+                Haptics.tap();
+                ChronoEngine.activeCategory = category;
+                ChronoEngine.boundTaskId = null;
+                ChronoEngine.boundTaskTitle = null;
+                const label = document.getElementById('chrono-active-tag');
+                if (label) label.innerText = category;
+                document.querySelectorAll('.chip').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.cat === category);
+                });
+            },
+
+            startForTask: (taskId) => {
+                const task = State.tasks.find(t => t.id === taskId);
+                if (!task) return;
+                ChronoEngine.boundTaskId = task.id;
+                ChronoEngine.boundTaskTitle = task.title;
+                ChronoEngine.activeCategory = 'Deep Work';
+                ChronoEngine.start('Deep Work');
+                App.router('timeview');
+                Toast.show(`Focus session bound to: "${task.title}"`, 'success');
+            },
+
+            toggle: () => {
+                if (ChronoEngine.isRunning) ChronoEngine.pause();
+                else ChronoEngine.start(ChronoEngine.activeCategory);
+            },
+
+            start: (category) => {
+                if (category) ChronoEngine.activeCategory = category;
+                ChronoEngine.initWorker();
+                ChronoEngine.isRunning = true;
+                ChronoEngine.startTime = Date.now();
+                Haptics.tap();
+
+                if (ChronoEngine.worker) ChronoEngine.worker.postMessage('start');
+                else ChronoEngine.fallbackInterval = setInterval(ChronoEngine.tick, 500);
+
+                const pill = document.getElementById('global-timer-pill');
+                const label = document.getElementById('global-timer-label');
+                if (pill) pill.style.display = 'inline-flex';
+                if (label) {
+                    label.innerText = ChronoEngine.boundTaskTitle 
+                        ? `Focus: ${ChronoEngine.boundTaskTitle.substring(0, 15)}... ` 
+                        : `${ChronoEngine.activeCategory}: `;
+                }
+
+                ChronoEngine.updateDisplays();
+                AuditEngine.log('time', `Started focus chrono: ${ChronoEngine.boundTaskTitle ? `"${ChronoEngine.boundTaskTitle}"` : ChronoEngine.activeCategory}`);
+                App.refreshTimerButtons();
+            },
+
+            pause: () => {
+                if (!ChronoEngine.isRunning) return;
+                ChronoEngine.accumulatedMs += (Date.now() - ChronoEngine.startTime);
+                ChronoEngine.startTime = null;
+                ChronoEngine.isRunning = false;
+
+                if (ChronoEngine.worker) ChronoEngine.worker.postMessage('stop');
+                if (ChronoEngine.fallbackInterval) clearInterval(ChronoEngine.fallbackInterval);
+
+                Haptics.tap();
+                AuditEngine.log('time', `Paused chrono: ${ChronoEngine.activeCategory}`);
+                App.refreshTimerButtons();
+                Toast.show('Timer paused');
+            },
+
+            stopAndLog: () => {
+                if (ChronoEngine.seconds === 0 && !ChronoEngine.isRunning) return;
+                if (ChronoEngine.isRunning) {
+                    ChronoEngine.accumulatedMs += (Date.now() - ChronoEngine.startTime);
+                    ChronoEngine.startTime = null;
+                    ChronoEngine.isRunning = false;
+                }
+
+                if (ChronoEngine.worker) ChronoEngine.worker.postMessage('stop');
+                if (ChronoEngine.fallbackInterval) clearInterval(ChronoEngine.fallbackInterval);
+
+                Haptics.timerComplete();
+                const mins = Math.max(1, Math.round(ChronoEngine.seconds / 60));
+                const now = new Date();
+                
+                State.timeLogs.unshift({
+                    id: 'time_' + Date.now(),
+                    category: ChronoEngine.activeCategory,
+                    duration: mins,
+                    timestamp: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    isoDate: now.toISOString(),
+                    taskId: ChronoEngine.boundTaskId,
+                    taskTitle: ChronoEngine.boundTaskTitle
+                });
+
+                if (ChronoEngine.boundTaskId) {
+                    const t = State.tasks.find(x => x.id === ChronoEngine.boundTaskId);
+                    if (t) t.timeSpent = (t.timeSpent || 0) + mins;
+                }
+
+                Data.addXP(mins * 2);
+                AuditEngine.log('time', `Committed ${mins}m focus block`);
+
+                const taskTitle = ChronoEngine.boundTaskTitle;
+                ChronoEngine.boundTaskId = null;
+                ChronoEngine.boundTaskTitle = null;
+                ChronoEngine.seconds = 0;
+                ChronoEngine.accumulatedMs = 0;
+                ChronoEngine.updateDisplays();
+
+                const pill = document.getElementById('global-timer-pill');
+                if (pill) pill.style.display = 'none';
+
+                Data.save();
+                Toast.show(taskTitle ? `Committed ${mins}m to "${taskTitle}"!` : `Committed ${mins}m focus session!`, 'success');
+                App.refreshCurrentView();
+            },
+
+            reset: () => {
+                ChronoEngine.isRunning = false;
+                ChronoEngine.startTime = null;
+                ChronoEngine.accumulatedMs = 0;
+                ChronoEngine.seconds = 0;
+                ChronoEngine.boundTaskId = null;
+                ChronoEngine.boundTaskTitle = null;
+                if (ChronoEngine.worker) ChronoEngine.worker.postMessage('stop');
+                if (ChronoEngine.fallbackInterval) clearInterval(ChronoEngine.fallbackInterval);
+                ChronoEngine.updateDisplays();
+                const pill = document.getElementById('global-timer-pill');
+                if (pill) pill.style.display = 'none';
+                App.refreshTimerButtons();
+                Toast.show('Timer reset');
+            },
+
+            deleteLog: (id) => {
+                State.timeLogs = State.timeLogs.filter(l => l.id !== id);
+                Data.save();
+                Toast.show('Session log deleted');
+                App.refreshCurrentView();
+            },
+
+            formatTime: (totalSecs) => {
+                const hrs = Math.floor(totalSecs / 3600);
+                const m = Math.floor((totalSecs % 3600) / 60).toString().padStart(2, '0');
+                const s = (totalSecs % 60).toString().padStart(2, '0');
+                return hrs > 0 ? `${hrs}:${m}:${s}` : `${m}:${s}`;
+            },
+
+            updateDisplays: () => {
+                const formatted = ChronoEngine.formatTime(ChronoEngine.seconds);
+                const clock = document.getElementById('global-timer-clock');
+                if (clock) clock.innerText = formatted;
+                const localClock = document.getElementById('chrono-view-clock');
+                if (localClock) localClock.innerText = formatted;
+            }
+        };
+
+        const AuditEngine = {
+            log: (type, text) => {
+                const now = new Date();
+                State.activityFeed.unshift({
+                    id: 'act_' + Date.now(),
+                    type,
+                    text,
+                    timestamp: now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }),
+                    isoDate: now.toISOString()
+                });
+                if (State.activityFeed.length > 80) State.activityFeed.pop();
+            }
+        };
+
+        const HeatmapEngine = {
+            render: (containerId, daysCount = 112) => {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+
+                const dayMap = {};
+                const now = new Date();
+
+                (State.timeLogs || []).forEach(l => {
+                    const key = (l.isoDate || '').slice(0, 10);
+                    if (key) dayMap[key] = (dayMap[key] || 0) + 1;
+                });
+                (State.workouts || []).forEach(w => {
+                    const key = (w.isoDate || '').slice(0, 10);
+                    if (key) dayMap[key] = (dayMap[key] || 0) + 2;
+                });
+                (State.activityFeed || []).forEach(a => {
+                    const key = (a.isoDate || '').slice(0, 10);
+                    if (key) dayMap[key] = (dayMap[key] || 0) + 1;
+                });
+
+                let cellsHtml = '';
+                for (let i = daysCount - 1; i >= 0; i--) {
+                    const d = new Date(now);
+                    d.setDate(d.getDate() - i);
+                    const key = d.toISOString().slice(0, 10);
+                    const count = dayMap[key] || 0;
+
+                    let level = 0;
+                    if (count >= 7) level = 4;
+                    else if (count >= 4) level = 3;
+                    else if (count >= 2) level = 2;
+                    else if (count >= 1) level = 1;
+
+                    cellsHtml += `<div class="heatmap-cell" data-level="${level}" title="${key}: ${count} operational actions"></div>`;
+                }
+
+                container.innerHTML = `
+                    <div class="heatmap-container">
+                        <div class="heatmap-grid">${cellsHtml}</div>
+                        <div class="flex justify-between items-center text-muted" style="font-size:0.7rem; margin-top:4px;">
+                            <span>16 Weeks of Telemetry</span>
+                            <div class="flex items-center gap-1">
+                                <span>Less</span>
+                                <div class="heatmap-cell" data-level="0" style="display:inline-block;"></div>
+                                <div class="heatmap-cell" data-level="1" style="display:inline-block;"></div>
+                                <div class="heatmap-cell" data-level="2" style="display:inline-block;"></div>
+                                <div class="heatmap-cell" data-level="3" style="display:inline-block;"></div>
+                                <div class="heatmap-cell" data-level="4" style="display:inline-block;"></div>
+                                <span>More</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        const RetroEngine = {
+            open: () => {
+                const now = new Date();
+                const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+                const weekLogs = (State.timeLogs || []).filter(l => new Date(l.isoDate || 0) >= sevenDaysAgo);
+                const totalFocusMins = weekLogs.reduce((a, b) => a + b.duration, 0);
+                const deepFocusMins = weekLogs.filter(l => l.category === 'Deep Work').reduce((a, b) => a + b.duration, 0);
+                const deepRatio = totalFocusMins > 0 ? Math.round((deepFocusMins / totalFocusMins) * 100) : 0;
+
+                const weekWorkouts = (State.workouts || []).filter(w => new Date(w.isoDate || 0) >= sevenDaysAgo);
+                const totalTrainingMins = weekWorkouts.reduce((a, b) => a + b.duration, 0);
+                const avgRPE = weekWorkouts.length > 0 
+                    ? (weekWorkouts.reduce((a, b) => a + b.rpe, 0) / weekWorkouts.length).toFixed(1) 
+                    : '0.0';
+
+                const completedTasks = State.tasks.filter(t => t.status === 'done').length;
+                const completedStories = (State.stories || []).filter(s => s.state === 'done');
+                const deliveredStoryPts = completedStories.reduce((a, b) => a + b.points, 0);
+
+                const weekTxs = (State.finances.transactions || []).filter(t => {
+                    const parsed = new Date(t.date + ', ' + now.getFullYear());
+                    return isNaN(parsed) || parsed >= sevenDaysAgo;
+                });
+                const weekSpent = weekTxs.filter(t => t.category !== 'Income').reduce((a, b) => a + b.amount, 0);
+                const weekEarned = weekTxs.filter(t => t.category === 'Income').reduce((a, b) => a + b.amount, 0);
+
+                let score = 40;
+                if (totalFocusMins >= 360) score += 20;
+                if (weekWorkouts.length >= 3) score += 20;
+                if (deliveredStoryPts >= 5 || completedTasks >= 3) score += 20;
+                score = Math.min(score, 100);
+
+                const container = document.getElementById('retro-content');
+                container.innerHTML = `
+                    <div style="background:var(--md-sys-color-surface-container); padding:16px 20px; border-radius:var(--radius-md); margin-bottom:16px; border:1px solid var(--md-sys-color-outline-variant);">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-muted" style="text-transform:uppercase; font-size:0.6875rem; font-weight:600; letter-spacing:0.06em;">Composite Performance Rating</span>
+                                <h2 style="font-weight:600; color:var(--md-sys-color-primary); margin-top:2px;">${score}% Operational Velocity</h2>
+                            </div>
+                            <span class="pill ${score >= 80 ? 'low' : score >= 60 ? 'info' : 'med'}" style="font-size:0.8rem; padding:4px 12px;">
+                                ${score >= 80 ? 'Optimal Sprint' : score >= 60 ? 'Stable Output' : 'Restock Required'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; margin-bottom:16px;">
+                        <div class="stat-card">
+                            <span class="text-muted">Total Deep Focus</span>
+                            <h3 style="margin-top:4px; font-weight:600;">${(totalFocusMins / 60).toFixed(1)} hrs <span class="text-muted" style="font-size:0.75rem;">(${deepRatio}% Deep)</span></h3>
+                        </div>
+                        <div class="stat-card">
+                            <span class="text-muted">Kinetic Volume</span>
+                            <h3 style="margin-top:4px; font-weight:600;">${weekWorkouts.length} bouts <span class="text-muted" style="font-size:0.75rem;">(${totalTrainingMins}m, RPE ${avgRPE})</span></h3>
+                        </div>
+                        <div class="stat-card">
+                            <span class="text-muted">Agile Velocity</span>
+                            <h3 style="margin-top:4px; font-weight:600;">${deliveredStoryPts} pts <span class="text-muted" style="font-size:0.75rem;">(${completedTasks} tasks done)</span></h3>
+                        </div>
+                        <div class="stat-card">
+                            <span class="text-muted">Net Outflows</span>
+                            <h3 style="margin-top:4px; font-weight:600; color:${weekSpent > weekEarned ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-success)'};">
+                                ${FinanceEngine.format(weekSpent)}
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 btn-group-responsive">
+                        <button class="primary" style="flex:1;" data-action="retro-copy" data-score="${score}" data-focus-hours="${(Number(totalFocusMins) / 60).toFixed(1)}" data-workout-count="${weekWorkouts.length}" data-story-points="${Number(deliveredStoryPts)}">
+                            <span class="material-symbols-outlined">content_copy</span> Copy Markdown Debrief
+                        </button>
+                        <button style="flex:1;" onclick="UI.closeModals()">Close</button>
+                    </div>
+                `;
+                UI.openModal('retro-modal');
+            },
+
+            copySummary: (score, focusHrs, workoutCount, pts) => {
+                const md = `### Aether OS Weekly Executive Debrief\n- **Operational Score:** ${score}%\n- **Focus Time:** ${focusHrs} hours\n- **Workouts Executed:** ${workoutCount} sessions\n- **Story Points Delivered:** ${pts} pts\n- **Generated On:** ${new Date().toLocaleDateString()}`;
+                navigator.clipboard.writeText(md).then(() => {
+                    Toast.show('Debrief markdown copied to clipboard!', 'success');
+                });
+            }
+        };
+
+        const WorkoutEngine = {
+            addWorkout: () => {
+                const title = document.getElementById('wo-title').value.trim();
+                const type = document.getElementById('wo-type').value;
+                const duration = parseInt(document.getElementById('wo-duration').value) || 45;
+                const rpe = parseInt(document.getElementById('wo-rpe').value) || 8;
+                const notes = document.getElementById('wo-notes').value.trim();
+                if (!title) return;
+
+                const now = new Date();
+                State.workouts.unshift({
+                    id: 'wo_' + Date.now(),
+                    title, type, duration, rpe, notes,
+                    date: now.toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    isoDate: now.toISOString()
+                });
+
+                Data.addXP(100);
+                Haptics.taskDone();
+                AuditEngine.log('workout', `Logged: "${title}" (${duration}m, RPE ${rpe})`);
+                Data.save();
+                UI.closeModals();
+                Toast.show('Workout Committed! +100 XP', 'success');
+                App.refreshCurrentView();
+                document.getElementById('wo-title').value = '';
+                document.getElementById('wo-notes').value = '';
+            },
+            quickPreset: (title, type, duration, rpe) => {
+                document.getElementById('wo-title').value = title;
+                document.getElementById('wo-type').value = type;
+                document.getElementById('wo-duration').value = duration;
+                document.getElementById('wo-rpe').value = rpe;
+                document.getElementById('wo-rpe-val').innerText = rpe;
+                UI.openModal('workout-modal');
+            },
+            deleteWorkout: (id) => {
+                State.workouts = State.workouts.filter(w => w.id !== id);
+                Data.save();
+                Toast.show('Workout deleted');
+                App.refreshCurrentView();
+            }
+        };
+
+        const WorkStoryEngine = {
+            addStory: () => {
+                const title = document.getElementById('story-title').value.trim();
+                const epic = document.getElementById('story-epic').value.trim() || 'General';
+                const points = parseInt(document.getElementById('story-points').value) || 3;
+                const acRaw = document.getElementById('story-ac').value.trim();
+                if (!title) return;
+
+                const ac = acRaw ? acRaw.split('\n').filter(Boolean).map((t, idx) => ({ id: 'ac_' + idx, text: t.trim(), done: false })) : [];
+                State.stories.unshift({ id: 'st_' + Date.now(), title, epic, points, state: 'sprint', ac });
+                AuditEngine.log('story', `Created Story: "${title}" (${points} pts)`);
+                Data.addXP(50);
+                Data.save();
+                UI.closeModals();
+                Toast.show('Story created (+50 XP)', 'success');
+                App.refreshCurrentView();
+                document.getElementById('story-title').value = '';
+                document.getElementById('story-epic').value = '';
+                document.getElementById('story-ac').value = '';
+            },
+            toggleAC: (storyId, acId) => {
+                const story = State.stories.find(s => s.id === storyId);
+                if (!story) return;
+                const crit = story.ac.find(c => c.id === acId);
+                if (crit) {
+                    crit.done = !crit.done;
+                    Data.addXP(crit.done ? 15 : -15);
+                    Haptics.tap();
+                    Data.save();
+                    App.refreshCurrentView();
+                }
+            },
+            moveState: (storyId, state) => {
+                const story = State.stories.find(s => s.id === storyId);
+                if (!story) return;
+                story.state = state;
+                if (state === 'done') {
+                    Data.addXP(story.points * 25);
+                    Haptics.taskDone();
+                    Toast.show(`Story completed! (+${story.points * 25} XP)`, 'success');
+                }
+                Data.save();
+                App.refreshCurrentView();
+            },
+            promoteToTask: (storyId) => {
+                const story = State.stories.find(s => s.id === storyId);
+                if (!story) return;
+                State.tasks.push({
+                    id: 'tsk_' + Date.now(),
+                    title: `[Story] ${story.title}`,
+                    desc: `Epic: ${story.epic} (${story.points} pts)`,
+                    status: 'todo',
+                    priority: story.points >= 5 ? 'high' : 'med',
+                    timeSpent: 0,
+                    subtasks: story.ac.map(a => ({ id: 's_' + Math.random(), title: a.text, done: a.done }))
+                });
+                AuditEngine.log('task', `Promoted story "${story.title}" into Kanban`);
+                Data.save();
+                Toast.show('Promoted to Kanban', 'success');
+                App.router('projects');
+            }
+        };
+
+        const PathwaysEngine = {
+            getActiveSuggestion: () => {
+                for (let pw of State.pathways) {
+                    const nextStep = pw.steps.find(s => !s.done);
+                    if (nextStep) return { pathway: pw, step: nextStep };
+                }
+                return null;
+            },
+            execute: (pwId, sId) => {
+                const pw = State.pathways.find(p => p.id === pwId);
+                if (!pw) return;
+                const step = pw.steps.find(s => s.id === sId);
+                if (!step) return;
+
+                if (step.activityType === 'workout') UI.openModal('workout-modal');
+                else if (step.activityType === 'task') {
+                    State.tasks.push({
+                        id: 'tsk_' + Date.now(),
+                        title: `[${pw.title}] ${step.title}`,
+                        desc: `Generated from Pathway milestone`,
+                        status: 'todo',
+                        priority: 'high',
+                        timeSpent: 0,
+                        subtasks: []
+                    });
+                    Data.addXP(30);
+                    Data.save();
+                    Toast.show('Task added to Kanban', 'success');
+                    App.router('projects');
+                } else if (step.activityType === 'time') App.router('timeview');
+                else if (step.activityType === 'story') App.router('stories');
+                else if (step.activityType === 'note') UI.openModal('note-modal');
+                else App.router('finance');
+            }
+        };
+
+        const FinanceEngine = {
+            getSymbol: () => {
+                switch(State.currency) {
+                    case 'INR': return '₹';
+                    case 'EUR': return '€';
+                    case 'GBP': return '£';
+                    default: return '$';
+                }
+            },
+            format: (v) => `${FinanceEngine.getSymbol()}${Number(v || 0).toLocaleString()}`,
+            setCurrency: (c) => {
+                State.currency = c;
+                Data.save();
+                App.refreshCurrentView();
+            },
+            addTransaction: () => {
+                const desc = document.getElementById('tx-desc').value.trim();
+                const amt = parseFloat(document.getElementById('tx-amount').value) || 0;
+                const cat = document.getElementById('tx-category').value;
+                if (!desc || amt <= 0) return;
+
+                const now = new Date();
+                State.finances.transactions.unshift({
+                    id: 'tx_' + Date.now(),
+                    desc, amount: amt, category: cat,
+                    date: now.toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                    isoDate: now.toISOString()
+                });
+
+                Data.addXP(10);
+                Haptics.tap();
+                Data.save();
+                UI.closeModals();
+                Toast.show(`Recorded (${FinanceEngine.format(amt)})`, 'success');
+                App.refreshCurrentView();
+                document.getElementById('tx-desc').value = '';
+                document.getElementById('tx-amount').value = '';
+            },
+            deleteTx: (id) => {
+                State.finances.transactions = State.finances.transactions.filter(t => t.id !== id);
+                Data.save();
+                Toast.show('Transaction deleted');
+                App.refreshCurrentView();
+            },
+            updateProjections: () => {
+                const inc = parseFloat(document.getElementById('cfg-income').value) || 0;
+                const rate = parseFloat(document.getElementById('cfg-rate').value) || 0;
+                State.finances.monthlyIncome = inc;
+                State.finances.targetSavingsRate = rate;
+                const monthly = (inc * rate) / 100;
+                const rEl = document.getElementById('disp-rate');
+                if (rEl) rEl.innerText = `${rate}%`;
+                const y1 = document.getElementById('disp-1yr');
+                if (y1) y1.innerText = FinanceEngine.format(monthly * 12);
+                const y3 = document.getElementById('disp-3yr');
+                if (y3) y3.innerText = FinanceEngine.format(monthly * 36 * 1.08);
+                const y5 = document.getElementById('disp-5yr');
+                if (y5) y5.innerText = FinanceEngine.format(monthly * 60 * 1.14);
+                Data.save();
+            }
+        };
+
+        const SnapshotEngine = {
+            createSnapshot: async () => {
+                const snap = {
+                    id: 'snap_' + Date.now(),
+                    label: `Checkpoint #${Snapshots.length + 1} (${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})})`,
+                    timestamp: new Date().toISOString(),
+                    state: JSON.parse(JSON.stringify(State))
+                };
+                Snapshots.unshift(snap);
+                if (Snapshots.length > MAX_SNAPSHOTS) Snapshots.pop();
+
+                const encrypted = await WebCrypto.encrypt(Snapshots, masterPassphrase);
+                await StorageEngine.set(SNAP_KEY, encrypted);
+                AuditEngine.log('snapshot', `Snapshot saved: ${snap.label}`);
+                Data.save();
+                Toast.show(`Checkpoint #${Snapshots.length} created!`, 'success');
+                App.refreshCurrentView();
+            },
+            compareDiff: (snapshotIndex) => {
+                const snap = Snapshots[snapshotIndex];
+                if (!snap) return;
+                const taskDiff = State.tasks.length - snap.state.tasks.length;
+                const woDiff = (State.workouts || []).length - (snap.state.workouts || []).length;
+                const txDiff = State.finances.transactions.length - (snap.state.finances?.transactions?.length || 0);
+
+                const container = document.getElementById('diff-content');
+                container.innerHTML = `
+                    <div style="background:var(--md-sys-color-surface-container); padding:16px; border-radius:var(--radius-md);">
+                        <h4 style="font-weight:600;">${esc(snap.label)}</h4>
+                        <span class="text-muted">Recorded ${new Date(snap.timestamp).toLocaleString()}</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;">
+                        <div class="stat-card" style="text-align:center;"><span class="text-muted">Tasks Delta</span><h3 style="margin-top:4px;">${taskDiff >= 0 ? `+${taskDiff}` : taskDiff}</h3></div>
+                        <div class="stat-card" style="text-align:center;"><span class="text-muted">Workouts</span><h3 style="margin-top:4px;">${woDiff >= 0 ? `+${woDiff}` : woDiff}</h3></div>
+                        <div class="stat-card" style="text-align:center;"><span class="text-muted">Ledger Delta</span><h3 style="margin-top:4px;">${txDiff >= 0 ? `+${txDiff}` : txDiff}</h3></div>
+                    </div>
+                    <div class="flex gap-2 btn-group-responsive" style="margin-top:16px;">
+                        <button class="primary" style="flex:1;" data-action="snapshot-restore" data-snapshot-index="${snapshotIndex}">Rollback to Checkpoint</button>
+                        <button style="flex:1;" onclick="UI.closeModals()">Close</button>
+                    </div>
+                `;
+                UI.openModal('diff-modal');
+            },
+            restore: (snapshotIndex) => {
+                const snap = Snapshots[snapshotIndex];
+                if (!snap) return;
+                UI.confirm('Rollback to Checkpoint', `Revert entire system to "${snap.label}"? All newer changes will be replaced.`, () => {
+                    try {
+                        State = normalizeWorkspaceState(snap.state);
+                    } catch (error) {
+                        console.error('Unable to restore malformed checkpoint data:', error);
+                        Toast.show('This checkpoint contains invalid workspace data.', 'error');
+                        return;
+                    }
+                    AuditEngine.log('snapshot', `Reverted state to ${snap.label}`);
+                    Data.save();
+                    UI.closeModals();
+                    Toast.show('State rolled back successfully', 'success');
+                    App.refreshCurrentView();
+                });
+            }
+        };
+
+        const Data = {
+            save: async () => {
+                try {
+                    if (masterPassphrase) {
+                        const encrypted = await WebCrypto.encrypt(State, masterPassphrase);
+                        await StorageEngine.set(DB_KEY, encrypted);
+                    }
+                    UI.updateGamification();
+                    StorageEngine.checkBackupStatus();
+                } catch (error) {
+                    console.error('Unable to save encrypted vault data:', error);
+                    Toast.show('Unable to save encrypted data on this device.', 'error');
+                    return false;
+                }
+                return true;
+            },
+            load: async () => {
+                const enc = await StorageEngine.get(DB_KEY);
+                if (!enc) return false;
+                try {
+                    State = normalizeWorkspaceState(await WebCrypto.decrypt(enc, masterPassphrase));
+                    if (!WebCrypto.isCurrentEnvelope(enc)) {
+                        await StorageEngine.set(DB_KEY, await WebCrypto.encrypt(State, masterPassphrase));
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('Unable to load or decrypt the local vault:', error);
+                    return false;
+                }
+            },
+            addTask: () => {
+                const title = document.getElementById('task-title').value.trim();
+                if (!title) return;
+                State.tasks.push({
+                    id: 'tsk_' + Date.now(),
+                    title,
+                    desc: document.getElementById('task-desc').value.trim(),
+                    status: document.getElementById('task-status').value,
+                    priority: document.getElementById('task-priority').value,
+                    timeSpent: 0,
+                    subtasks: []
+                });
+                AuditEngine.log('task', `Captured task: "${title}"`);
+                Data.addXP(25);
+                Haptics.tap();
+                Data.save();
+                UI.closeModals();
+                Toast.show('Task added (+25 XP)', 'success');
+                App.refreshCurrentView();
+                document.getElementById('task-title').value = '';
+                document.getElementById('task-desc').value = '';
+            },
+            quickAddTask: (status, inputEl) => {
+                const title = inputEl.value.trim();
+                if (!title) return;
+                State.tasks.push({
+                    id: 'tsk_' + Date.now(),
+                    title, desc: '', status, priority: 'med', timeSpent: 0, subtasks: []
+                });
+                inputEl.value = '';
+                Data.addXP(25);
+                Haptics.tap();
+                Data.save();
+                Toast.show('Task captured (+25 XP)', 'success');
+                App.refreshCurrentView();
+            },
+            moveTaskStep: (id, direction) => {
+                const order = ['inbox', 'todo', 'in_progress', 'done'];
+                const task = State.tasks.find(t => t.id === id);
+                if (!task) return;
+                const currIdx = order.indexOf(task.status);
+                const targetIdx = currIdx + direction;
+                if (targetIdx >= 0 && targetIdx < order.length) {
+                    task.status = order[targetIdx];
+                    if (task.status === 'done') {
+                        Data.addXP(80);
+                        Haptics.taskDone();
+                    } else Haptics.tap();
+                    Data.save();
+                    App.refreshCurrentView();
+                }
+            },
+            updateTaskStatus: (id, st) => {
+                const task = State.tasks.find(t => t.id === id);
+                if (task) {
+                    if (st === 'done' && task.status !== 'done') {
+                        Data.addXP(80);
+                        Haptics.taskDone();
+                    } else {
+                        Haptics.dragDrop();
+                    }
+                    task.status = st;
+                    Data.save();
+                }
+            },
+            saveNote: () => {
+                const title = document.getElementById('note-title').value.trim();
+                const content = document.getElementById('note-content').value.trim();
+                const tags = document.getElementById('note-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+                if (!title) return;
+
+                State.notes.unshift({ id: 'note_' + Date.now(), title, content, tags, date: new Date().toISOString() });
+                Data.addXP(35);
+                Haptics.tap();
+                Data.save();
+                UI.closeModals();
+                Toast.show('Note archived (+35 XP)', 'success');
+                App.refreshCurrentView();
+            },
+            toggleStep: (pwId, sId) => {
+                const pw = State.pathways.find(p => p.id === pwId);
+                if (!pw) return;
+                const step = pw.steps.find(s => s.id === sId);
+                if (step) {
+                    step.done = !step.done;
+                    Data.addXP(step.done ? 50 : -50);
+                    if (step.done) Haptics.taskDone();
+                    else Haptics.tap();
+                    Data.save();
+                    Toast.show(step.done ? 'Milestone cleared (+50 XP)' : 'Milestone reopened', 'success');
+                    App.refreshCurrentView();
+                }
+            },
+            addXP: (amount) => {
+                State.user.xp += amount;
+                if (State.user.xp < 0) State.user.xp = 0;
+                const next = State.user.level * 1000;
+                if (State.user.xp >= next) {
+                    State.user.level++;
+                    State.user.xp -= next;
+                    Haptics.timerComplete();
+                    Toast.show(`Level Up! You reached Level ${State.user.level}`, 'success');
+                }
+                UI.updateGamification();
+            }
+        };
+
+        const Views = {
+            projects: () => {
+                const cols = [
+                    { id: 'inbox', name: 'Inbox (Triage)' },
+                    { id: 'todo', name: 'To Do (Active)' },
+                    { id: 'in_progress', name: 'In Progress' },
+                    { id: 'done', name: 'Completed' }
+                ];
+                return `
+                    <div class="flex justify-between items-center" style="margin-bottom: 16px;">
+                        <div>
+                            <h2>Project Kanban Pipeline</h2>
+                            <p class="text-muted">Touch-friendly board with inspector drawer and mobile segmented tabs.</p>
+                        </div>
+                        <button class="primary sm" onclick="UI.openModal('task-modal')">
+                            <span class="material-symbols-outlined" style="font-size:18px;">add</span> Add Task
+                        </button>
+                    </div>
+
+                    <div class="kanban-mobile-tabs" id="kanban-mobile-tabs">
+                        ${cols.map((col, idx) => `
+                            <button class="chip sm ${idx === 0 ? 'active' : ''}" data-col="${col.id}" onclick="Views.switchMobileCol('${col.id}')">
+                                ${esc(col.name.split(' ')[0])} (${State.tasks.filter(t => t.status === col.id).length})
+                            </button>
+                        `).join('')}
+                    </div>
+
+                    <div class="kanban-board" id="kanban-board-container">
+                        ${cols.map((col, idx) => {
+                            const tasks = State.tasks.filter(t => t.status === col.id);
+                            return `
+                                <div class="kanban-col ${idx === 0 ? 'active-mobile-col' : ''}" id="col-${col.id}">
+                                    <div class="kanban-header">
+                                        <span>${esc(col.name)}</span>
+                                        <span class="pill info">${tasks.length}</span>
+                                    </div>
+                                    <div class="fast-input-box">
+                                        <input type="text" placeholder="+ Quick Add (Enter)" onkeydown="if(event.key==='Enter') Data.quickAddTask('${col.id}', this)">
+                                    </div>
+                                    <div class="kanban-tasks" id="board-${col.id}" data-status="${col.id}">
+                                        ${tasks.map(t => `
+                                            <div class="task-card" draggable="true" data-task-index="${State.tasks.indexOf(t)}">
+                                                <div class="drag-handle">
+                                                    <span>⋮⋮ DRAG</span>
+                                                    <div class="flex items-center gap-1">
+                                                        ${t.timeSpent ? `<span class="pill info" style="font-size:0.68rem;"><span class="material-symbols-outlined" style="font-size:11px;">timer</span> ${esc(t.timeSpent)}m</span>` : ''}
+                                                        <span class="pill ${['low', 'med', 'high'].includes(t.priority) ? t.priority : 'low'}">${esc(t.priority)}</span>
+                                                    </div>
+                                                </div>
+                                                <div style="font-weight: 500;">${esc(t.title)}</div>
+                                                ${t.desc ? `<div class="text-muted" style="margin-top:4px; font-size:0.75rem;">${esc(t.desc.substring(0,40))}...</div>` : ''}
+                                                
+                                                <div class="task-card-actions flex justify-between items-center" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--md-sys-color-outline-variant);">
+                                                    <button class="sm tonal" style="padding: 2px 8px; font-size:0.7rem; min-height:24px;" data-task-action="focus">
+                                                        <span class="material-symbols-outlined" style="font-size:14px;">play_arrow</span> Focus
+                                                    </button>
+                                                    <div class="flex gap-1">
+                                                        <button class="sm" title="Move Left" data-task-action="move-left">←</button>
+                                                        <button class="sm" title="Move Right" data-task-action="move-right">→</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            },
+            switchMobileCol: (colId) => {
+                Haptics.tap();
+                document.querySelectorAll('.kanban-mobile-tabs .chip').forEach(c => {
+                    c.classList.toggle('active', c.dataset.col === colId);
+                });
+                document.querySelectorAll('.kanban-col').forEach(c => {
+                    c.classList.toggle('active-mobile-col', c.id === `col-${colId}`);
+                });
+            },
+            workout: () => {
+                const list = State.workouts || [];
+                const totalMinutes = list.reduce((a, b) => a + (b.duration || 0), 0);
+                const avgRPE = list.length > 0 ? (list.reduce((a, b) => a + (b.rpe || 0), 0) / list.length).toFixed(1) : '0.0';
+                return `
+                    <div class="flex justify-between items-center" style="margin-bottom: 24px;">
+                        <div>
+                            <h2>Kinetic Performance Lab</h2>
+                            <p class="text-muted">Biomechanical volume tracking. Not medical or therapy advice.</p>
+                        </div>
+                        <button class="primary sm" onclick="UI.openModal('workout-modal')">
+                            <span class="material-symbols-outlined" style="font-size:18px;">add</span> Log Session
+                        </button>
+                    </div>
+
+                    <div class="card" style="margin-bottom: 20px; padding: 16px 20px;">
+                        <span class="text-muted" style="text-transform:uppercase; font-size:0.6875rem; font-weight:600; letter-spacing:0.06em;">Presets</span>
+                        <div class="flex gap-2" style="flex-wrap: wrap; margin-top: 10px;">
+                            <button class="chip active" onclick="WorkoutEngine.quickPreset('Push Protocol (Hypertrophy)', 'Strength', 50, 8)">
+                                <span class="material-symbols-outlined">bolt</span> Hypertrophy Push (50m)
+                            </button>
+                            <button class="chip" onclick="WorkoutEngine.quickPreset('Posterior Chain (Deadlifts & Pull)', 'Strength', 60, 9)">
+                                <span class="material-symbols-outlined">fitness_center</span> Pull & Deadlift (60m)
+                            </button>
+                            <button class="chip" onclick="WorkoutEngine.quickPreset('Zone 2 Aerobic Base Run', 'Cardio', 45, 6)">
+                                <span class="material-symbols-outlined">directions_run</span> Zone 2 Cardio (45m)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="stat-grid">
+                        <div class="stat-card"><span class="text-muted">Completed Sessions</span><h3 style="margin-top:6px; font-weight:600; color:var(--md-sys-color-primary);">${list.length}</h3></div>
+                        <div class="stat-card"><span class="text-muted">Total Time Under Tension</span><h3 style="margin-top:6px; font-weight:600;">${(totalMinutes / 60).toFixed(1)} hrs</h3></div>
+                        <div class="stat-card"><span class="text-muted">Average Strain (RPE)</span><h3 style="margin-top:6px; font-weight:600; color:var(--md-sys-color-warning);">${avgRPE} / 10</h3></div>
+                        <div class="stat-card"><span class="text-muted">Kinetic XP Earned</span><h3 style="margin-top:6px; font-weight:600; color:var(--md-sys-color-success);">+${list.length * 100}</h3></div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+                        <div class="card">
+                            <div class="card-header"><h3 style="font-size: 1rem; font-weight:600;">Modality Distribution</h3><span class="pill info">Live Analytics</span></div>
+                            <div class="chart-wrapper">
+                                <canvas id="workout-chart" aria-label="Workout time by activity type"></canvas>
+                                <div id="workout-chart-legend" class="chart-legend"></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3 style="font-size: 1rem; font-weight:600;">Session History</h3><span class="text-muted">${list.length} logs</span></div>
+                            <div class="flex-col gap-2" style="max-height: 290px; overflow-y: auto;">
+                                ${list.map(w => `
+                                    <div class="flex justify-between items-center" style="background:var(--md-sys-color-surface-container); padding:12px 14px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
+                                        <div>
+                                            <div style="font-weight:600; font-size:0.875rem;">${esc(w.title)}</div>
+                                            <div class="text-muted" style="margin-top:2px;"><span class="pill info">${esc(w.type)}</span> • ${esc(w.duration)}m • RPE ${esc(w.rpe)}/10 • ${esc(w.date)}</div>
+                                            ${w.notes ? `<div class="text-muted" style="margin-top:4px; font-style:italic;">"${esc(w.notes)}"</div>` : ''}
+                                        </div>
+                                        <button class="sm danger icon-btn" data-action="workout-delete" data-workout-index="${State.workouts.indexOf(w)}"><span class="material-symbols-outlined" style="font-size:16px;">delete</span></button>
+                                    </div>
+                                `).join('') || '<div class="text-muted" style="text-align:center; padding:32px 0;">No sessions recorded yet.</div>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            timeview: () => {
+                const logs = State.timeLogs || [];
+                const totalMins = logs.reduce((a,b)=>a+b.duration, 0);
+                const categories = ['Deep Work', 'Workout', 'Architecture', 'Meetings', 'Code Review', 'Research', 'Operations'];
+                return `
+                    <div class="flex justify-between items-center" style="margin-bottom: 24px;">
+                        <div>
+                            <h2>Chrono Engine & Telemetry</h2>
+                            <p class="text-muted">Drift-free epoch delta stopwatch backed by background Web Worker ticks.</p>
+                        </div>
+                    </div>
+                    <div class="chrono-hero">
+                        <div class="flex justify-between items-center">
+                            <span class="pill ${ChronoEngine.isRunning ? 'high' : 'info'}">${ChronoEngine.isRunning ? 'Stopwatch Running' : 'Ready'}</span>
+                            <span class="text-muted">
+                                ${ChronoEngine.boundTaskTitle ? `Task: <strong>${esc(ChronoEngine.boundTaskTitle)}</strong>` : `Category: <strong>${esc(ChronoEngine.activeCategory)}</strong>`}
+                            </span>
+                        </div>
+                        <div class="chrono-clock-display text-mono" id="chrono-view-clock">${ChronoEngine.formatTime(ChronoEngine.seconds)}</div>
+                        <div class="flex gap-2" style="flex-wrap: wrap; margin-bottom: 20px;">
+                            ${categories.map(c => `
+                                <button type="button" class="chip ${(!ChronoEngine.boundTaskId && ChronoEngine.activeCategory === c) ? 'active' : ''}" data-cat="${esc(c)}" onclick="ChronoEngine.setCategory('${esc(c)}')">${esc(c)}</button>
+                            `).join('')}
+                        </div>
+                        <div class="flex gap-2 btn-group-responsive" id="chrono-actions-row">
+                            <button class="${ChronoEngine.isRunning ? 'danger' : 'primary'}" onclick="ChronoEngine.toggle()">
+                                <span class="material-symbols-outlined">${ChronoEngine.isRunning ? 'pause' : 'play_arrow'}</span>
+                                ${ChronoEngine.isRunning ? 'Pause Timer' : 'Start Stopwatch'}
+                            </button>
+                            <button class="tonal" onclick="ChronoEngine.stopAndLog()"><span class="material-symbols-outlined">save</span> Commit Session</button>
+                            <button onclick="ChronoEngine.reset()"><span class="material-symbols-outlined">restart_alt</span> Reset</button>
+                        </div>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-card"><span class="text-muted">Total Time Logged</span><h3 style="margin-top:6px; font-weight:600;">${(totalMins / 60).toFixed(1)} hrs</h3></div>
+                        <div class="stat-card"><span class="text-muted">Sessions Executed</span><h3 style="margin-top:6px; font-weight:600;">${logs.length}</h3></div>
+                        <div class="stat-card"><span class="text-muted">Focus XP Built</span><h3 style="margin-top:6px; font-weight:600; color:var(--md-sys-color-success);">+${totalMins * 2}</h3></div>
+                    </div>
+                `;
+            },
+            pathways: () => {
+                const active = PathwaysEngine.getActiveSuggestion();
+                const activePathwayIndex = active ? State.pathways.indexOf(active.pathway) : -1;
+                const activeStepIndex = active ? active.pathway.steps.indexOf(active.step) : -1;
+                return `
+                    <div class="flex justify-between items-center" style="margin-bottom: 24px;">
+                        <div>
+                            <h2>Guided Execution Pathways</h2>
+                            <p class="text-muted">Strategic roadmaps across biomechanical vitality, technical throughput, and runway.</p>
+                        </div>
+                    </div>
+                    ${active ? `
+                        <div class="chrono-hero" style="margin-bottom: 24px;">
+                            <span class="pill low">Active Strategic Objective</span>
+                            <h3 style="margin: 8px 0; font-size: 1.3rem; font-weight: 600;">${esc(active.step.title)}</h3>
+                            <div class="flex gap-2 btn-group-responsive" style="margin-top:12px;">
+                                <button class="primary" data-action="pathway-execute" data-pathway-index="${activePathwayIndex}" data-step-index="${activeStepIndex}">
+                                    <span class="material-symbols-outlined">bolt</span> Execute (${esc(active.step.actionLabel)})
+                                </button>
+                                <button class="tonal" data-action="pathway-toggle" data-pathway-index="${activePathwayIndex}" data-step-index="${activeStepIndex}">
+                                    <span class="material-symbols-outlined">check</span> Clear Milestone (+50 XP)
+                                </button>
+                            </div>
+                        </div>
+                    ` : ''}
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+                        ${State.pathways.map((pw, pathwayIndex) => `
+                            <div class="card">
+                                <div class="card-header"><h3 style="font-size: 1rem; font-weight:600;">${esc(pw.title)}</h3></div>
+                                <div class="flex-col gap-2">
+                                    ${pw.steps.map((s, stepIndex) => `
+                                        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--md-sys-color-surface-container); padding:10px 14px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
+                                            <label class="flex items-center gap-2" style="font-size:0.84rem; cursor:pointer; flex:1;">
+                                                <input type="checkbox" ${s.done ? 'checked' : ''} data-action="pathway-toggle" data-pathway-index="${pathwayIndex}" data-step-index="${stepIndex}">
+                                                <span style="${s.done ? 'text-decoration:line-through; opacity:0.6;' : ''}">${esc(s.title)}</span>
+                                            </label>
+                                            ${!s.done ? `<button class="sm primary" data-action="pathway-execute" data-pathway-index="${pathwayIndex}" data-step-index="${stepIndex}">${esc(s.actionLabel)}</button>` : `<span style="font-size:0.75rem; color:var(--md-sys-color-success); font-weight:600;">Done</span>`}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            },
+            stories: () => {
+                const stories = State.stories || [];
+                return `
+                    <div class="flex justify-between items-center" style="margin-bottom: 24px;">
+                        <div>
+                            <h2>Work Stories & Epics</h2>
+                            <p class="text-muted">Fibonacci estimation and acceptance criteria verification.</p>
+                        </div>
+                        <button class="primary sm" onclick="UI.openModal('story-modal')"><span class="material-symbols-outlined">add</span> New Story</button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                        ${['sprint', 'review', 'done'].map(col => `
+                            <div class="kanban-col" style="width:100%; display:flex;">
+                                <div class="kanban-header"><span style="text-transform:uppercase;">${esc(col)}</span></div>
+                                <div class="kanban-tasks">
+                                    ${stories.filter(s => s.state === col).map(s => `
+                                        <div class="task-card">
+                                            <div class="flex justify-between items-center" style="margin-bottom:8px;">
+                                                <span class="pill info">${esc(s.epic)}</span><span class="pill med text-mono">${esc(s.points)} PTS</span>
+                                            </div>
+                                            <div style="font-weight:600; font-size:0.875rem; margin-bottom:8px;">${esc(s.title)}</div>
+                                            <div class="flex justify-between items-center">
+                                                <select data-action="story-move" data-story-index="${stories.indexOf(s)}" style="width:auto; padding:3px 8px; font-size:0.75rem;">
+                                                    <option value="sprint" ${s.state==='sprint'?'selected':''}>Sprint</option>
+                                                    <option value="review" ${s.state==='review'?'selected':''}>Review</option>
+                                                    <option value="done" ${s.state==='done'?'selected':''}>Done</option>
+                                                </select>
+                                                <button class="sm tonal" data-action="story-promote" data-story-index="${stories.indexOf(s)}">➔ Kanban</button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            },
+            finance: () => {
+                const txs = State.finances.transactions || [];
+                return `
+                    <div class="flex justify-between items-center" style="margin-bottom: 24px;">
+                        <div>
+                            <h2>Wealth & Capital Ledger</h2>
+                            <p class="text-muted">Liquid runway heuristics and illustrative compound estimates.</p>
+                        </div>
+                        <button class="primary sm" onclick="UI.openModal('tx-modal')"><span class="material-symbols-outlined">add</span> Record Outflow</button>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-card"><span class="text-muted">Base Monthly Income</span><h3 style="color:var(--md-sys-color-success); margin-top:6px; font-weight:600;">${FinanceEngine.format(State.finances.monthlyIncome)}</h3></div>
+                        <div class="stat-card"><span class="text-muted">Logged Transactions</span><h3 style="margin-top:6px; font-weight:600;">${txs.length} entries</h3></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3 style="font-size:1rem; font-weight:600;">Financial Transactions</h3></div>
+                        <div class="flex-col gap-2" style="max-height: 280px; overflow-y: auto;">
+                            ${txs.map(t => `
+                                <div class="flex justify-between items-center" style="background:var(--md-sys-color-surface-container); padding:10px 14px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
+                                    <div><div style="font-weight:600; font-size:0.84rem;">${esc(t.desc)}</div><span class="text-muted">${esc(t.date)} • ${esc(t.category)}</span></div>
+                                    <strong style="${t.category === 'Income' ? 'color:var(--md-sys-color-success);' : 'color:var(--md-sys-color-error);'}">${FinanceEngine.format(t.amount)}</strong>
+                                </div>
+                            `).join('') || '<div class="text-muted">No transactions logged yet.</div>'}
+                        </div>
+                    </div>
+                `;
+            },
+            audit: () => `
+                <div class="flex justify-between items-center" style="margin-bottom: 24px;">
+                    <div><h2>Universal Audit Stream</h2><p class="text-muted">Immutable client-side chronological feed.</p></div>
+                </div>
+                <div class="card">
+                    <div class="flex-col gap-2">
+                        ${State.activityFeed.map(f => `
+                            <div class="flex justify-between items-center" style="background:var(--md-sys-color-surface-container); padding:10px 14px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
+                                <span><span class="pill info">${esc(f.type)}</span> ${esc(f.text)}</span>
+                                <span class="text-muted text-mono">${esc(f.timestamp)}</span>
+                            </div>
+                        `).join('') || '<div class="text-muted">No audit events captured.</div>'}
+                    </div>
+                </div>
+            `,
+            snapshots: () => `
+                <div class="flex justify-between items-center" style="margin-bottom: 24px;">
+                    <div><h2>Checkpoints & Vault Backups</h2>                    <p class="text-muted">AES-256-GCM encrypted backup bundles.</p></div>
+                    <div class="flex gap-2">
+                        <button class="sm" onclick="App.exportVault()"><span class="material-symbols-outlined">download</span> Export Backup</button>
+                        <button class="primary sm" onclick="SnapshotEngine.createSnapshot()"><span class="material-symbols-outlined">add</span> Take Checkpoint</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="flex-col gap-3">
+                        ${Snapshots.map((s, snapshotIndex) => `
+                            <div class="flex justify-between items-center" style="background:var(--md-sys-color-surface-container); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
+                                <div><strong style="font-size:0.875rem;">${esc(s.label)}</strong><div class="text-muted">Tasks: ${s.state.tasks?.length || 0}</div></div>
+                                <div class="flex gap-2">
+                                    <button class="tonal sm" data-action="snapshot-diff" data-snapshot-index="${snapshotIndex}">Diff</button>
+                                    <button class="sm" data-action="snapshot-restore" data-snapshot-index="${snapshotIndex}">Restore</button>
+                                </div>
+                            </div>
+                        `).join('') || '<div class="text-muted">No checkpoints recorded yet.</div>'}
+                    </div>
+                </div>
+            `,
+            brain: () => `
+                <div class="flex justify-between items-center" style="margin-bottom: 24px;">
+                    <div><h2>Second Brain Knowledge Base</h2><p class="text-muted">Synthesized technical architecture blueprints.</p></div>
+                    <button class="primary sm" onclick="UI.openModal('note-modal')"><span class="material-symbols-outlined">add</span> Create Note</button>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                    ${State.notes.map(n => `
+                        <div class="card">
+                            <h3 style="font-size:1rem; font-weight:600;">${esc(n.title)}</h3>
+                            <p class="text-secondary" style="margin: 8px 0 14px 0; white-space: pre-wrap; font-size:0.84rem;">${esc(n.content)}</p>
+                        </div>
+                    `).join('') || '<div class="text-muted">No notes found.</div>'}
+                </div>
+            `,
+            legal: () => `
+                <div class="flex justify-between items-center" style="margin-bottom: 24px;">
+                    <div>
+                        <h2>Privacy, Security & Use Notices</h2>
+                        <p class="text-muted">Local storage, encryption, hosting, and use information.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="danger sm" onclick="UI.confirmPurgeAllData()">
+                            <span class="material-symbols-outlined" style="font-size:18px;">delete_forever</span> Delete This Browser's App Data
+                        </button>
+                    </div>
+                </div>
+                <div class="card" style="margin-bottom: 20px;">
+                    <p class="text-muted" style="margin-bottom: 14px; font-size: 0.75rem;">
+                        Last reviewed: 4 October 2026 | Client-side encrypted storage
+                    </p>
+                    ${LegalModule.renderLegalBlocks()}
+                </div>
+            `,
+            dashboard: () => {
+                const active = State.tasks.filter(t => ['todo', 'in_progress'].includes(t.status));
+                return `
+                    <div class="flex justify-between items-center" style="margin-bottom: 24px;">
+                        <div><h2>Executive Command Center</h2><p class="text-muted">Holistic pipeline execution telemetry.</p></div>
+                        <button class="primary sm" onclick="RetroEngine.open()">
+                            <span class="material-symbols-outlined" style="font-size:18px;">analytics</span> Weekly Retrospective
+                        </button>
+                    </div>
+                    <div class="card" style="margin-bottom: 20px; padding: 18px 20px;">
+                        <div class="card-header" style="margin-bottom:12px;">
+                            <h3 style="font-size:1rem; font-weight:600;">System Execution Velocity (Activity Matrix)</h3>
+                            <span class="pill info">Daily Cadence</span>
+                        </div>
+                        <div id="dashboard-heatmap"></div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                        <div class="card">
+                            <div class="card-header"><h3 style="font-size:1rem; font-weight:600;">Active Tasks</h3><span class="pill info">${active.length}</span></div>
+                            <div class="flex-col gap-2">
+                                ${active.slice(0, 4).map(t => `
+                                    <div class="dashboard-task-card flex justify-between items-center" data-task-index="${State.tasks.indexOf(t)}" style="background:var(--md-sys-color-surface-container); padding:10px 14px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
+                                        <span style="font-weight:500; font-size:0.84rem;">${esc(t.title)}</span>
+                                        <span class="pill ${['low', 'med', 'high'].includes(t.priority) ? t.priority : 'low'}">${esc(t.priority)}</span>
+                                    </div>
+                                `).join('') || '<div class="text-muted">No active items.</div>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        const UI = {
+            openModal: (id) => { 
+                Haptics.tap(); 
+                if (id === 'legal-modal') {
+                    document.getElementById('legal-content-container').innerHTML = LegalModule.renderLegalBlocks();
+                }
+                document.getElementById(id).style.display = 'flex'; 
+            },
+            closeModals: () => { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); },
+            confirm: (title, msg, onConfirm) => {
+                const modal = document.getElementById('confirm-modal');
+                document.getElementById('confirm-title').innerText = title;
+                document.getElementById('confirm-msg').innerText = msg;
+                document.getElementById('confirm-btn-yes').onclick = () => { UI.closeModals(); onConfirm(); };
+                modal.style.display = 'flex';
+            },
+            confirmPurgeAllData: () => {
+                UI.confirm('Delete Local App Data', 'This removes the Aether vault and checkpoints stored for this site in this browser, plus the backup reminder. It does not delete exported files, browser or device backups, hosting logs, or other copies. Proceed?', async () => {
+                    await StorageEngine.purgeAllData();
+                    location.reload();
+                });
+            },
+            toggleSidebar: (force) => {
+                const sb = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                const target = typeof force === 'boolean' ? force : !sb.classList.contains('open');
+                sb.classList.toggle('open', target);
+                overlay.classList.toggle('active', target);
+            },
+            toggleTheme: () => {
+                const next = (State.theme || 'dark') === 'dark' ? 'light' : 'dark';
+                State.theme = next;
+                document.documentElement.setAttribute('data-theme', next);
+                const btn = document.getElementById('theme-btn');
+                if (btn) btn.innerHTML = `<span class="material-symbols-outlined">${next === 'light' ? 'light_mode' : 'dark_mode'}</span>`;
+                Data.save();
+                Toast.show(`Theme: ${next}`);
+            },
+            updateGamification: () => {
+                document.getElementById('ui-level').innerText = State.user.level;
+                document.getElementById('ui-xp').innerText = State.user.xp;
+                const next = State.user.level * 1000;
+                document.getElementById('ui-next-xp').innerText = next;
+                document.getElementById('ui-xp-fill').style.width = `${Math.min((State.user.xp / next) * 100, 100)}%`;
+            }
+        };
+
+        const CommandPalette = {
+            open: () => {
+                UI.openModal('cmd-modal');
+                const inp = document.getElementById('cmd-search');
+                inp.value = ''; inp.focus();
+                CommandPalette.filter('');
+            },
+            close: () => { document.getElementById('cmd-modal').style.display = 'none'; },
+            getCommands: () => [
+                { title: 'View Privacy, Security & Use Notices', run: () => UI.openModal('legal-modal') },
+                { title: 'Log Workout Session', run: () => UI.openModal('workout-modal') },
+                { title: 'Chrono: Start / Pause', run: () => ChronoEngine.toggle() },
+                { title: 'Capture New Task', run: () => UI.openModal('task-modal') },
+                { title: 'Export Backup Bundle', run: () => App.exportVault() },
+                { title: 'Weekly Retrospective', run: () => RetroEngine.open() },
+                { title: 'Navigate: Kanban Pipeline', run: () => App.router('projects') },
+                { title: 'Navigate: Kinetic Lab', run: () => App.router('workout') }
+            ],
+            filter: (q) => {
+                const results = document.getElementById('cmd-results');
+                const matches = CommandPalette.getCommands().filter(c => c.title.toLowerCase().includes(q.toLowerCase().trim()));
+                results.innerHTML = matches.map((m, idx) => `
+                    <div class="cmd-item" onclick="CommandPalette.execute(${idx})"><span>${esc(m.title)}</span></div>
+                `).join('') || '<div class="text-muted" style="padding:16px; text-align:center;">No commands found.</div>';
+                CommandPalette.matches = matches;
+            },
+            execute: (idx) => {
+                if (CommandPalette.matches[idx]) {
+                    CommandPalette.close();
+                    CommandPalette.matches[idx].run();
+                }
+            }
+        };
+
+        const App = {
+            instances: { workoutChart: null },
+
+            initPWA: () => {
+                if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+                    navigator.serviceWorker.register('./sw.js').catch(err => {
+                        console.warn('SW registration bypassed:', err);
+                    });
+                }
+            },
+
+            setAuthMode: (mode) => {
+                document.getElementById('tab-fetch').className = mode === 'fetch' ? 'primary sm' : 'sm';
+                document.getElementById('tab-new').className = mode === 'new' ? 'primary sm' : 'sm';
+                document.getElementById('auth-panel-fetch').style.display = mode === 'fetch' ? 'block' : 'none';
+                document.getElementById('auth-panel-new').style.display = mode === 'new' ? 'block' : 'none';
+            },
+
+            fetchByKey: async (inputKey) => {
+                const k = inputKey || document.getElementById('fetch-key').value.trim();
+                const err = document.getElementById('auth-error');
+                if (!k) return;
+                masterPassphrase = k;
+                if (await Data.load()) {
+                    const snapEnc = await StorageEngine.get(SNAP_KEY);
+                    if (snapEnc) {
+                        try {
+                            const loadedSnapshots = await WebCrypto.decrypt(snapEnc, masterPassphrase);
+                            if (!Array.isArray(loadedSnapshots) ||
+                                loadedSnapshots.some(snapshot => !snapshot || typeof snapshot !== 'object' ||
+                                    !snapshot.state || typeof snapshot.state !== 'object')) {
+                                throw new Error('The encrypted checkpoints have an invalid format.');
+                            }
+                            Snapshots = loadedSnapshots.map(snapshot => ({
+                                ...snapshot,
+                                state: normalizeWorkspaceState(snapshot.state)
+                            }));
+                            if (!WebCrypto.isCurrentEnvelope(snapEnc)) {
+                                await StorageEngine.set(SNAP_KEY, await WebCrypto.encrypt(Snapshots, masterPassphrase));
+                            }
+                        } catch (error) {
+                            console.error('Unable to load encrypted checkpoints:', error);
+                            Snapshots = [];
+                            Toast.show('The vault opened, but its checkpoints could not be loaded.', 'error');
+                        }
+                    }
+                    document.getElementById('auth-screen').style.display = 'none';
+                    document.getElementById('app').style.display = 'flex';
+                    App.init();
+                } else {
+                    Haptics.error();
+                    err.innerText = 'Unable to unlock the vault. Check the passphrase and ensure the backup is valid.';
+                    err.style.display = 'block';
+                }
+            },
+
+            loginAsNew: async () => {
+                const k = document.getElementById('new-key').value.trim();
+                if (!k) return;
+                if (k.length < 16) {
+                    document.getElementById('auth-error').innerText = 'Choose a passphrase with at least 16 characters.';
+                    document.getElementById('auth-error').style.display = 'block';
+                    return;
+                }
+                masterPassphrase = k;
+                State = JSON.parse(JSON.stringify(DEFAULT_INITIAL_STATE));
+                Snapshots = [];
+                if (!await Data.save()) return;
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('app').style.display = 'flex';
+                App.init();
+            },
+
+            fetchFromNewInput: () => App.fetchByKey(document.getElementById('new-key').value.trim()),
+
+            loadDemoData: async () => {
+                masterPassphrase = "demo_ephemeral_key";
+                State.tasks = [
+                    { id: '1', title: 'Audit VPC ingress traffic', desc: 'Verify cloud endpoints', status: 'inbox', priority: 'high', timeSpent: 30, subtasks: [] },
+                    { id: '2', title: 'Refactor OAuth rotation', desc: 'Deploy PBKDF2 Web Crypto', status: 'todo', priority: 'med', timeSpent: 90, subtasks: [] }
+                ];
+                if (!await Data.save()) return;
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('app').style.display = 'flex';
+                App.init();
+            },
+
+            exportVault: async () => {
+                const encVault = await StorageEngine.get(DB_KEY);
+                const encSnaps = await StorageEngine.get(SNAP_KEY);
+                const backupBundle = {
+                    app: "Aether OS",
+                    version: "5.4",
+                    exportedAt: new Date().toISOString(),
+                    vault: encVault,
+                    snapshots: encSnaps
+                };
+                localStorage.setItem('aether_last_export_ts', String(Date.now()));
+                StorageEngine.checkBackupStatus();
+
+                const blob = new Blob([JSON.stringify(backupBundle, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `aether_complete_backup_${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                Toast.show('Complete backup bundle exported!', 'success');
+            },
+
+            importVaultFile: (file) => {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (!data.vault) throw new Error();
+                        await StorageEngine.set(DB_KEY, data.vault);
+                        if (data.snapshots) await StorageEngine.set(SNAP_KEY, data.snapshots);
+                        Toast.show('Backup loaded! Enter passphrase to unlock.', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } catch (err) {
+                        Haptics.error();
+                        Toast.show('Failed to import: Invalid backup file', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            },
+
+            handleDataAction: (event) => {
+                const target = event.target instanceof Element ? event.target : null;
+                if (!target) return;
+
+                const getIndex = (value, items) => {
+                    const index = Number(value);
+                    return Number.isInteger(index) && index >= 0 && index < items.length ? index : -1;
+                };
+                const actionElement = target.closest('[data-action]');
+                if (actionElement) {
+                    const pathwayIndex = getIndex(actionElement.dataset.pathwayIndex, State.pathways);
+                    const stepIndex = pathwayIndex >= 0
+                        ? getIndex(actionElement.dataset.stepIndex, State.pathways[pathwayIndex].steps)
+                        : -1;
+
+                    switch (actionElement.dataset.action) {
+                        case 'retro-copy': {
+                            const values = [
+                                actionElement.dataset.score,
+                                actionElement.dataset.focusHours,
+                                actionElement.dataset.workoutCount,
+                                actionElement.dataset.storyPoints
+                            ].map(Number);
+                            if (values.every(Number.isFinite)) RetroEngine.copySummary(...values);
+                            return;
+                        }
+                        case 'workout-delete': {
+                            const workoutIndex = getIndex(actionElement.dataset.workoutIndex, State.workouts || []);
+                            if (workoutIndex >= 0) WorkoutEngine.deleteWorkout(State.workouts[workoutIndex].id);
+                            return;
+                        }
+                        case 'pathway-execute':
+                            if (pathwayIndex >= 0 && stepIndex >= 0) {
+                                PathwaysEngine.execute(State.pathways[pathwayIndex].id, State.pathways[pathwayIndex].steps[stepIndex].id);
+                            }
+                            return;
+                        case 'pathway-toggle':
+                            if (!(actionElement instanceof HTMLInputElement) && pathwayIndex >= 0 && stepIndex >= 0) {
+                                Data.toggleStep(State.pathways[pathwayIndex].id, State.pathways[pathwayIndex].steps[stepIndex].id);
+                            }
+                            return;
+                        case 'story-promote': {
+                            const storyIndex = getIndex(actionElement.dataset.storyIndex, State.stories || []);
+                            if (storyIndex >= 0) WorkStoryEngine.promoteToTask(State.stories[storyIndex].id);
+                            return;
+                        }
+                        case 'snapshot-diff': {
+                            const snapshotIndex = getIndex(actionElement.dataset.snapshotIndex, Snapshots);
+                            if (snapshotIndex >= 0) SnapshotEngine.compareDiff(snapshotIndex);
+                            return;
+                        }
+                        case 'snapshot-restore': {
+                            const snapshotIndex = getIndex(actionElement.dataset.snapshotIndex, Snapshots);
+                            if (snapshotIndex >= 0) SnapshotEngine.restore(snapshotIndex);
+                            return;
+                        }
+                    }
+                }
+
+                const taskCard = target.closest('[data-task-index]');
+                if (!taskCard) return;
+                const taskIndex = getIndex(taskCard.dataset.taskIndex, State.tasks);
+                if (taskIndex < 0) return;
+                const task = State.tasks[taskIndex];
+
+                const taskAction = target.closest('[data-task-action]');
+                if (taskAction && taskCard.contains(taskAction)) {
+                    switch (taskAction.dataset.taskAction) {
+                        case 'focus':
+                            ChronoEngine.startForTask(task.id);
+                            break;
+                        case 'move-left':
+                            Data.moveTaskStep(task.id, -1);
+                            break;
+                        case 'move-right':
+                            Data.moveTaskStep(task.id, 1);
+                            break;
+                    }
+                    return;
+                }
+
+                if (target.closest('.drag-handle, .task-card-actions')) return;
+                TaskDrawer.open(task.id);
+            },
+
+            handleDataChange: (event) => {
+                const target = event.target instanceof Element ? event.target : null;
+                if (!target) return;
+
+                const getIndex = (value, items) => {
+                    const index = Number(value);
+                    return Number.isInteger(index) && index >= 0 && index < items.length ? index : -1;
+                };
+
+                if (target.dataset.action === 'pathway-toggle' && target instanceof HTMLInputElement) {
+                    const pathwayIndex = getIndex(target.dataset.pathwayIndex, State.pathways);
+                    if (pathwayIndex < 0) return;
+                    const pathway = State.pathways[pathwayIndex];
+                    const stepIndex = getIndex(target.dataset.stepIndex, pathway.steps);
+                    if (stepIndex >= 0) Data.toggleStep(pathway.id, pathway.steps[stepIndex].id);
+                } else if (target.dataset.action === 'story-move') {
+                    const storyIndex = getIndex(target.dataset.storyIndex, State.stories || []);
+                    if (storyIndex >= 0) WorkStoryEngine.moveState(State.stories[storyIndex].id, target.value);
+                }
+            },
+
+            init: () => {
+                App.initPWA();
+                IconSystem.init();
+                document.addEventListener('click', App.handleDataAction);
+                document.addEventListener('change', App.handleDataChange);
+                document.addEventListener('dragstart', event => {
+                    const target = event.target instanceof Element ? event.target : null;
+                    const card = target?.closest('.task-card[data-task-index]');
+                    if (!card || !target.closest('.drag-handle')) {
+                        event.preventDefault();
+                        return;
+                    }
+                    event.dataTransfer?.setData('text/plain', card.dataset.taskIndex);
+                    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+                });
+                document.addEventListener('dragover', event => {
+                    const target = event.target instanceof Element ? event.target : null;
+                    if (target?.closest('.kanban-tasks[data-status]')) event.preventDefault();
+                });
+                document.addEventListener('drop', event => {
+                    const target = event.target instanceof Element ? event.target : null;
+                    const board = target?.closest('.kanban-tasks[data-status]');
+                    if (!board) return;
+                    event.preventDefault();
+                    const taskIndex = Number(event.dataTransfer?.getData('text/plain'));
+                    const statuses = ['inbox', 'todo', 'in_progress', 'done'];
+                    const task = Number.isInteger(taskIndex) ? State.tasks[taskIndex] : null;
+                    const status = board.dataset.status;
+                    if (task && statuses.includes(status)) Data.updateTaskStatus(task.id, status);
+                });
+                document.documentElement.setAttribute('data-theme', State.theme || 'dark');
+                document.getElementById('currency-select').value = State.currency || 'INR';
+
+                document.querySelectorAll('#sidebar .nav-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        const view = e.currentTarget.dataset.view;
+                        App.setActiveNav(view);
+                        UI.toggleSidebar(false);
+                        App.router(view);
+                    });
+                });
+
+                window.addEventListener('keydown', (e) => {
+                    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+                        e.preventDefault();
+                        CommandPalette.open();
+                    } else if (e.key === 'Escape') {
+                        UI.closeModals();
+                        CommandPalette.close();
+                        TaskDrawer.close();
+                    }
+                });
+
+                let touchStartX = 0;
+                const boardContainer = document.getElementById('content');
+                boardContainer.addEventListener('touchstart', (e) => {
+                    touchStartX = e.changedTouches[0].screenX;
+                }, { passive: true });
+                boardContainer.addEventListener('touchend', (e) => {
+                    const activeColEl = document.querySelector('.kanban-col.active-mobile-col');
+                    if (!activeColEl) return;
+                    const deltaX = e.changedTouches[0].screenX - touchStartX;
+                    const cols = ['inbox', 'todo', 'in_progress', 'done'];
+                    const currentId = activeColEl.id.replace('col-', '');
+                    const currentIdx = cols.indexOf(currentId);
+                    if (deltaX < -50 && currentIdx < cols.length - 1) {
+                        Views.switchMobileCol(cols[currentIdx + 1]);
+                    } else if (deltaX > 50 && currentIdx > 0) {
+                        Views.switchMobileCol(cols[currentIdx - 1]);
+                    }
+                }, { passive: true });
+
+                UI.updateGamification();
+                StorageEngine.checkBackupStatus();
+                App.router('pathways');
+            },
+
+            setActiveNav: (view) => {
+                document.querySelectorAll('.nav-item').forEach(n => {
+                    n.classList.toggle('active', n.dataset.view === view);
+                });
+                document.querySelectorAll('.bnav-item').forEach(b => {
+                    b.classList.toggle('active', b.dataset.view === view);
+                });
+            },
+
+            refreshCurrentView: () => {
+                const active = document.querySelector('.nav-item.active')?.dataset.view || 'pathways';
+                App.router(active);
+            },
+
+            refreshTimerButtons: () => {
+                const btnRow = document.getElementById('chrono-actions-row');
+                if (btnRow) {
+                    btnRow.innerHTML = `
+                        <button class="${ChronoEngine.isRunning ? 'danger' : 'primary'}" onclick="ChronoEngine.toggle()">
+                            <span class="material-symbols-outlined">${ChronoEngine.isRunning ? 'pause' : 'play_arrow'}</span>
+                            ${ChronoEngine.isRunning ? 'Pause Timer' : 'Start Stopwatch'}
+                        </button>
+                        <button class="tonal" onclick="ChronoEngine.stopAndLog()"><span class="material-symbols-outlined">save</span> Commit Session</button>
+                        <button onclick="ChronoEngine.reset()"><span class="material-symbols-outlined">restart_alt</span> Reset</button>
+                    `;
+                }
+            },
+
+            router: (view) => {
+                if (App.instances.workoutChart) {
+                    App.instances.workoutChart.disconnect();
+                    App.instances.workoutChart = null;
+                }
+
+                App.setActiveNav(view);
+                const content = document.getElementById('content');
+                if (Views[view]) {
+                    content.innerHTML = Views[view]();
+                    App.postRender(view);
+                }
+            },
+
+            postRender: (view) => {
+                if (view === 'dashboard') {
+                    HeatmapEngine.render('dashboard-heatmap');
+                }
+
+                if (view === 'workout') {
+                    const ctx = document.getElementById('workout-chart');
+                    if (ctx) {
+                        const labels = ['Strength', 'Cardio', 'HIIT', 'Mobility'];
+                        const colors = ['#0b57d0', '#0288d1', '#e37400', '#188038'];
+                        const values = labels.map(label => (State.workouts || []).reduce((total, workout) =>
+                            workout.type === label && Number.isFinite(Number(workout.duration))
+                                ? total + Math.max(0, Number(workout.duration))
+                                : total, 0));
+                        const legend = document.getElementById('workout-chart-legend');
+                        const renderChart = () => {
+                            const width = ctx.clientWidth;
+                            const height = ctx.clientHeight;
+                            const scale = window.devicePixelRatio || 1;
+                            ctx.width = Math.max(1, Math.floor(width * scale));
+                            ctx.height = Math.max(1, Math.floor(height * scale));
+                            const context = ctx.getContext('2d');
+                            if (!context) return;
+                            context.scale(scale, scale);
+                            const total = values.reduce((sum, value) => sum + value, 0);
+                            const radius = Math.max(12, Math.min(width, height) * 0.34);
+                            const centerX = width / 2;
+                            const centerY = height / 2;
+                            context.lineWidth = 24;
+                            context.lineCap = 'butt';
+                            let angle = -Math.PI / 2;
+                            if (!total) {
+                                context.beginPath();
+                                context.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-outline');
+                                context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                                context.stroke();
+                            } else {
+                                values.forEach((value, index) => {
+                                    if (!value) return;
+                                    const nextAngle = angle + value / total * Math.PI * 2;
+                                    context.beginPath();
+                                    context.strokeStyle = colors[index];
+                                    context.arc(centerX, centerY, radius, angle, nextAngle);
+                                    context.stroke();
+                                    angle = nextAngle;
+                                });
+                            }
+                        };
+                        legend.replaceChildren();
+                        labels.forEach((label, index) => {
+                            const item = document.createElement('span');
+                            item.className = 'chart-legend-item';
+                            const swatch = document.createElement('span');
+                            swatch.className = 'chart-legend-swatch';
+                            swatch.style.backgroundColor = colors[index];
+                            const text = document.createElement('span');
+                            text.textContent = label;
+                            item.append(swatch, text);
+                            legend.append(item);
+                        });
+                        const observer = new ResizeObserver(renderChart);
+                        observer.observe(ctx);
+                        App.instances.workoutChart = observer;
+                        renderChart();
+                    }
+                }
+            }
+        };
+        if (location.hostname === 'github.io' || location.hostname.endsWith('.github.io')) {
+            document.getElementById('github-pages-origin-warning').hidden = false;
+        }
+        IconSystem.init();
+    </script>
+</body>
+</html>
