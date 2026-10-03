@@ -303,16 +303,32 @@
             background: var(--glass-header); backdrop-filter: blur(12px);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 20px; flex-shrink: 0; z-index: 100; gap: 16px;
+            min-width: 0;
+        }
+        #topbar > .topbar-group {
+            display: flex; align-items: center; gap: 8px; min-width: 0;
+            flex: 1 1 auto;
+        }
+        #topbar > .topbar-group:last-child {
+            justify-content: flex-end;
+            flex: 0 1 auto;
         }
         .topbar-search-bar {
-            flex: 1; max-width: 580px; background: var(--md-sys-color-surface-container);
+            flex: 1 1 auto; min-width: 0; max-width: 580px; background: var(--md-sys-color-surface-container);
             border-radius: var(--radius-pill); display: flex; align-items: center;
             padding: 6px 16px; cursor: pointer; transition: background 0.15s ease, box-shadow 0.15s ease;
             border: 1px solid transparent;
+            overflow: hidden;
         }
         .topbar-search-bar:hover {
             background: var(--md-sys-color-surface-container-high);
             border-color: var(--md-sys-color-outline);
+        }
+        .topbar-search-bar .search-text {
+            flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .topbar-search-bar .kbd {
+            flex-shrink: 0;
         }
 
         #backup-reminder-banner {
@@ -644,7 +660,21 @@
             .mobile-only { display: inline-flex !important; }
             .desktop-hide { display: none !important; }
             #content { padding: 16px; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
-            #topbar { padding: 0 14px; }
+            #topbar { padding: 0 12px; gap: 8px; }
+            #topbar > .topbar-group { gap: 6px; }
+            .topbar-search-bar {
+                padding: 5px 10px;
+                min-height: 40px;
+                max-width: none;
+                flex: 1 1 auto;
+            }
+            .topbar-search-bar .search-text {
+                font-size: 0.82rem;
+                letter-spacing: -0.01em;
+            }
+            .topbar-search-bar .material-symbols-outlined {
+                margin-right: 6px;
+            }
             #bottom-nav { display: flex; }
             #toast-container { bottom: calc(74px + env(safe-area-inset-bottom)); right: 16px; left: 16px; }
 
@@ -812,18 +842,18 @@
 
         <div id="main-wrapper">
             <header id="topbar">
-                <div class="flex items-center gap-2">
+                <div class="topbar-group">
                     <button class="icon-btn mobile-only" onclick="UI.toggleSidebar(true)">
                         <span class="material-symbols-outlined">menu</span>
                     </button>
                     <div class="topbar-search-bar" onclick="CommandPalette.open()">
-                        <span class="material-symbols-outlined text-muted" style="margin-right: 8px;">search</span>
-                        <span class="text-muted" style="font-size: 0.84rem; flex: 1;">Search commands, workouts, or notes...</span>
+                        <span class="material-symbols-outlined text-muted">search</span>
+                        <span class="text-muted search-text">Search commands, workouts, or notes...</span>
                         <span class="kbd desktop-hide">⌘K</span>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="topbar-group">
                     <div id="global-timer-pill" class="timer-glow" style="display: none;" onclick="App.router('timeview')">
                         <div class="pulse-dot"></div>
                         <span id="global-timer-label">Tracking</span>
