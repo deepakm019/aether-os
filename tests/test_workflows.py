@@ -54,6 +54,40 @@ def test_create_story_finance_entry_note_and_checkpoint(app_page: Page) -> None:
     expect(app_page.locator("#content")).to_contain_text("Checkpoint #")
 
 
+def test_edit_note_category_and_create_editable_task_from_note(app_page: Page) -> None:
+    app_page.locator('.nav-item[data-view="brain"]').click()
+    app_page.get_by_role("button", name="Create Note").click()
+    app_page.locator("#note-title").fill("Note to refine")
+    app_page.locator("#note-category").fill("Engineering")
+    app_page.locator("#note-content").fill("Implementation details from the note")
+    app_page.get_by_role("button", name="Save Note (+35 XP)").click()
+
+    note_card = app_page.locator('.card[data-action="note-open"]').filter(has_text="Note to refine")
+    expect(note_card).to_contain_text("Engineering")
+    note_card.click()
+    expect(app_page.locator("#note-modal-title")).to_have_text("Note Details")
+    expect(app_page.locator("#note-category")).to_have_value("Engineering")
+
+    app_page.locator("#note-title").fill("Refined note")
+    app_page.locator("#note-category").fill("Architecture")
+    app_page.get_by_role("button", name="Save Changes").click()
+    note_card = app_page.locator('.card[data-action="note-open"]').filter(has_text="Refined note")
+    expect(note_card).to_contain_text("Architecture")
+
+    note_card.click()
+    app_page.get_by_role("button", name="Create Task").click()
+    expect(app_page.locator("#task-title")).to_have_value("Refined note")
+    expect(app_page.locator("#task-desc")).to_have_value("Implementation details from the note")
+    app_page.locator("#task-title").fill("Task refined from note")
+    app_page.get_by_role("button", name="Save Item (+25 XP)").click()
+
+    app_page.locator('.nav-item[data-view="projects"]').click()
+    task_card = app_page.locator(".task-card").filter(has_text="Task refined from note")
+    expect(task_card).to_be_visible()
+    task_card.click()
+    expect(app_page.locator("#drawer-task-title")).to_have_value("Task refined from note")
+
+
 def test_timer_and_theme_controls_work(app_page: Page) -> None:
     app_page.locator('.nav-item[data-view="timeview"]').click()
     app_page.get_by_role("button", name="Start Stopwatch").click()

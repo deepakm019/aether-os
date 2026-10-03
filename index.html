@@ -1146,13 +1146,15 @@
 
     <div class="modal-overlay" id="note-modal" onclick="if(event.target===this) UI.closeModals()">
         <div class="modal-card">
-            <h3 style="margin-bottom: 16px; font-weight: 600;">Second Brain Note</h3>
+            <h3 id="note-modal-title" style="margin-bottom: 16px; font-weight: 600;">Second Brain Note</h3>
             <div class="flex-col gap-3">
                 <input type="text" id="note-title" placeholder="Concept headline...">
+                <input type="text" id="note-category" placeholder="Category (e.g. Engineering, Personal)">
                 <textarea id="note-content" placeholder="Synthesize architectural ideas..." rows="6"></textarea>
                 <input type="text" id="note-tags" placeholder="Tags (comma-separated, e.g. workout, engineering)">
-                <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px;">
-                    <button class="primary" style="flex:1;" onclick="Data.saveNote()">Save Note (+35 XP)</button>
+                <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px; flex-wrap: wrap;">
+                    <button id="note-save-button" class="primary" style="flex:1;" onclick="NoteEditor.save()">Save Note (+35 XP)</button>
+                    <button id="note-create-task-button" class="tonal" style="flex:1; display:none;" onclick="NoteEditor.createTask()">Create Task</button>
                     <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
                 </div>
             </div>
@@ -2318,7 +2320,7 @@
                     App.router('projects');
                 } else if (step.activityType === 'time') App.router('timeview');
                 else if (step.activityType === 'story') App.router('stories');
-                else if (step.activityType === 'note') UI.openModal('note-modal');
+                else if (step.activityType === 'note') NoteEditor.openNew();
                 else App.router('finance');
             }
         };
@@ -2448,6 +2450,79 @@
             }
         };
 
+        const NoteEditor = {
+            editingNoteId: null,
+            openNew: () => {
+                NoteEditor.editingNoteId = null;
+                document.getElementById('note-modal-title').textContent = 'Create Note';
+                document.getElementById('note-title').value = '';
+                document.getElementById('note-category').value = '';
+                document.getElementById('note-content').value = '';
+                document.getElementById('note-tags').value = '';
+                document.getElementById('note-save-button').textContent = 'Save Note (+35 XP)';
+                document.getElementById('note-create-task-button').style.display = 'none';
+                UI.openModal('note-modal');
+            },
+            open: (noteId) => {
+                const note = State.notes.find(item => item.id === noteId);
+                if (!note) {
+                    Toast.show('This note is no longer available.', 'error');
+                    return;
+                }
+                NoteEditor.editingNoteId = note.id;
+                document.getElementById('note-modal-title').textContent = 'Note Details';
+                document.getElementById('note-title').value = note.title || '';
+                document.getElementById('note-category').value = note.category || '';
+                document.getElementById('note-content').value = note.content || '';
+                document.getElementById('note-tags').value = Array.isArray(note.tags) ? note.tags.join(', ') : '';
+                document.getElementById('note-save-button').textContent = 'Save Changes';
+                document.getElementById('note-create-task-button').style.display = 'inline-flex';
+                UI.openModal('note-modal');
+            },
+            save: async () => {
+                const title = document.getElementById('note-title').value.trim();
+                if (!title) {
+                    Toast.show('Enter a title before saving the note.', 'error');
+                    return;
+                }
+                const content = document.getElementById('note-content').value.trim();
+                const category = document.getElementById('note-category').value.trim();
+                const tags = document.getElementById('note-tags').value.split(',').map(tag => tag.trim()).filter(Boolean);
+                const editingNote = NoteEditor.editingNoteId
+                    ? State.notes.find(note => note.id === NoteEditor.editingNoteId)
+                    : null;
+                if (NoteEditor.editingNoteId && !editingNote) {
+                    Toast.show('This note is no longer available.', 'error');
+                    UI.closeModals();
+                    return;
+                }
+
+                if (editingNote) {
+                    Object.assign(editingNote, { title, content, category, tags, updatedAt: new Date().toISOString() });
+                } else {
+                    State.notes.unshift({ id: 'note_' + Date.now(), title, content, category, tags, date: new Date().toISOString() });
+                    Data.addXP(35);
+                }
+                Haptics.tap();
+                if (!await Data.save()) return;
+                UI.closeModals();
+                Toast.show(editingNote ? 'Note updated.' : 'Note archived (+35 XP)', 'success');
+                App.refreshCurrentView();
+            },
+            createTask: () => {
+                const note = State.notes.find(item => item.id === NoteEditor.editingNoteId);
+                if (!note) {
+                    Toast.show('This note is no longer available.', 'error');
+                    return;
+                }
+                document.getElementById('task-title').value = note.title || '';
+                document.getElementById('task-desc').value = note.content || '';
+                UI.closeModals();
+                UI.openModal('task-modal');
+                document.getElementById('task-title').focus();
+            }
+        };
+
         const Data = {
             save: async () => {
                 try {
@@ -2542,20 +2617,6 @@
                     task.status = st;
                     Data.save();
                 }
-            },
-            saveNote: () => {
-                const title = document.getElementById('note-title').value.trim();
-                const content = document.getElementById('note-content').value.trim();
-                const tags = document.getElementById('note-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
-                if (!title) return;
-
-                State.notes.unshift({ id: 'note_' + Date.now(), title, content, tags, date: new Date().toISOString() });
-                Data.addXP(35);
-                Haptics.tap();
-                Data.save();
-                UI.closeModals();
-                Toast.show('Note archived (+35 XP)', 'success');
-                App.refreshCurrentView();
             },
             toggleStep: (pwId, sId) => {
                 const pw = State.pathways.find(p => p.id === pwId);
@@ -2918,13 +2979,15 @@
             brain: () => `
                 <div class="flex justify-between items-center" style="margin-bottom: 24px;">
                     <div><h2>Second Brain Knowledge Base</h2><p class="text-muted">Synthesized technical architecture blueprints.</p></div>
-                    <button class="primary sm" onclick="UI.openModal('note-modal')"><span class="material-symbols-outlined">add</span> Create Note</button>
+                    <button class="primary sm" onclick="NoteEditor.openNew()"><span class="material-symbols-outlined">add</span> Create Note</button>
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
-                    ${State.notes.map(n => `
-                        <div class="card">
+                    ${State.notes.map((n, noteIndex) => `
+                        <div class="card" data-action="note-open" data-note-index="${noteIndex}" role="button" tabindex="0" aria-label="Open note details" style="cursor:pointer;">
                             <h3 style="font-size:1rem; font-weight:600;">${esc(n.title)}</h3>
+                            ${n.category ? `<span class="pill info" style="margin-top:8px;">${esc(n.category)}</span>` : ''}
                             <p class="text-secondary" style="margin: 8px 0 14px 0; white-space: pre-wrap; font-size:0.84rem;">${esc(n.content)}</p>
+                            ${Array.isArray(n.tags) && n.tags.length ? `<div class="flex gap-1" style="flex-wrap:wrap;">${n.tags.map(tag => `<span class="pill">${esc(tag)}</span>`).join('')}</div>` : ''}
                         </div>
                     `).join('') || '<div class="text-muted">No notes found.</div>'}
                 </div>
@@ -3207,6 +3270,11 @@
                         : -1;
 
                     switch (actionElement.dataset.action) {
+                        case 'note-open': {
+                            const noteIndex = getIndex(actionElement.dataset.noteIndex, State.notes);
+                            if (noteIndex >= 0) NoteEditor.open(State.notes[noteIndex].id);
+                            return;
+                        }
                         case 'retro-copy': {
                             const values = [
                                 actionElement.dataset.score,
@@ -3301,6 +3369,14 @@
                 App.initPWA();
                 IconSystem.init();
                 document.addEventListener('click', App.handleDataAction);
+                document.addEventListener('keydown', event => {
+                    const target = event.target instanceof Element ? event.target : null;
+                    const noteCard = target?.closest('[data-action="note-open"]');
+                    if (noteCard && (event.key === 'Enter' || event.key === ' ')) {
+                        event.preventDefault();
+                        noteCard.click();
+                    }
+                });
                 document.addEventListener('change', App.handleDataChange);
                 document.addEventListener('dragstart', event => {
                     const target = event.target instanceof Element ? event.target : null;
