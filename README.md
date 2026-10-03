@@ -1,6 +1,7 @@
 # Aether OS
 
 Aether OS is a client-side productivity workspace. The app is a static site: it has no build step or server-side component. It makes no third-party runtime requests; interface icons use Unicode glyphs, charts use Canvas, and typography uses system fonts.
+https://deepakm019.github.io/aether-os/
 
 ## Deploy to GitHub Pages
 
