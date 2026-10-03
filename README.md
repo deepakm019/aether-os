@@ -1,6 +1,7 @@
 # AstralSurge OS
 
 AstralSurge OS is a client-side productivity workspace. The app is a static site: it has no build step or server-side component. It makes no third-party runtime requests; interface icons use Unicode glyphs, charts use Canvas, and typography uses system fonts.
+The finance view groups expenses by budget category, tracks recurring items and paid status, records paid items in the transaction ledger, and estimates remaining monthly category budgets. Amounts can be hidden from view.
 https://deepakm019.github.io/aether-os/
 
 ## Deploy to GitHub Pages

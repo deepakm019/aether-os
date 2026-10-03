@@ -648,6 +648,26 @@
         .pathway-step-actions button {
             min-height: 44px;
         }
+        .pathway-step-editor {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(130px, 1fr) minmax(130px, 1fr) auto;
+            align-items: end;
+            gap: 10px;
+            padding: 12px;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--radius-sm);
+            background: var(--md-sys-color-surface-container);
+        }
+        .pathway-step-editor label {
+            display: block;
+            min-width: 0;
+            font-size: 0.75rem;
+            color: var(--md-sys-color-text-muted);
+        }
+        .pathway-step-editor input,
+        .pathway-step-editor select {
+            margin-top: 5px;
+        }
 
         @media (max-width: 960px) {
             #sidebar {
@@ -700,6 +720,7 @@
             .btn-group-responsive { flex-direction: column; width: 100%; }
             .btn-group-responsive button, .btn-group-responsive label.btn-label { width: 100%; }
             .kanban-board { height: calc(100vh - 210px); }
+            .pathway-step-editor { grid-template-columns: minmax(0, 1fr); }
         }
     </style>
 </head>
@@ -1093,17 +1114,47 @@
             <div class="flex-col gap-3">
                 <input type="text" id="tx-desc" placeholder="Description (e.g. Health insurance, Clean Fuel)">
                 <div class="flex gap-2 btn-group-responsive">
-                    <input type="number" id="tx-amount" placeholder="Amount">
-                    <select id="tx-category">
-                        <option value="Housing">Housing</option>
-                        <option value="Food">Food / Fuel</option>
-                        <option value="Tech">Tech</option>
-                        <option value="Discretionary">Discretionary</option>
-                        <option value="Income">Direct Income (+)</option>
-                    </select>
+                <input type="number" id="tx-amount" placeholder="Amount">
+                <select id="tx-category" aria-label="Category"></select>
                 </div>
                 <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px;">
                     <button class="primary" style="flex:1;" onclick="FinanceEngine.addTransaction()">Log Entry</button>
+                    <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="finance-expense-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card">
+            <h3 id="finance-expense-modal-title" style="margin-bottom: 16px; font-weight: 600;">Add Budget Item</h3>
+            <div class="flex-col gap-3">
+                <input type="text" id="finance-expense-title" placeholder="Expense name">
+                <select id="finance-expense-category" aria-label="Category"></select>
+                <input type="number" id="finance-expense-amount" min="0.01" step="0.01" placeholder="Amount">
+                <select id="finance-expense-recurrence" aria-label="Recurrence">
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly" selected>Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="once">One-time</option>
+                </select>
+                <div class="flex gap-2 btn-group-responsive">
+                    <button class="primary" style="flex:1;" onclick="FinanceEngine.saveExpense()">Save Item</button>
+                    <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="finance-category-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card">
+            <h3 style="margin-bottom: 16px; font-weight: 600;">Add Budget Category</h3>
+            <div class="flex-col gap-3">
+                <input type="text" id="finance-category-name" placeholder="Category name">
+                <input type="number" id="finance-category-budget" min="0" step="0.01" placeholder="Monthly budget">
+                <div class="flex gap-2 btn-group-responsive">
+                    <button class="primary" style="flex:1;" onclick="FinanceEngine.addCategory()">Add Category</button>
                     <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
                 </div>
             </div>
@@ -1155,6 +1206,25 @@
                 <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px; flex-wrap: wrap;">
                     <button id="note-save-button" class="primary" style="flex:1;" onclick="NoteEditor.save()">Save Note (+35 XP)</button>
                     <button id="note-create-task-button" class="tonal" style="flex:1; display:none;" onclick="NoteEditor.createTask()">Create Task</button>
+                    <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="pathway-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card">
+            <h3 id="pathway-modal-title" style="margin-bottom: 16px; font-weight: 600;">Create Guided Path</h3>
+            <div class="flex-col gap-3">
+                <input type="text" id="pathway-title" placeholder="Path name...">
+                <textarea id="pathway-desc" placeholder="What outcome does this path help you achieve?" rows="2"></textarea>
+                <div class="flex justify-between items-center">
+                    <strong>Milestones</strong>
+                    <button type="button" class="tonal sm" data-action="pathway-add-step">Add Milestone</button>
+                </div>
+                <div id="pathway-step-editor-list" class="flex-col gap-2"></div>
+                <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px;">
+                    <button class="primary" style="flex:1;" onclick="PathwayEditor.save()">Save Path</button>
                     <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
                 </div>
             </div>
@@ -1622,40 +1692,11 @@
                     { category: 'Tech', limit: 8000 },
                     { category: 'Discretionary', limit: 10000 }
                 ],
+                budgetItems: [],
+                amountsHidden: false,
                 transactions: []
             },
-            pathways: [
-                {
-                    id: 'pw_kinetic',
-                    title: 'Peak Physical Architecture',
-                    desc: 'Progressive overload, aerobic engine building, and structural recovery.',
-                    steps: [
-                        { id: 'pw_k1', title: 'Execute 45-min Compound Hypertrophy session', done: true, activityType: 'workout', actionLabel: 'Log Workout' },
-                        { id: 'pw_k2', title: 'Run 30-min Zone 2 Aerobic flush or ruck', done: false, activityType: 'time', actionLabel: 'Start Stopwatch' },
-                        { id: 'pw_k3', title: 'Document structural mobility & sleep recovery protocol', done: false, activityType: 'note', actionLabel: 'Document Protocol' }
-                    ]
-                },
-                {
-                    id: 'pw_work',
-                    title: 'High-Velocity Agile Engineering',
-                    desc: 'Sprint stories with acceptance criteria verification.',
-                    steps: [
-                        { id: 'pw_w1', title: 'Draft Acceptance Criteria for priority epics', done: true, activityType: 'story', actionLabel: 'Open Stories' },
-                        { id: 'pw_w2', title: 'Log 90 minutes of continuous deep execution', done: false, activityType: 'time', actionLabel: 'Start Stopwatch' },
-                        { id: 'pw_w3', title: 'Document technical architectural decisions', done: false, activityType: 'note', actionLabel: 'Second Brain' }
-                    ]
-                },
-                {
-                    id: 'pw_emergency',
-                    title: 'Capital Liquidity Blueprint',
-                    desc: 'Build 3-month survival and liquidity runways.',
-                    steps: [
-                        { id: 'p1', title: 'Audit 3 months of bank statements', done: true, activityType: 'task', actionLabel: 'Audit Pipeline' },
-                        { id: 'p2', title: 'Cut 2 redundant cloud subscriptions', done: true, activityType: 'task', actionLabel: 'Review SaaS' },
-                        { id: 'p3', title: 'Stash liquid capital into high-yield vault', done: false, activityType: 'finance', actionLabel: 'Allocate Vault' }
-                    ]
-                }
-            ],
+            pathways: [],
             notes: []
         };
 
@@ -1684,7 +1725,7 @@
             }
 
             const finances = loadedState.finances || {};
-            for (const field of ['budgets', 'transactions']) {
+            for (const field of ['budgets', 'budgetItems', 'transactions']) {
                 if (finances[field] !== undefined &&
                     (!Array.isArray(finances[field]) ||
                         finances[field].some(item => !item || typeof item !== 'object' || Array.isArray(item)))) {
@@ -1698,6 +1739,7 @@
                 user: { ...DEFAULT_INITIAL_STATE.user, ...(loadedState.user || {}) },
                 finances: { ...DEFAULT_INITIAL_STATE.finances, ...finances }
             };
+            if (typeof normalized.finances.amountsHidden !== 'boolean') normalized.finances.amountsHidden = false;
             for (const pathway of normalized.pathways) {
                 if (pathway.steps !== undefined && !Array.isArray(pathway.steps)) {
                     throw new Error('The decrypted vault has invalid pathway steps.');
@@ -2289,6 +2331,189 @@
             }
         };
 
+        const PathwayEditor = {
+            pathwayId: null,
+            steps: [],
+            activityTypes: [
+                ['task', 'Create a Task', 'Create Task'],
+                ['workout', 'Log a Workout', 'Log Workout'],
+                ['time', 'Start Stopwatch', 'Start Stopwatch'],
+                ['story', 'Open Stories', 'Open Stories'],
+                ['note', 'Create a Note', 'Create Note'],
+                ['finance', 'Open Finance', 'Open Finance']
+            ],
+            openNew: () => {
+                PathwayEditor.pathwayId = null;
+                PathwayEditor.steps = [];
+                document.getElementById('pathway-modal-title').textContent = 'Create Guided Path';
+                document.getElementById('pathway-title').value = '';
+                document.getElementById('pathway-desc').value = '';
+                PathwayEditor.addStep();
+                UI.openModal('pathway-modal');
+            },
+            open: (pathwayId) => {
+                const pathway = State.pathways.find(item => item.id === pathwayId);
+                if (!pathway) {
+                    Toast.show('This guided path is no longer available.', 'error');
+                    return;
+                }
+                PathwayEditor.pathwayId = pathway.id;
+                PathwayEditor.steps = pathway.steps.map(step => ({ ...step }));
+                document.getElementById('pathway-modal-title').textContent = 'Edit Guided Path';
+                document.getElementById('pathway-title').value = pathway.title || '';
+                document.getElementById('pathway-desc').value = pathway.desc || '';
+                PathwayEditor.renderSteps();
+                UI.openModal('pathway-modal');
+            },
+            syncStepsFromForm: () => {
+                const rows = [...document.querySelectorAll('#pathway-step-editor-list .pathway-step-editor')];
+                if (!rows.length) return;
+                PathwayEditor.steps = rows.map((row, stepIndex) => {
+                    const previous = PathwayEditor.steps[stepIndex];
+                    return {
+                        id: previous?.id || null,
+                        done: previous?.done === true,
+                        title: row.querySelector('.pathway-step-title').value,
+                        activityType: row.querySelector('.pathway-step-activity').value,
+                        actionLabel: row.querySelector('.pathway-step-action-label').value
+                    };
+                });
+            },
+            addStep: () => {
+                PathwayEditor.syncStepsFromForm();
+                PathwayEditor.steps.push({ id: null, title: '', done: false, activityType: 'task', actionLabel: 'Create Task' });
+                PathwayEditor.renderSteps();
+                const titleInput = document.querySelector('#pathway-step-editor-list .pathway-step-title:last-of-type');
+                titleInput?.focus();
+            },
+            removeStep: (stepIndex) => {
+                if (stepIndex < 0 || stepIndex >= PathwayEditor.steps.length) return;
+                PathwayEditor.syncStepsFromForm();
+                PathwayEditor.steps.splice(stepIndex, 1);
+                PathwayEditor.renderSteps();
+            },
+            renderSteps: () => {
+                const list = document.getElementById('pathway-step-editor-list');
+                list.replaceChildren();
+                PathwayEditor.steps.forEach((step, stepIndex) => {
+                    const row = document.createElement('div');
+                    row.className = 'pathway-step-editor';
+
+                    const titleLabel = document.createElement('label');
+                    titleLabel.textContent = 'Milestone';
+                    const titleInput = document.createElement('input');
+                    titleInput.className = 'pathway-step-title';
+                    titleInput.type = 'text';
+                    titleInput.placeholder = 'What needs to be done?';
+                    titleInput.value = step.title || '';
+                    titleLabel.append(titleInput);
+
+                    const activityLabel = document.createElement('label');
+                    activityLabel.textContent = 'Action';
+                    const activitySelect = document.createElement('select');
+                    activitySelect.className = 'pathway-step-activity';
+                    PathwayEditor.activityTypes.forEach(([value, label]) => {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = label;
+                        activitySelect.append(option);
+                    });
+                    activitySelect.value = PathwayEditor.activityTypes.some(([value]) => value === step.activityType)
+                        ? step.activityType
+                        : 'task';
+                    activityLabel.append(activitySelect);
+
+                    const actionLabel = document.createElement('label');
+                    actionLabel.textContent = 'Button label';
+                    const actionInput = document.createElement('input');
+                    actionInput.className = 'pathway-step-action-label';
+                    actionInput.type = 'text';
+                    actionInput.placeholder = 'e.g. Start Stopwatch';
+                    actionInput.value = step.actionLabel || '';
+                    actionLabel.append(actionInput);
+
+                    const removeButton = document.createElement('button');
+                    removeButton.type = 'button';
+                    removeButton.className = 'sm danger icon-btn';
+                    removeButton.dataset.action = 'pathway-remove-step';
+                    removeButton.dataset.editorStepIndex = String(stepIndex);
+                    removeButton.setAttribute('aria-label', `Remove milestone ${stepIndex + 1}`);
+                    removeButton.textContent = '×';
+
+                    row.append(titleLabel, activityLabel, actionLabel, removeButton);
+                    list.append(row);
+                });
+            },
+            save: async () => {
+                const title = document.getElementById('pathway-title').value.trim();
+                if (!title) {
+                    Toast.show('Enter a name for the guided path.', 'error');
+                    return;
+                }
+                const stepRows = [...document.querySelectorAll('#pathway-step-editor-list .pathway-step-editor')];
+                const steps = stepRows.map((row, stepIndex) => {
+                    const previous = PathwayEditor.steps[stepIndex];
+                    const activityType = row.querySelector('.pathway-step-activity').value;
+                    const customActionLabel = row.querySelector('.pathway-step-action-label').value.trim();
+                    const activity = PathwayEditor.activityTypes.find(([value]) => value === activityType);
+                    return {
+                        id: previous?.id || `pw_step_${Date.now()}_${stepIndex}_${Math.random().toString(36).slice(2)}`,
+                        title: row.querySelector('.pathway-step-title').value.trim(),
+                        done: previous?.done === true,
+                        activityType,
+                        actionLabel: customActionLabel || activity[2]
+                    };
+                });
+                if (!steps.length || steps.some(step => !step.title)) {
+                    Toast.show('Add at least one milestone and give each milestone a title.', 'error');
+                    return;
+                }
+
+                const existingPathway = PathwayEditor.pathwayId
+                    ? State.pathways.find(pathway => pathway.id === PathwayEditor.pathwayId)
+                    : null;
+                if (PathwayEditor.pathwayId && !existingPathway) {
+                    Toast.show('This guided path is no longer available.', 'error');
+                    UI.closeModals();
+                    return;
+                }
+                const oldPathway = existingPathway ? { ...existingPathway, steps: existingPathway.steps } : null;
+                const pathway = existingPathway || {
+                    id: `pw_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+                    title: '',
+                    desc: '',
+                    steps: []
+                };
+                Object.assign(pathway, {
+                    title,
+                    desc: document.getElementById('pathway-desc').value.trim(),
+                    steps
+                });
+                if (!existingPathway) State.pathways.push(pathway);
+                if (!await Data.save()) {
+                    if (existingPathway) Object.assign(existingPathway, oldPathway);
+                    else State.pathways = State.pathways.filter(item => item.id !== pathway.id);
+                    return;
+                }
+                UI.closeModals();
+                Toast.show(existingPathway ? 'Guided path updated.' : 'Guided path created.', 'success');
+                App.refreshCurrentView();
+            },
+            delete: (pathwayIndex) => {
+                if (!Number.isInteger(pathwayIndex) || pathwayIndex < 0 || pathwayIndex >= State.pathways.length) return;
+                const pathway = State.pathways[pathwayIndex];
+                UI.confirm('Delete Guided Path', `Delete "${pathway.title}" and its milestones?`, async () => {
+                    State.pathways.splice(pathwayIndex, 1);
+                    if (!await Data.save()) {
+                        State.pathways.splice(pathwayIndex, 0, pathway);
+                        return;
+                    }
+                    Toast.show('Guided path deleted.', 'success');
+                    App.refreshCurrentView();
+                });
+            }
+        };
+
         const PathwaysEngine = {
             getActiveSuggestion: () => {
                 for (let pw of State.pathways) {
@@ -2326,6 +2551,14 @@
         };
 
         const FinanceEngine = {
+            expenseEditingId: null,
+            recurrenceLabels: {
+                weekly: 'Weekly',
+                monthly: 'Monthly',
+                quarterly: 'Quarterly',
+                yearly: 'Yearly',
+                once: 'One-time'
+            },
             getSymbol: () => {
                 switch(State.currency) {
                     case 'INR': return '₹';
@@ -2335,6 +2568,216 @@
                 }
             },
             format: (v) => `${FinanceEngine.getSymbol()}${Number(v || 0).toLocaleString()}`,
+            displayAmount: (v) => State.finances.amountsHidden ? '••••••' : FinanceEngine.format(v),
+            cycleKey: (recurrence, date = new Date()) => {
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                if (recurrence === 'once') return 'once';
+                if (recurrence === 'weekly') {
+                    const weekStart = new Date(year, month, date.getDate());
+                    weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+                    return `week:${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, '0')}-${String(weekStart.getDate()).padStart(2, '0')}`;
+                }
+                if (recurrence === 'quarterly') return `quarter:${year}-Q${Math.floor(month / 3) + 1}`;
+                if (recurrence === 'yearly') return `year:${year}`;
+                return `month:${year}-${String(month + 1).padStart(2, '0')}`;
+            },
+            itemIsPaid: (item, now = new Date()) =>
+                item.paidPeriod === FinanceEngine.cycleKey(item.recurrence, now),
+            categorySpent: (category, now = new Date()) => {
+                const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                return (State.finances.transactions || []).reduce((total, transaction) => {
+                    const transactionDate = transaction.isoDate
+                        ? new Date(transaction.isoDate)
+                        : new Date(`${transaction.date || ''}, ${now.getFullYear()}`);
+                    if (Number.isNaN(transactionDate.getTime())) return total;
+                    const transactionMonth = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
+                    return transaction.category === category &&
+                        transaction.category !== 'Income' &&
+                        transactionMonth === monthKey
+                        ? total + Number(transaction.amount || 0)
+                        : total;
+                }, 0);
+            },
+            populateCategorySelect: (select, selected = '', includeIncome = false) => {
+                select.replaceChildren();
+                State.finances.budgets.forEach(budget => {
+                    const option = document.createElement('option');
+                    option.value = budget.category;
+                    option.textContent = budget.category;
+                    select.append(option);
+                });
+                if (includeIncome) {
+                    const incomeOption = document.createElement('option');
+                    incomeOption.value = 'Income';
+                    incomeOption.textContent = 'Income';
+                    select.append(incomeOption);
+                }
+                if (selected && [...select.options].some(option => option.value === selected)) select.value = selected;
+            },
+            openTransaction: () => {
+                FinanceEngine.populateCategorySelect(document.getElementById('tx-category'), '', true);
+                UI.openModal('tx-modal');
+            },
+            openCategory: () => {
+                document.getElementById('finance-category-name').value = '';
+                document.getElementById('finance-category-budget').value = '';
+                UI.openModal('finance-category-modal');
+            },
+            addCategory: async () => {
+                const category = document.getElementById('finance-category-name').value.trim();
+                const limit = Number(document.getElementById('finance-category-budget').value);
+                if (!category || !Number.isFinite(limit) || limit < 0) {
+                    Toast.show('Enter a category name and a valid monthly budget.', 'error');
+                    return;
+                }
+                if (State.finances.budgets.some(budget => budget.category.toLowerCase() === category.toLowerCase())) {
+                    Toast.show('That budget category already exists.', 'error');
+                    return;
+                }
+                State.finances.budgets.push({ category, limit });
+                if (!await Data.save()) {
+                    State.finances.budgets.pop();
+                    return;
+                }
+                UI.closeModals();
+                Toast.show('Budget category added.', 'success');
+                App.refreshCurrentView();
+            },
+            saveBudget: async (budgetIndex) => {
+                const budget = State.finances.budgets[budgetIndex];
+                const input = document.getElementById(`finance-budget-${budgetIndex}`);
+                const limit = Number(input?.value);
+                if (!budget || !Number.isFinite(limit) || limit < 0) {
+                    Toast.show('Enter a valid monthly budget amount.', 'error');
+                    return;
+                }
+                const previousLimit = budget.limit;
+                budget.limit = limit;
+                if (!await Data.save()) {
+                    budget.limit = previousLimit;
+                    return;
+                }
+                Toast.show('Monthly budget updated.', 'success');
+                App.refreshCurrentView();
+            },
+            toggleAmounts: async () => {
+                State.finances.amountsHidden = !State.finances.amountsHidden;
+                if (!await Data.save()) {
+                    State.finances.amountsHidden = !State.finances.amountsHidden;
+                    return;
+                }
+                App.refreshCurrentView();
+            },
+            openExpense: (expenseId = null, category = '') => {
+                const item = expenseId
+                    ? State.finances.budgetItems.find(expense => expense.id === expenseId)
+                    : null;
+                if (expenseId && !item) {
+                    Toast.show('This budget item is no longer available.', 'error');
+                    return;
+                }
+                FinanceEngine.expenseEditingId = item?.id || null;
+                document.getElementById('finance-expense-modal-title').textContent = item ? 'Edit Budget Item' : 'Add Budget Item';
+                document.getElementById('finance-expense-title').value = item?.title || '';
+                document.getElementById('finance-expense-amount').value = item?.amount ?? '';
+                document.getElementById('finance-expense-recurrence').value = item?.recurrence || 'monthly';
+                FinanceEngine.populateCategorySelect(document.getElementById('finance-expense-category'), item?.category || category);
+                UI.openModal('finance-expense-modal');
+            },
+            saveExpense: async () => {
+                const title = document.getElementById('finance-expense-title').value.trim();
+                const amount = Number(document.getElementById('finance-expense-amount').value);
+                const category = document.getElementById('finance-expense-category').value;
+                const recurrence = document.getElementById('finance-expense-recurrence').value;
+                if (!title || !Number.isFinite(amount) || amount <= 0 || !category ||
+                    !Object.prototype.hasOwnProperty.call(FinanceEngine.recurrenceLabels, recurrence)) {
+                    Toast.show('Enter an expense name, valid amount, category, and recurrence.', 'error');
+                    return;
+                }
+                const existingItem = FinanceEngine.expenseEditingId
+                    ? State.finances.budgetItems.find(item => item.id === FinanceEngine.expenseEditingId)
+                    : null;
+                if (FinanceEngine.expenseEditingId && !existingItem) {
+                    Toast.show('This budget item is no longer available.', 'error');
+                    UI.closeModals();
+                    return;
+                }
+                const previous = existingItem ? { ...existingItem } : null;
+                const item = existingItem || {
+                    id: `budget_item_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+                    paidPeriod: null
+                };
+                Object.assign(item, { title, amount, category, recurrence });
+                if (!existingItem) State.finances.budgetItems.unshift(item);
+                if (!await Data.save()) {
+                    if (previous) Object.assign(existingItem, previous);
+                    else State.finances.budgetItems = State.finances.budgetItems.filter(entry => entry.id !== item.id);
+                    return;
+                }
+                UI.closeModals();
+                Toast.show(existingItem ? 'Budget item updated.' : 'Budget item added.', 'success');
+                App.refreshCurrentView();
+            },
+            toggleBudgetItem: async (itemId, paid) => {
+                const item = State.finances.budgetItems.find(expense => expense.id === itemId);
+                if (!item) {
+                    Toast.show('This budget item is no longer available.', 'error');
+                    App.refreshCurrentView();
+                    return;
+                }
+                const previousPaidPeriod = item.paidPeriod || null;
+                const period = FinanceEngine.cycleKey(item.recurrence);
+                if (paid) {
+                    if (previousPaidPeriod === period) return;
+                    const now = new Date();
+                    const transaction = {
+                        id: `tx_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+                        desc: item.title,
+                        amount: item.amount,
+                        category: item.category,
+                        date: now.toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                        isoDate: now.toISOString(),
+                        budgetItemId: item.id,
+                        budgetPeriod: period
+                    };
+                    item.paidPeriod = period;
+                    State.finances.transactions.unshift(transaction);
+                    if (!await Data.save()) {
+                        item.paidPeriod = previousPaidPeriod;
+                        State.finances.transactions = State.finances.transactions.filter(entry => entry.id !== transaction.id);
+                        App.refreshCurrentView();
+                        return;
+                    }
+                    Toast.show('Marked paid and added to transactions.', 'success');
+                } else {
+                    if (previousPaidPeriod !== period) return;
+                    const relatedTransactions = State.finances.transactions.filter(entry =>
+                        entry.budgetItemId === item.id && entry.budgetPeriod === period);
+                    item.paidPeriod = null;
+                    State.finances.transactions = State.finances.transactions.filter(entry =>
+                        !(entry.budgetItemId === item.id && entry.budgetPeriod === period));
+                    if (!await Data.save()) {
+                        item.paidPeriod = previousPaidPeriod;
+                        State.finances.transactions.unshift(...relatedTransactions);
+                        App.refreshCurrentView();
+                        return;
+                    }
+                    Toast.show('Marked unpaid and removed its transaction.', 'success');
+                }
+                App.refreshCurrentView();
+            },
+            deleteExpense: async (expenseId) => {
+                const itemIndex = State.finances.budgetItems.findIndex(item => item.id === expenseId);
+                if (itemIndex < 0) return;
+                const [item] = State.finances.budgetItems.splice(itemIndex, 1);
+                if (!await Data.save()) {
+                    State.finances.budgetItems.splice(itemIndex, 0, item);
+                    return;
+                }
+                Toast.show('Budget item deleted. Historical transactions remain in the ledger.', 'success');
+                App.refreshCurrentView();
+            },
             setCurrency: (c) => {
                 State.currency = c;
                 Data.save();
@@ -2836,8 +3279,9 @@
                     <div class="flex justify-between items-center" style="margin-bottom: 24px;">
                         <div>
                             <h2>Guided Execution Pathways</h2>
-                            <p class="text-muted">Strategic roadmaps across biomechanical vitality, technical throughput, and runway.</p>
+                            <p class="text-muted">Create and shape your own step-by-step roadmaps.</p>
                         </div>
+                        <button class="primary sm" onclick="PathwayEditor.openNew()"><span class="material-symbols-outlined">add</span> Create Path</button>
                     </div>
                     ${active ? `
                         <div class="chrono-hero" style="margin-bottom: 24px;">
@@ -2856,7 +3300,16 @@
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
                         ${State.pathways.map((pw, pathwayIndex) => `
                             <div class="card">
-                                <div class="card-header"><h3 style="font-size: 1rem; font-weight:600;">${esc(pw.title)}</h3></div>
+                                <div class="card-header" style="align-items:flex-start; gap:12px;">
+                                    <div style="min-width:0;">
+                                        <h3 style="font-size: 1rem; font-weight:600;">${esc(pw.title)}</h3>
+                                        ${pw.desc ? `<p class="text-muted" style="margin-top:5px; font-size:0.8rem;">${esc(pw.desc)}</p>` : ''}
+                                    </div>
+                                    <div class="flex gap-1" style="flex-shrink:0;">
+                                        <button class="sm tonal" data-action="pathway-edit" data-pathway-index="${pathwayIndex}">Edit</button>
+                                        <button class="sm danger icon-btn" data-action="pathway-delete" data-pathway-index="${pathwayIndex}" aria-label="Delete guided path"><span class="material-symbols-outlined">delete</span></button>
+                                    </div>
+                                </div>
                                 <div class="flex-col gap-2">
                                     ${pw.steps.map((s, stepIndex) => `
                                 <div class="pathway-step-item">
@@ -2871,7 +3324,7 @@
                                 `).join('')}
                                 </div>
                             </div>
-                        `).join('')}
+                        `).join('') || '<div class="card text-muted">No guided paths yet. Create a path to define your own milestones and actions.</div>'}
                     </div>
                 `;
             },
@@ -2914,17 +3367,82 @@
             },
             finance: () => {
                 const txs = State.finances.transactions || [];
+                const budgets = State.finances.budgets || [];
+                const budgetItems = State.finances.budgetItems || [];
+                const amountsHidden = State.finances.amountsHidden === true;
                 return `
-                    <div class="flex justify-between items-center" style="margin-bottom: 24px;">
+                    <div class="flex justify-between items-center" style="margin-bottom: 24px; gap:12px; flex-wrap:wrap;">
                         <div>
                             <h2>Wealth & Capital Ledger</h2>
-                            <p class="text-muted">Liquid runway heuristics and illustrative compound estimates.</p>
+                            <p class="text-muted">Category budgets, recurring payments, and transaction history.</p>
                         </div>
-                        <button class="primary sm" onclick="UI.openModal('tx-modal')"><span class="material-symbols-outlined">add</span> Record Outflow</button>
+                        <div class="flex gap-2" style="flex-wrap:wrap;">
+                            <button class="sm" data-action="finance-toggle-amounts" aria-pressed="${amountsHidden}">${amountsHidden ? 'Show amounts' : 'Hide amounts'}</button>
+                            <button class="sm tonal" onclick="FinanceEngine.openCategory()"><span class="material-symbols-outlined">add</span> Add Category</button>
+                            <button class="sm tonal" onclick="FinanceEngine.openExpense()"><span class="material-symbols-outlined">add</span> Add Budget Item</button>
+                            <button class="primary sm" onclick="FinanceEngine.openTransaction()"><span class="material-symbols-outlined">add</span> Record Outflow</button>
+                        </div>
                     </div>
                     <div class="stat-grid">
-                        <div class="stat-card"><span class="text-muted">Base Monthly Income</span><h3 style="color:var(--md-sys-color-success); margin-top:6px; font-weight:600;">${FinanceEngine.format(State.finances.monthlyIncome)}</h3></div>
+                        <div class="stat-card"><span class="text-muted">Base Monthly Income</span><h3 style="color:var(--md-sys-color-success); margin-top:6px; font-weight:600;">${FinanceEngine.displayAmount(State.finances.monthlyIncome)}</h3></div>
                         <div class="stat-card"><span class="text-muted">Logged Transactions</span><h3 style="margin-top:6px; font-weight:600;">${txs.length} entries</h3></div>
+                    </div>
+                    <div class="card" style="margin-bottom:20px;">
+                        <div class="card-header" style="align-items:flex-start;">
+                            <div>
+                                <h3 style="font-size:1rem; font-weight:600;">Budget Categories</h3>
+                                <p class="text-muted" style="font-size:0.78rem; margin-top:4px;">Monthly remaining is your category budget minus this month's logged outflows. Recurring paid items reset by their selected interval.</p>
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px;">
+                            ${budgets.map((budget, budgetIndex) => {
+                                const spent = FinanceEngine.categorySpent(budget.category);
+                                const budgetLimit = Number(budget.limit);
+                                const remaining = (Number.isFinite(budgetLimit) ? budgetLimit : 0) - spent;
+                                const items = budgetItems.map((item, itemIndex) => ({ item, itemIndex }))
+                                    .filter(({ item }) => item.category === budget.category);
+                                return `
+                                    <section class="stat-card" aria-label="Budget category">
+                                        <div class="flex justify-between items-center" style="gap:8px;">
+                                            <h4 style="font-size:0.94rem; font-weight:600;">${esc(budget.category)}</h4>
+                                            <button class="sm tonal" data-action="finance-add-item" data-budget-index="${budgetIndex}">Add item</button>
+                                        </div>
+                                        <label class="text-muted" style="display:block; margin-top:12px; font-size:0.75rem;">
+                                            Monthly budget
+                                            <input id="finance-budget-${budgetIndex}" type="number" min="0" step="0.01" value="${amountsHidden ? '' : (Number.isFinite(Number(budget.limit)) ? Number(budget.limit) : 0)}" placeholder="${amountsHidden ? 'Hidden' : ''}" ${amountsHidden ? 'disabled' : ''} style="margin-top:5px;">
+                                        </label>
+                                        <button class="sm" data-action="finance-save-budget" data-budget-index="${budgetIndex}" ${amountsHidden ? 'disabled' : ''} style="margin-top:6px;">Save budget</button>
+                                        <div class="flex justify-between text-muted" style="margin-top:12px; font-size:0.78rem;">
+                                            <span>Spent this month</span><strong>${FinanceEngine.displayAmount(spent)}</strong>
+                                        </div>
+                                        <div class="flex justify-between" style="margin-top:5px; font-size:0.84rem;">
+                                            <span>Tentative remaining</span>
+                                            <strong style="color:${remaining < 0 ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-success)'};">${FinanceEngine.displayAmount(remaining)}</strong>
+                                        </div>
+                                        <div class="flex-col gap-2" style="margin-top:12px;">
+                                            ${items.map(({ item, itemIndex }) => {
+                                                const isPaid = FinanceEngine.itemIsPaid(item);
+                                                const recurrenceLabel = Object.prototype.hasOwnProperty.call(FinanceEngine.recurrenceLabels, item.recurrence)
+                                                    ? FinanceEngine.recurrenceLabels[item.recurrence]
+                                                    : 'Monthly';
+                                                return `
+                                                    <div class="flex justify-between items-center" style="gap:8px; padding:9px 10px; border:1px solid var(--md-sys-color-outline-variant); border-radius:var(--radius-sm);">
+                                                        <label class="flex items-center gap-2" style="min-width:0; flex:1; cursor:pointer;">
+                                                            <input type="checkbox" data-action="finance-item-paid" data-budget-item-index="${itemIndex}" ${isPaid ? 'checked' : ''} aria-label="Mark budget item paid">
+                                                            <span style="min-width:0; overflow-wrap:anywhere; ${isPaid ? 'text-decoration:line-through; opacity:0.65;' : ''}">${esc(item.title)}<small class="text-muted" style="display:block; text-decoration:none;">${recurrenceLabel} · ${FinanceEngine.displayAmount(item.amount)}</small></span>
+                                                        </label>
+                                                        <div class="flex gap-1" style="flex-shrink:0;">
+                                                            <button class="sm tonal" data-action="finance-edit-item" data-budget-item-index="${itemIndex}" aria-label="Edit budget item">Edit</button>
+                                                            <button class="sm danger icon-btn" data-action="finance-delete-item" data-budget-item-index="${itemIndex}" aria-label="Delete budget item"><span class="material-symbols-outlined">delete</span></button>
+                                                        </div>
+                                                    </div>
+                                                `;
+                                            }).join('') || '<span class="text-muted" style="font-size:0.78rem;">No budget items yet.</span>'}
+                                        </div>
+                                    </section>
+                                `;
+                            }).join('') || '<p class="text-muted">Add a budget category to start tracking expenses.</p>'}
+                        </div>
                     </div>
                     <div class="card">
                         <div class="card-header"><h3 style="font-size:1rem; font-weight:600;">Financial Transactions</h3></div>
@@ -2932,7 +3450,7 @@
                             ${txs.map(t => `
                                 <div class="flex justify-between items-center" style="background:var(--md-sys-color-surface-container); padding:10px 14px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
                                     <div><div style="font-weight:600; font-size:0.84rem;">${esc(t.desc)}</div><span class="text-muted">${esc(t.date)} • ${esc(t.category)}</span></div>
-                                    <strong style="${t.category === 'Income' ? 'color:var(--md-sys-color-success);' : 'color:var(--md-sys-color-error);'}">${FinanceEngine.format(t.amount)}</strong>
+                                    <strong style="${t.category === 'Income' ? 'color:var(--md-sys-color-success);' : 'color:var(--md-sys-color-error);'}">${FinanceEngine.displayAmount(t.amount)}</strong>
                                 </div>
                             `).join('') || '<div class="text-muted">No transactions logged yet.</div>'}
                         </div>
@@ -3270,6 +3788,43 @@
                         : -1;
 
                     switch (actionElement.dataset.action) {
+                        case 'finance-toggle-amounts':
+                            FinanceEngine.toggleAmounts();
+                            return;
+                        case 'finance-add-item': {
+                            const budgetIndex = getIndex(actionElement.dataset.budgetIndex, State.finances.budgets);
+                            if (budgetIndex >= 0) FinanceEngine.openExpense(null, State.finances.budgets[budgetIndex].category);
+                            return;
+                        }
+                        case 'finance-save-budget': {
+                            const budgetIndex = getIndex(actionElement.dataset.budgetIndex, State.finances.budgets);
+                            if (budgetIndex >= 0) FinanceEngine.saveBudget(budgetIndex);
+                            return;
+                        }
+                        case 'finance-edit-item': {
+                            const itemIndex = getIndex(actionElement.dataset.budgetItemIndex, State.finances.budgetItems);
+                            if (itemIndex >= 0) FinanceEngine.openExpense(State.finances.budgetItems[itemIndex].id);
+                            return;
+                        }
+                        case 'finance-delete-item': {
+                            const itemIndex = getIndex(actionElement.dataset.budgetItemIndex, State.finances.budgetItems);
+                            if (itemIndex >= 0) FinanceEngine.deleteExpense(State.finances.budgetItems[itemIndex].id);
+                            return;
+                        }
+                        case 'pathway-add-step':
+                            PathwayEditor.addStep();
+                            return;
+                        case 'pathway-remove-step': {
+                            const editorStepIndex = getIndex(actionElement.dataset.editorStepIndex, PathwayEditor.steps);
+                            if (editorStepIndex >= 0) PathwayEditor.removeStep(editorStepIndex);
+                            return;
+                        }
+                        case 'pathway-edit':
+                            if (pathwayIndex >= 0) PathwayEditor.open(State.pathways[pathwayIndex].id);
+                            return;
+                        case 'pathway-delete':
+                            if (pathwayIndex >= 0) PathwayEditor.delete(pathwayIndex);
+                            return;
                         case 'note-open': {
                             const noteIndex = getIndex(actionElement.dataset.noteIndex, State.notes);
                             if (noteIndex >= 0) NoteEditor.open(State.notes[noteIndex].id);
@@ -3362,6 +3917,14 @@
                 } else if (target.dataset.action === 'story-move') {
                     const storyIndex = getIndex(target.dataset.storyIndex, State.stories || []);
                     if (storyIndex >= 0) WorkStoryEngine.moveState(State.stories[storyIndex].id, target.value);
+                } else if (target.dataset.action === 'finance-item-paid' && target instanceof HTMLInputElement) {
+                    const itemIndex = getIndex(target.dataset.budgetItemIndex, State.finances.budgetItems || []);
+                    if (itemIndex >= 0) FinanceEngine.toggleBudgetItem(State.finances.budgetItems[itemIndex].id, target.checked);
+                } else if (target.classList.contains('pathway-step-activity')) {
+                    const row = target.closest('.pathway-step-editor');
+                    const actionLabel = row?.querySelector('.pathway-step-action-label');
+                    const activity = PathwayEditor.activityTypes.find(([value]) => value === target.value);
+                    if (actionLabel && activity) actionLabel.value = activity[2];
                 }
             },
 

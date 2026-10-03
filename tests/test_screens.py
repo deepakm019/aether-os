@@ -32,6 +32,13 @@ def test_every_screen_renders_from_navigation(app_page: Page, view: str, heading
 def test_pathway_steps_fit_iphone_touch_targets(app_page: Page) -> None:
     app_page.set_viewport_size({"width": 393, "height": 852})
     app_page.locator('#bottom-nav .bnav-item[data-view="pathways"]').click()
+    app_page.get_by_role("button", name="Create Path").click()
+    app_page.locator("#pathway-title").fill("Mobile layout path")
+    app_page.locator(".pathway-step-title").nth(0).fill("First mobile milestone")
+    app_page.get_by_role("button", name="Add Milestone").click()
+    app_page.locator(".pathway-step-title").nth(1).fill("Second mobile milestone")
+    app_page.get_by_role("button", name="Save Path").click()
+
     step = app_page.locator(".pathway-step-item").nth(1)
     checkbox = step.locator('input[type="checkbox"]')
     action = step.locator(".pathway-step-actions button")

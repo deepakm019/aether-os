@@ -16,6 +16,48 @@ def test_create_task_and_open_its_inspector(app_page: Page) -> None:
     expect(app_page.locator("#drawer-task-title")).to_have_value("Playwright-created task")
 
 
+def test_create_and_edit_custom_guided_path(app_page: Page) -> None:
+    app_page.locator('.nav-item[data-view="pathways"]').click()
+    expect(app_page.locator("#content")).to_contain_text("No guided paths yet")
+    expect(app_page.locator("#content")).not_to_contain_text("Peak Physical Architecture")
+
+    app_page.get_by_role("button", name="Create Path").click()
+    app_page.locator("#pathway-title").fill("Quarterly learning plan")
+    app_page.locator("#pathway-desc").fill("Build a steady learning habit.")
+    app_page.locator(".pathway-step-title").nth(0).fill("Read one chapter")
+    app_page.locator(".pathway-step-activity").nth(0).select_option("time")
+    app_page.locator(".pathway-step-action-label").nth(0).fill("Start reading timer")
+    app_page.get_by_role("button", name="Add Milestone").click()
+    app_page.locator(".pathway-step-title").nth(1).fill("Write a short summary")
+    app_page.locator(".pathway-step-activity").nth(1).select_option("note")
+    app_page.get_by_role("button", name="Save Path").click()
+
+    path_card = app_page.locator("#content .card").filter(has_text="Quarterly learning plan")
+    expect(path_card).to_contain_text("Build a steady learning habit.")
+    expect(path_card.locator(".pathway-step-item")).to_have_count(2)
+    expect(path_card.locator(".pathway-step-actions button").first).to_have_text("Start reading timer")
+
+    path_card.locator('input[type="checkbox"]').first.check()
+    path_card.get_by_role("button", name="Edit").click()
+    expect(app_page.locator("#pathway-modal-title")).to_have_text("Edit Guided Path")
+    expect(app_page.locator(".pathway-step-title").nth(0)).to_have_value("Read one chapter")
+    expect(app_page.locator(".pathway-step-activity").nth(0)).to_have_value("time")
+
+    app_page.locator("#pathway-title").fill("Updated learning plan")
+    app_page.locator(".pathway-step-title").nth(0).fill("Read two chapters")
+    app_page.locator('[data-action="pathway-remove-step"]').nth(1).click()
+    app_page.get_by_role("button", name="Save Path").click()
+
+    path_card = app_page.locator("#content .card").filter(has_text="Updated learning plan")
+    expect(path_card.locator(".pathway-step-item")).to_have_count(1)
+    expect(path_card.locator(".pathway-step-item")).to_contain_text("Read two chapters")
+    expect(path_card.locator('input[type="checkbox"]')).to_be_checked()
+
+    path_card.get_by_role("button", name="Delete guided path").click()
+    app_page.get_by_role("button", name="Proceed").click()
+    expect(app_page.locator("#content")).to_contain_text("No guided paths yet")
+
+
 def test_create_workout_and_render_canvas_chart(app_page: Page) -> None:
     app_page.locator('.nav-item[data-view="workout"]').click()
     app_page.get_by_role("button", name="Log Session").click()
@@ -86,6 +128,68 @@ def test_edit_note_category_and_create_editable_task_from_note(app_page: Page) -
     expect(task_card).to_be_visible()
     task_card.click()
     expect(app_page.locator("#drawer-task-title")).to_have_value("Task refined from note")
+
+
+def test_finance_categories_recurring_paid_items_and_amount_visibility(app_page: Page) -> None:
+    app_page.locator('.nav-item[data-view="finance"]').click()
+    housing = app_page.locator("#content section.stat-card").filter(has_text="Housing").first
+    expect(housing).to_be_visible()
+
+    housing.get_by_role("button", name="Add item").click()
+    app_page.locator("#finance-expense-title").fill("Internet service")
+    app_page.locator("#finance-expense-amount").fill("350")
+    app_page.locator("#finance-expense-recurrence").select_option("weekly")
+    expect(app_page.locator("#finance-expense-category")).to_have_value("Housing")
+    app_page.get_by_role("button", name="Save Item").click()
+
+    housing = app_page.locator("#content section.stat-card").filter(has_text="Housing").first
+    paid_checkbox = housing.locator('[data-action="finance-item-paid"]')
+    expect(paid_checkbox).not_to_be_checked()
+    paid_checkbox.check()
+    expect(app_page.locator("#toast-container")).to_contain_text("Marked paid and added to transactions.")
+    expect(app_page.locator("#content")).to_contain_text("Internet service")
+    assert app_page.evaluate("State.finances.transactions.filter(tx => tx.budgetItemId).length") == 1
+    assert app_page.evaluate("FinanceEngine.categorySpent('Housing')") == 350
+
+    app_page.evaluate(
+        """async () => {
+            const item = State.finances.budgetItems[0];
+            const previousWeek = new Date();
+            previousWeek.setDate(previousWeek.getDate() - 7);
+            item.paidPeriod = FinanceEngine.cycleKey('weekly', previousWeek);
+            await Data.save();
+            App.refreshCurrentView();
+        }"""
+    )
+    housing = app_page.locator("#content section.stat-card").filter(has_text="Housing").first
+    expect(housing.locator('[data-action="finance-item-paid"]')).not_to_be_checked()
+
+    app_page.get_by_role("button", name="Hide amounts").click()
+    housing = app_page.locator("#content section.stat-card").filter(has_text="Housing").first
+    expect(app_page.get_by_role("button", name="Show amounts")).to_be_visible()
+    expect(housing.locator("#finance-budget-0")).to_be_disabled()
+    expect(housing).not_to_contain_text("30,000")
+    expect(housing).not_to_contain_text("350")
+
+    app_page.get_by_role("button", name="Show amounts").click()
+    housing = app_page.locator("#content section.stat-card").filter(has_text="Housing").first
+    expect(housing.locator("#finance-budget-0")).to_have_value("30000")
+    expect(housing).to_contain_text("29,650")
+
+    app_page.get_by_role("button", name="Add Category").click()
+    app_page.locator("#finance-category-name").fill("Travel")
+    app_page.locator("#finance-category-budget").fill("5000")
+    app_page.get_by_role("button", name="Add Category").last.click()
+    expect(app_page.locator("#content section.stat-card").filter(has_text="Travel").first).to_be_visible()
+    app_page.get_by_role("button", name="Add Budget Item").click()
+    expect(app_page.locator("#finance-expense-category")).to_contain_text("Travel")
+    app_page.get_by_role("button", name="Cancel").last.click()
+
+    app_page.set_viewport_size({"width": 393, "height": 852})
+    layout = app_page.locator("#content").evaluate(
+        "(content) => content.scrollWidth <= content.clientWidth"
+    )
+    assert layout
 
 
 def test_timer_and_theme_controls_work(app_page: Page) -> None:
