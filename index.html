@@ -12,13 +12,13 @@
 
     <style>
         :root[data-theme="dark"] {
-            --md-sys-color-background: #14111b;
-            --md-sys-color-surface: #1d1927;
-            --md-sys-color-surface-container: #242032;
-            --md-sys-color-surface-container-high: #302a40;
-            --md-sys-color-surface-variant: #393249;
-            --md-sys-color-outline: #514860;
-            --md-sys-color-outline-variant: #332d40;
+            --md-sys-color-background: #09080e;
+            --md-sys-color-surface: #12101b;
+            --md-sys-color-surface-container: #181524;
+            --md-sys-color-surface-container-high: #221e33;
+            --md-sys-color-surface-variant: #29243a;
+            --md-sys-color-outline: rgba(255, 255, 255, 0.12);
+            --md-sys-color-outline-variant: rgba(255, 255, 255, 0.08);
             
             --md-sys-color-primary: #c4a5ff;
             --md-sys-color-on-primary: #27104f;
@@ -50,13 +50,13 @@
         }
 
         :root[data-theme="light"] {
-            --md-sys-color-background: #fff9f0;
-            --md-sys-color-surface: #fffdf9;
-            --md-sys-color-surface-container: #f8f0e8;
-            --md-sys-color-surface-container-high: #f1e6dc;
-            --md-sys-color-surface-variant: #ece1d8;
-            --md-sys-color-outline: #d8c9bd;
-            --md-sys-color-outline-variant: #eee3da;
+            --md-sys-color-background: #f8fafc;
+            --md-sys-color-surface: #ffffff;
+            --md-sys-color-surface-container: #ffffff;
+            --md-sys-color-surface-container-high: #f1f5f9;
+            --md-sys-color-surface-variant: #f1f5f9;
+            --md-sys-color-outline: #cbd5e1;
+            --md-sys-color-outline-variant: #e2e8f0;
             
             --md-sys-color-primary: #7046c8;
             --md-sys-color-on-primary: #ffffff;
@@ -88,8 +88,8 @@
         }
 
         :root {
-            --font-sans: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            --font-mono: 'Roboto Mono', ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Geist', 'Inter', sans-serif;
+            --font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Code', monospace;
             --nav-width: 272px;
             --topbar-height: 64px;
             --radius-xs: 4px;
@@ -303,8 +303,31 @@
             margin-top: auto; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant);
             padding: 14px 16px; border-radius: var(--radius-md); margin-bottom: 12px;
         }
-        .xp-track { width: 100%; height: 5px; background: var(--md-sys-color-outline-variant); border-radius: var(--radius-pill); margin: 8px 0; overflow: hidden; }
-        .xp-progress { height: 100%; background: var(--md-sys-color-primary); width: 0%; transition: width 0.4s ease; border-radius: var(--radius-pill); }
+        .sidebar-achievements { padding: 12px; }
+        .topbar-rewards {
+            display: grid; gap: 5px; width: min(232px, 30vw); min-width: 156px; padding: 7px 11px;
+            border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 28%, var(--md-sys-color-outline-variant));
+            border-radius: 14px; background: color-mix(in srgb, var(--md-sys-color-primary-container) 28%, var(--md-sys-color-surface));
+            box-shadow: inset 0 1px rgba(255, 255, 255, 0.04);
+        }
+        .reward-meta, .reward-daily { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+        .reward-level { flex: 0 0 auto; color: var(--md-sys-color-primary); font-size: 0.67rem; font-weight: 700; letter-spacing: 0.04em; }
+        .reward-title { min-width: 0; overflow: hidden; color: var(--md-sys-color-text-secondary); font-size: 0.68rem; text-overflow: ellipsis; white-space: nowrap; }
+        .reward-xp { flex: 0 0 auto; color: var(--md-sys-color-text-muted); font-size: 0.64rem; font-variant-numeric: tabular-nums; }
+        .reward-streak {
+            flex: 0 0 auto; display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px;
+            border-radius: var(--radius-pill); background: var(--md-sys-color-warning-container);
+            color: var(--md-sys-color-warning); font-size: 0.65rem; font-weight: 700; font-variant-numeric: tabular-nums;
+        }
+        .reward-daily { color: var(--md-sys-color-text-muted); font-size: 0.63rem; font-variant-numeric: tabular-nums; }
+        .reward-daily strong { color: var(--md-sys-color-text-main); font-weight: 600; }
+        .reward-track { height: 3px; overflow: hidden; border-radius: var(--radius-pill); background: var(--md-sys-color-outline-variant); }
+        .reward-fill {
+            width: 0; height: 100%; border-radius: inherit;
+            background: linear-gradient(90deg, var(--md-sys-color-primary), var(--md-sys-color-success));
+            box-shadow: 0 0 8px color-mix(in srgb, var(--md-sys-color-primary) 55%, transparent);
+            transition: width 0.4s ease;
+        }
 
         #main-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; overflow: hidden; }
         
@@ -319,7 +342,7 @@
             display: flex; align-items: center; gap: 8px; min-width: 0;
             flex: 1 1 auto;
         }
-        #topbar > .topbar-group:last-child {
+        #topbar > .topbar-group:nth-of-type(2) {
             justify-content: flex-end;
             flex: 0 1 auto;
         }
@@ -692,6 +715,7 @@
             #content { padding: 16px; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
             #topbar { padding: 0 12px; gap: 8px; }
             #topbar > .topbar-group { gap: 6px; }
+            .topbar-rewards { width: 184px; min-width: 142px; }
             .topbar-search-bar {
                 padding: 5px 10px;
                 min-height: 40px;
@@ -736,6 +760,30 @@
             .btn-group-responsive button, .btn-group-responsive label.btn-label { width: 100%; }
             .kanban-board { height: calc(100vh - 210px); }
             .pathway-step-editor { grid-template-columns: minmax(0, 1fr); }
+            #topbar {
+                height: auto; min-height: var(--topbar-height); display: grid;
+                grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 44px auto;
+                align-content: center; gap: 4px 8px; padding: 6px 12px;
+            }
+            #topbar > .topbar-group:first-child { grid-column: 1; grid-row: 1; width: 100%; }
+            #topbar > .topbar-group:nth-of-type(2) { grid-column: 2; grid-row: 1; gap: 6px; }
+            #topbar > .topbar-rewards {
+                grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: 1fr auto;
+                align-items: center; gap: 3px 10px; width: 100%; min-width: 0;
+                padding: 0 2px; border: 0; border-radius: 0; background: transparent; box-shadow: none;
+            }
+            #topbar > .topbar-rewards .reward-meta { justify-content: flex-start; gap: 8px; }
+            #topbar > .topbar-rewards .reward-xp,
+            .reward-streak-label { display: none; }
+            #topbar > .topbar-rewards .reward-daily { grid-column: 2; grid-row: 1; gap: 4px; }
+            #topbar > .topbar-rewards .reward-track { grid-column: 1 / -1; grid-row: 2; }
+            #topbar .topbar-search-bar { min-width: 0; }
+            #topbar .topbar-search-bar .search-text { font-size: 0.76rem; }
+            #topbar .topbar-create-label { display: none; }
+        }
+        @media (max-width: 380px) {
+            #topbar { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 6px; padding-right: 10px; padding-left: 10px; }
+            #topbar > .topbar-group:nth-of-type(2) { gap: 4px; }
         }
         .drag-handle[draggable="true"] { cursor: grab; }
         .task-card.is-dragging { opacity: 0.45; transform: rotate(-1deg) scale(0.98); }
@@ -745,22 +793,13 @@
             outline-offset: -4px;
             border-radius: var(--radius-md);
         }
-        .xp-track { height: 8px; background: var(--md-sys-color-surface-variant); }
-        .xp-progress {
-            background: linear-gradient(90deg, #9c72ff, #ff8a7b, #ffc66d, #78e2bd, #9c72ff);
-            background-size: 220% 100%;
-            box-shadow: 0 0 14px rgba(196, 165, 255, 0.45);
-            animation: xp-shimmer 5s linear infinite;
-        }
-        @keyframes xp-shimmer { to { background-position: 220% 0; } }
         .stat-card, .card, .kanban-col { border-radius: var(--radius-md); }
-        .card { border-color: color-mix(in srgb, var(--md-sys-color-primary) 16%, var(--md-sys-color-outline-variant)); }
+        .card { border-color: var(--md-sys-color-outline-variant); box-shadow: var(--elevation-1); }
         button, .chip { transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease; }
         button:hover, .chip:hover { transform: translateY(-2px); box-shadow: var(--elevation-1); }
         button:active, .chip:active { transform: scale(0.97); }
         :focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 3px; }
         .rpg-card { border-color: color-mix(in srgb, var(--md-sys-color-primary) 32%, var(--md-sys-color-outline-variant)); }
-        #ui-xp { display: inline-block; padding: 2px 7px; border-radius: var(--radius-pill); background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
         }
@@ -785,6 +824,32 @@
             .calendar-event-kind, .calendar-event-amount { display:none; }
         }
         @media (max-width: 420px) { .calendar-day { min-height:72px; padding:3px; } .calendar-event-title { font-size:0.62rem; } }
+        :root { font-variant-numeric: tabular-nums lining-nums; }
+        .energy-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:var(--radius-pill); font-size:.68rem; font-weight:600; white-space:nowrap; }
+        .energy-deep { background:rgba(168,85,247,.15); color:#c084fc; border:1px solid rgba(168,85,247,.3); }
+        .energy-shallow { background:rgba(16,185,129,.15); color:#34d399; border:1px solid rgba(16,185,129,.3); }
+        .energy-reactive { background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.3); }
+        .dashboard-grid { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr); gap:16px; }
+        .dashboard-task-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; align-items:center; gap:10px; padding:12px; border:1px solid var(--md-sys-color-outline-variant); border-radius:var(--radius-sm); background:var(--md-sys-color-surface); }
+        .dashboard-task-row:hover { border-color:var(--md-sys-color-outline); }
+        .task-rank { color:var(--md-sys-color-primary); font-weight:700; font-size:.78rem; }
+        .task-complete-toggle { width:20px; height:20px; accent-color:var(--md-sys-color-primary); cursor:pointer; }
+        .energy-track { display:flex; width:100%; height:12px; overflow:hidden; border-radius:var(--radius-pill); background:var(--md-sys-color-surface-variant); }
+        .energy-track span { height:100%; transition:width .3s ease; }
+        .badge-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; }
+        .badge-tile { min-width:0; padding:12px; text-align:center; border:1px solid var(--md-sys-color-outline-variant); border-radius:var(--radius-sm); background:var(--md-sys-color-surface-container); }
+        .badge-tile.unlocked { background:linear-gradient(145deg,rgba(168,85,247,.22),rgba(59,130,246,.12)); border-color:rgba(192,132,252,.45); box-shadow:0 0 22px rgba(168,85,247,.12); }
+        .badge-tile.locked { filter:grayscale(1); opacity:.66; }
+        .badge-emblem { display:block; font-size:1.45rem; margin-bottom:6px; }
+        .badge-emblem svg { width:26px; height:26px; }
+        .heatmap-cell { border-radius:4px; transition:transform .16s ease, filter .16s ease; }
+        .heatmap-cell:hover { transform:scale(1.35); filter:brightness(1.22); }
+        .heatmap-cell[data-tooltip] { position:relative; }
+        .heatmap-cell[data-tooltip]:hover::after { content:attr(data-tooltip); position:absolute; z-index:20; left:50%; bottom:calc(100% + 7px); transform:translateX(-50%); padding:5px 8px; border:1px solid var(--md-sys-color-outline-variant); border-radius:6px; background:var(--md-sys-color-surface-variant); color:var(--md-sys-color-text-main); font-size:.68rem; white-space:nowrap; box-shadow:var(--elevation-2); pointer-events:none; }
+        .rpg-trophies { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-top:10px; }
+        .rpg-trophies span { text-align:center; padding:4px 2px; border-radius:6px; background:var(--md-sys-color-surface-container); font-size:.85rem; }
+        @media (max-width: 900px) { .dashboard-grid { grid-template-columns:minmax(0,1fr); } }
+        @media (max-width: 600px) { .dashboard-task-row { grid-template-columns:auto minmax(0,1fr) auto; } .dashboard-task-row .energy-pill { grid-column:2; justify-self:start; } .dashboard-task-row .task-focus { grid-column:3; grid-row:1/3; } }
     </style>
 </head>
 <body>
@@ -801,14 +866,14 @@
             <p class="text-muted" style="margin-bottom: 20px;">AES-256-GCM Web Crypto Encrypted Workspace</p>
 
             <div class="flex gap-2" style="margin-bottom: 18px; background: var(--md-sys-color-surface-container); padding: 4px; border-radius: var(--radius-pill);">
-                <button id="tab-fetch" class="primary sm" style="flex: 1;" onclick="App.setAuthMode('fetch')">Fetch by Key</button>
-                <button id="tab-new" class="sm" style="flex: 1; background: transparent; border: none;" onclick="App.setAuthMode('new')">Login as New</button>
+                <button id="tab-fetch" class="primary sm" style="flex: 1;" onclick="App.setAuthMode('fetch')">Unlock Vault</button>
+                <button id="tab-new" class="sm" style="flex: 1; background: transparent; border: none;" onclick="App.setAuthMode('new')">Create New Vault</button>
             </div>
 
             <div id="auth-panel-fetch">
-                <input type="password" id="fetch-key" placeholder="Enter Vault Master Passphrase" style="margin-bottom: 14px;">
+                <input type="password" id="fetch-key" placeholder="Enter your master password" style="margin-bottom: 14px;">
                 <div class="flex gap-2 btn-group-responsive">
-                    <button class="primary" style="flex: 1;" onclick="App.fetchByKey()">Unlock Workspace</button>
+                    <button class="primary" style="flex: 1;" onclick="App.fetchByKey()">Unlock Vault</button>
                     <button style="flex: 1;" onclick="App.loadDemoData()">Load Demo</button>
                 </div>
                 <div style="margin-top: 16px; border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 14px;">
@@ -825,7 +890,7 @@
                 <p class="text-muted" style="margin-bottom: 14px; font-size: 0.75rem;">Use at least 16 characters; a unique phrase of four or more unrelated words is recommended.</p>
                 <div class="flex gap-2 btn-group-responsive">
                     <button class="primary" style="flex: 1;" onclick="App.loginAsNew()">Initialize New Vault</button>
-                    <button class="tonal" style="flex: 1;" onclick="App.fetchFromNewInput()">Fetch by This Key</button>
+                    <button class="tonal" style="flex: 1;" onclick="App.fetchFromNewInput()">Unlock Existing Vault</button>
                 </div>
             </div>
             <p id="auth-error" style="color: var(--md-sys-color-error); margin-top: 12px; font-size: 0.78rem; display: none;"></p>
@@ -871,34 +936,34 @@
                 </button>
             </div>
             
-            <div class="nav-label">Core Engine</div>
-            <div class="nav-item active" data-view="pathways">
+            <div class="nav-label">Workspace</div>
+            <div class="nav-item" data-view="pathways">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M7 18h3a3 3 0 0 0 3-3V9a3 3 0 0 1 3-3h1"/></svg></span>
-                <span>Quests & Pathways</span>
+                <span>Goal Roadmaps</span>
             </div>
-            <div class="nav-item" data-view="dashboard">
+            <div class="nav-item active" data-view="dashboard">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg></span>
-                <span>Command Center</span>
+                <span>Dashboard</span>
             </div>
 
-            <div class="nav-label">Kinetic & Focus</div>
+            <div class="nav-label">Health & Focus</div>
             <div class="nav-item" data-view="workout">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>
-                <span>Kinetic Lab</span>
+                <span>Workouts & Fitness</span>
             </div>
             <div class="nav-item" data-view="timeview">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6M12 2v3"/></svg></span>
-                <span>Focus Flow</span>
+                <span>Focus Timer</span>
             </div>
 
-            <div class="nav-label">Agile & Operations</div>
+            <div class="nav-label">Planning</div>
             <div class="nav-item" data-view="stories">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 5.5v13A2.5 2.5 0 0 1 6.5 16H20M8 7h8M8 11h6"/></svg></span>
-                <span>Stories & Epics</span>
+                <span>Projects & Milestones</span>
             </div>
             <div class="nav-item" data-view="projects">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg></span>
-                <span>Action Board</span>
+                <span>Task Board</span>
             </div>
             <div class="nav-item" data-view="eisenhower">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></span>
@@ -910,10 +975,10 @@
             </div>
             <div class="nav-item" data-view="audit">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span>
-                <span>Audit Stream</span>
+                <span>Activity History</span>
             </div>
 
-            <div class="nav-label">Capital & Intellect</div>
+            <div class="nav-label">Money & Ideas</div>
             <div class="nav-item" data-view="finance">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M16 14h2M7 5V3h10v2"/></svg></span>
                 <span>Wallet & Budget</span>
@@ -924,26 +989,22 @@
             </div>
             <div class="nav-item" data-view="brain">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M8 14c-1.5-1-2.5-2.7-2.5-4.7a6.5 6.5 0 1 1 13 0c0 2-1 3.7-2.5 4.7-.6.4-1 1.1-1 1.8h-6c0-.7-.4-1.4-1-1.8z"/><path d="M12 3v2"/></svg></span>
-                <span>Idea Vault</span>
+                <span>Notes & Ideas</span>
             </div>
             <div class="nav-item" data-view="snapshots">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></svg></span>
-                <span>Checkpoints</span>
+                <span>Backup Snapshots</span>
             </div>
 
-            <div class="nav-label">Governance</div>
+            <div class="nav-label">Privacy</div>
             <div class="nav-item" data-view="legal">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/><path d="m9 12 2 2 4-4"/></svg></span>
                 <span>Privacy & Security</span>
             </div>
 
-            <div class="rpg-card">
-                <div class="flex justify-between items-center">
-                    <span style="font-weight: 600; font-size: 0.825rem;">Level <span id="ui-level">1</span></span>
-                    <span class="text-muted" style="font-size: 0.72rem;"><span id="ui-xp">0</span> / <span id="ui-next-xp">1000</span> XP</span>
-                </div>
-                <div class="xp-track"><div class="xp-progress" id="ui-xp-fill"></div></div>
-                <div class="text-muted" style="font-size: 0.72rem;" id="ui-title">Novice Strategist</div>
+            <div class="rpg-card sidebar-achievements">
+                <div class="nav-label" style="padding: 0 0 6px;">Achievements</div>
+                <div class="rpg-trophies" id="sidebar-trophy-case" aria-label="Unlocked achievements"></div>
             </div>
         </aside>
 
@@ -978,10 +1039,27 @@
                         <span class="material-symbols-outlined">dark_mode</span>
                     </button>
 
-                    <button class="primary sm" onclick="UI.openModal('task-modal')">
+                    <button class="primary sm" onclick="UI.openModal('task-modal')" title="Create task" aria-label="Create task">
                         <span class="material-symbols-outlined" style="font-size: 18px;">add</span>
-                        <span>Create</span>
+                        <span class="topbar-create-label">Create</span>
                     </button>
+                </div>
+
+                <div class="topbar-rewards" aria-label="Daily rewards and level progress">
+                    <div class="reward-meta">
+                        <span class="reward-level" id="ui-level-label" title="Novice Strategist">LV <span id="ui-level">1</span></span>
+                        <span class="reward-xp"><span id="ui-xp">0</span>/<span id="ui-next-xp">1000</span> XP</span>
+                        <span class="reward-streak" title="Consecutive active days">
+                            <span aria-hidden="true">🔥</span><span id="ui-streak">0</span><span class="reward-streak-label"> day streak</span>
+                        </span>
+                    </div>
+                    <div class="reward-daily">
+                        <span>Today</span>
+                        <span><strong id="ui-daily-xp">0</strong>/<span id="ui-daily-goal">250</span> XP</span>
+                    </div>
+                    <div class="reward-track" role="progressbar" aria-label="Daily XP goal" aria-valuemin="0" aria-valuemax="250" aria-valuenow="0">
+                        <div class="reward-fill" id="ui-daily-fill"></div>
+                    </div>
                 </div>
             </header>
 
@@ -1005,7 +1083,10 @@
         <div id="task-drawer-overlay" onclick="TaskDrawer.close()"></div>
         <div id="task-drawer">
             <div class="flex justify-between items-center" style="margin-bottom: 20px;">
-                <span class="pill info" id="drawer-task-status-pill">Inbox</span>
+                <div class="flex items-center gap-2">
+                    <span class="pill info" id="drawer-task-status-pill">Inbox</span>
+                    <span id="drawer-task-energy-pill"></span>
+                </div>
                 <div class="flex gap-1">
                     <button class="sm danger icon-btn" onclick="TaskDrawer.deleteCurrent()">
                         <span class="material-symbols-outlined">delete</span>
@@ -1032,6 +1113,13 @@
                             <option value="done">Completed</option>
                         </select>
                     </div>
+                    <label class="text-muted" style="font-size:.75rem;">Energy Level
+                        <select id="task-energy" style="margin-top:4px;">
+                            <option value="deep" selected>⚡ Deep — High concentration, creative or strategic output</option>
+                            <option value="shallow">🍃 Shallow — Low cognitive load, checklists, admin</option>
+                            <option value="reactive">🔥 Reactive — Urgent inquiries, maintenance, interrupts</option>
+                        </select>
+                    </label>
                     <div style="flex:1;">
                         <label class="text-muted" style="font-size: 0.75rem; display:block; margin-bottom:4px;">Priority</label>
                         <select id="drawer-task-priority" onchange="TaskDrawer.saveField('priority', this.value)">
@@ -1040,6 +1128,14 @@
                             <option value="high">High</option>
                         </select>
                     </div>
+                </div>
+                <div>
+                    <label class="text-muted" style="font-size:0.75rem; display:block; margin-bottom:4px;" for="drawer-task-energy">Energy Level</label>
+                    <select id="drawer-task-energy" onchange="TaskDrawer.saveField('energy', this.value)">
+                        <option value="deep">⚡ Deep — High concentration, creative or strategic output</option>
+                        <option value="shallow">🍃 Shallow — Low cognitive load, checklists, admin</option>
+                        <option value="reactive">🔥 Reactive — Urgent inquiries, maintenance, interrupts</option>
+                    </select>
                 </div>
 
                 <div>
@@ -1079,15 +1175,15 @@
         <nav id="bottom-nav">
             <div class="bnav-item" data-view="pathways" onclick="App.router('pathways')">
                 <span class="material-symbols-outlined">explore</span>
-                <span>Pathways</span>
+                <span>Goals</span>
             </div>
             <div class="bnav-item" data-view="workout" onclick="App.router('workout')">
                 <span class="material-symbols-outlined">fitness_center</span>
-                <span>Kinetic</span>
+                <span>Workouts</span>
             </div>
             <div class="bnav-item" data-view="projects" onclick="App.router('projects')">
                 <span class="material-symbols-outlined">view_kanban</span>
-                <span>Kanban</span>
+                <span>Tasks</span>
             </div>
             <div class="bnav-item" data-view="calendar" onclick="App.router('calendar')">
                 <span class="material-symbols-outlined">calendar_month</span>
@@ -1143,7 +1239,7 @@
             <div class="flex justify-between items-center" style="margin-bottom: 16px;">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">analytics</span>
-                    <h3 style="font-weight: 600;">Executive Weekly Retrospective</h3>
+                    <h3 style="font-weight: 600;">Weekly Review</h3>
                 </div>
                 <button class="sm icon-btn" onclick="UI.closeModals()"><span class="material-symbols-outlined">close</span></button>
             </div>
@@ -1153,7 +1249,7 @@
 
     <div class="modal-overlay" id="workout-modal" onclick="if(event.target===this) UI.closeModals()">
         <div class="modal-card">
-            <h3 style="margin-bottom: 16px; font-weight: 600;">Log Kinetic Training Session</h3>
+            <h3 style="margin-bottom: 16px; font-weight: 600;">Log Workout</h3>
             <div class="flex-col gap-3">
                 <input type="text" id="wo-title" placeholder="Session Focus (e.g. Upper Body Compound, 5k Run)">
                 <div class="flex gap-2 btn-group-responsive">
@@ -1174,7 +1270,7 @@
                 </div>
                 <textarea id="wo-notes" placeholder="Sets, reps, loads, or pacing data..." rows="3"></textarea>
                 <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px;">
-                    <button class="primary" style="flex:1;" onclick="WorkoutEngine.addWorkout()">Commit (+100 XP)</button>
+                    <button class="primary" style="flex:1;" onclick="WorkoutEngine.addWorkout()">Save Workout</button>
                     <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
                 </div>
             </div>
@@ -1207,7 +1303,7 @@
                     <label class="flex items-center gap-2 text-secondary"><input type="checkbox" id="task-urgent"> Urgent</label>
                 </div>
                 <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px;">
-                    <button class="primary" style="flex:1;" onclick="Data.addTask()">Save Item (+25 XP)</button>
+                    <button class="primary" style="flex:1;" onclick="Data.addTask()">Save Task</button>
                     <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
                 </div>
             </div>
@@ -1276,7 +1372,7 @@
             <div class="flex-col gap-3">
                 <input type="text" id="story-title" placeholder="As a [User], I need [Feature] so that [Benefit]...">
                 <div class="flex gap-2 btn-group-responsive">
-                    <input type="text" id="story-epic" placeholder="Epic label (e.g. Kinetic, Infrastructure)" style="flex:1;">
+                    <input type="text" id="story-epic" placeholder="Project label (e.g. Fitness, Infrastructure)" style="flex:1;">
                     <select id="story-points" style="min-width: 120px;">
                         <option value="1">1 Point</option>
                         <option value="2">2 Points</option>
@@ -1287,7 +1383,7 @@
                 </div>
                 <textarea id="story-ac" placeholder="Acceptance criteria (one per line)..." rows="4"></textarea>
                 <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px;">
-                    <button class="primary" style="flex:1;" onclick="WorkStoryEngine.addStory()">Commit Story (+50 XP)</button>
+                    <button class="primary" style="flex:1;" onclick="WorkStoryEngine.addStory()">Save Project (+50 XP)</button>
                     <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
                 </div>
             </div>
@@ -1297,7 +1393,7 @@
     <div class="modal-overlay" id="diff-modal" onclick="if(event.target===this) UI.closeModals()">
         <div class="modal-card">
             <div class="flex justify-between items-center" style="margin-bottom: 16px;">
-                <h3 style="font-weight: 600;">Snapshot Comparison & Diff</h3>
+                <h3 style="font-weight: 600;">Compare Backup Snapshots</h3>
                 <button class="sm icon-btn" onclick="UI.closeModals()"><span class="material-symbols-outlined">close</span></button>
             </div>
             <div id="diff-content" class="flex-col gap-3"></div>
@@ -1681,7 +1777,7 @@
                 if (!banner) return;
                 const days = last ? Math.floor((Date.now() - Number(last)) / 86400000) : 8;
                 if (days >= 7) {
-                    text.innerText = last ? `Last backup was ${days} days ago. Eviction risk active.` : 'No export on record. Eviction risk active.';
+                    text.innerText = last ? `Last backup was ${days} days ago. Backup recommended: browser storage may clear.` : 'No export on record. Backup recommended: browser storage may clear.';
                     banner.style.display = 'flex';
                 } else {
                     banner.style.display = 'none';
@@ -1742,7 +1838,7 @@
 
                     <div class="legal-block">
                         <h4><span class="material-symbols-outlined" style="font-size:18px;">fitness_center</span> 5. Physical Fitness & Health Disclaimer</h4>
-                        <p>The <strong>Kinetic Performance Lab</strong>, RPE calculators, and volume estimators are educational tracking tools only.</p>
+                        <p>The <strong>Workouts & Fitness</strong> screen, RPE calculators, and volume estimators are educational tracking tools only.</p>
                         <ul>
                             <li><strong>Not Medical Advice:</strong> Nothing contained in this workspace constitutes sports medicine, orthopedic assessment, physical therapy, or diagnosis.</li>
                             <li><strong>Assumption of Risk:</strong> Consult a certified physician before undertaking physical training. You assume all voluntary risks of injury, illness, or strain.</li>
@@ -1781,12 +1877,14 @@
         const DB_KEY = 'aether_os_state';
         const SNAP_KEY = 'aether_os_snaps';
         const MAX_SNAPSHOTS = 8;
+        const DAILY_XP_GOAL = 250;
+        const localDateKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         let masterPassphrase = null;
 
         let State = {
             theme: 'dark',
             currency: 'INR',
-            user: { level: 1, xp: 0, title: 'Novice Strategist' },
+            user: { level: 1, xp: 0, title: 'Novice Strategist', badges: [], dailyXp: 0, dailyXpDate: '', streak: 0, streakDate: '' },
             tasks: [],
             stories: [],
             timeLogs: [],
@@ -1848,6 +1946,18 @@
                 user: { ...DEFAULT_INITIAL_STATE.user, ...(loadedState.user || {}) },
                 finances: { ...DEFAULT_INITIAL_STATE.finances, ...finances }
             };
+            if (!Array.isArray(normalized.user.badges) ||
+                normalized.user.badges.some(badge => !badge || typeof badge !== 'object' ||
+                    typeof badge.id !== 'string' || typeof badge.unlockedAt !== 'string')) {
+                normalized.user.badges = [];
+            }
+            if (!Number.isFinite(normalized.user.dailyXp) || normalized.user.dailyXp < 0) normalized.user.dailyXp = 0;
+            if (!Number.isInteger(normalized.user.streak) || normalized.user.streak < 0) normalized.user.streak = 0;
+            for (const field of ['dailyXpDate', 'streakDate']) {
+                if (typeof normalized.user[field] !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(normalized.user[field])) {
+                    normalized.user[field] = '';
+                }
+            }
             if (typeof normalized.finances.amountsHidden !== 'boolean') normalized.finances.amountsHidden = false;
             for (const pathway of normalized.pathways) {
                 if (pathway.steps !== undefined && !Array.isArray(pathway.steps)) {
@@ -1862,6 +1972,7 @@
                 if (typeof task.important !== 'boolean') task.important = task.priority === 'high';
                 if (typeof task.urgent !== 'boolean') task.urgent = false;
                 if (typeof task.dueDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(task.dueDate)) task.dueDate = '';
+                if (!['deep', 'shallow', 'reactive'].includes(task.energy)) task.energy = 'deep';
             }
             return normalized;
         };
@@ -1896,6 +2007,8 @@
                 document.getElementById('drawer-task-desc').value = task.desc || '';
                 document.getElementById('drawer-task-status').value = task.status;
                 document.getElementById('drawer-task-priority').value = task.priority;
+                document.getElementById('drawer-task-energy').value = task.energy || 'deep';
+                document.getElementById('drawer-task-energy-pill').innerHTML = energyPill(task);
                 document.getElementById('drawer-task-due-date').value = task.dueDate || '';
                 document.getElementById('drawer-task-important').checked =
                     typeof task.important === 'boolean' ? task.important : task.priority === 'high';
@@ -1915,11 +2028,19 @@
             saveField: (field, value) => {
                 const task = State.tasks.find(t => t.id === TaskDrawer.currentTaskId);
                 if (!task) return;
-                task[field] = value;
-                if (field === 'status') {
-                    document.getElementById('drawer-task-status-pill').innerText = value.toUpperCase();
-                    if (value === 'done') Haptics.taskDone();
+                if (field === 'energy' && !['deep', 'shallow', 'reactive'].includes(value)) return;
+                if (field === 'energy') {
+                    task.energy = value;
+                    document.getElementById('drawer-task-energy-pill').innerHTML = energyPill(task);
+                    Data.save();
+                    App.refreshCurrentView();
+                    return;
                 }
+                if (field === 'status') {
+                    Data.updateTaskStatus(task.id, value);
+                    return;
+                }
+                task[field] = value;
                 Data.save();
                 App.refreshCurrentView();
             },
@@ -1990,6 +2111,7 @@
             isRunning: false,
             boundTaskId: null,
             boundTaskTitle: null,
+            boundTaskEnergy: null,
             fallbackInterval: null,
 
             initWorker: () => {
@@ -2036,6 +2158,7 @@
                 ChronoEngine.activeCategory = category;
                 ChronoEngine.boundTaskId = null;
                 ChronoEngine.boundTaskTitle = null;
+                ChronoEngine.boundTaskEnergy = null;
                 const label = document.getElementById('chrono-active-tag');
                 if (label) label.innerText = category;
                 document.querySelectorAll('.chip').forEach(btn => {
@@ -2048,8 +2171,10 @@
                 if (!task) return;
                 ChronoEngine.boundTaskId = task.id;
                 ChronoEngine.boundTaskTitle = task.title;
-                ChronoEngine.activeCategory = 'Deep Work';
-                ChronoEngine.start('Deep Work');
+                ChronoEngine.boundTaskEnergy = task.energy || 'deep';
+                const category = ChronoEngine.boundTaskEnergy === 'deep' ? 'Deep Work' : 'Operations';
+                ChronoEngine.activeCategory = category;
+                ChronoEngine.start(category);
                 App.router('timeview');
                 Toast.show(`Focus session bound to: "${task.title}"`, 'success');
             },
@@ -2112,6 +2237,7 @@
                 Haptics.timerComplete();
                 const mins = Math.max(1, Math.round(ChronoEngine.seconds / 60));
                 const now = new Date();
+                const deepTaskBonus = ChronoEngine.boundTaskEnergy === 'deep' && ChronoEngine.activeCategory === 'Deep Work';
                 
                 State.timeLogs.unshift({
                     id: 'time_' + Date.now(),
@@ -2120,7 +2246,8 @@
                     timestamp: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     isoDate: now.toISOString(),
                     taskId: ChronoEngine.boundTaskId,
-                    taskTitle: ChronoEngine.boundTaskTitle
+                    taskTitle: ChronoEngine.boundTaskTitle,
+                    energy: ChronoEngine.boundTaskEnergy || null
                 });
 
                 if (ChronoEngine.boundTaskId) {
@@ -2129,11 +2256,13 @@
                 }
 
                 Data.addXP(mins * 2);
-                AuditEngine.log('time', `Committed ${mins}m focus block`);
+                if (deepTaskBonus) Data.addXP(50);
+                AuditEngine.log('time', `Saved ${mins}m focus session`);
 
                 const taskTitle = ChronoEngine.boundTaskTitle;
                 ChronoEngine.boundTaskId = null;
                 ChronoEngine.boundTaskTitle = null;
+                ChronoEngine.boundTaskEnergy = null;
                 ChronoEngine.seconds = 0;
                 ChronoEngine.accumulatedMs = 0;
                 ChronoEngine.updateDisplays();
@@ -2142,7 +2271,7 @@
                 if (pill) pill.style.display = 'none';
 
                 Data.save();
-                Toast.show(taskTitle ? `Committed ${mins}m to "${taskTitle}"!` : `Committed ${mins}m focus session!`, 'success');
+                Toast.show(taskTitle ? `Saved ${mins}m to "${taskTitle}"!` : `Saved ${mins}m focus session!`, 'success');
                 App.refreshCurrentView();
             },
 
@@ -2153,6 +2282,7 @@
                 ChronoEngine.seconds = 0;
                 ChronoEngine.boundTaskId = null;
                 ChronoEngine.boundTaskTitle = null;
+                ChronoEngine.boundTaskEnergy = null;
                 if (ChronoEngine.worker) ChronoEngine.worker.postMessage('stop');
                 if (ChronoEngine.fallbackInterval) clearInterval(ChronoEngine.fallbackInterval);
                 ChronoEngine.updateDisplays();
@@ -2200,7 +2330,7 @@
         };
 
         const HeatmapEngine = {
-            render: (containerId, daysCount = 112) => {
+            render: (containerId, daysCount = 364) => {
                 const container = document.getElementById(containerId);
                 if (!container) return;
 
@@ -2233,14 +2363,14 @@
                     else if (count >= 2) level = 2;
                     else if (count >= 1) level = 1;
 
-                    cellsHtml += `<div class="heatmap-cell" data-level="${level}" title="${key}: ${count} operational actions"></div>`;
+                    cellsHtml += `<div class="heatmap-cell" data-level="${level}" data-tooltip="${key}: ${count} activities" aria-label="${key}: ${count} activities" title="${key}: ${count} activities"></div>`;
                 }
 
                 container.innerHTML = `
                     <div class="heatmap-container">
-                        <div class="heatmap-grid">${cellsHtml}</div>
+                        <div class="heatmap-grid" aria-label="52-week activity heatmap">${cellsHtml}</div>
                         <div class="flex justify-between items-center text-muted" style="font-size:0.7rem; margin-top:4px;">
-                            <span>16 Weeks of Telemetry</span>
+                                <span>52 weeks of activity</span>
                             <div class="flex items-center gap-1">
                                 <span>Less</span>
                                 <div class="heatmap-cell" data-level="0" style="display:inline-block;"></div>
@@ -2309,7 +2439,7 @@
                             <h3 style="margin-top:4px; font-weight:600;">${(totalFocusMins / 60).toFixed(1)} hrs <span class="text-muted" style="font-size:0.75rem;">(${deepRatio}% Deep)</span></h3>
                         </div>
                         <div class="stat-card">
-                            <span class="text-muted">Kinetic Volume</span>
+                            <span class="text-muted">Workout Volume</span>
                             <h3 style="margin-top:4px; font-weight:600;">${weekWorkouts.length} bouts <span class="text-muted" style="font-size:0.75rem;">(${totalTrainingMins}m, RPE ${avgRPE})</span></h3>
                         </div>
                         <div class="stat-card">
@@ -2361,11 +2491,12 @@
                 });
 
                 Data.addXP(100);
+                GamifyEngine.checkBadges();
                 Haptics.taskDone();
                 AuditEngine.log('workout', `Logged: "${title}" (${duration}m, RPE ${rpe})`);
                 Data.save();
                 UI.closeModals();
-                Toast.show('Workout Committed! +100 XP', 'success');
+                Toast.show('Workout saved (+100 XP)', 'success');
                 App.refreshCurrentView();
                 document.getElementById('wo-title').value = '';
                 document.getElementById('wo-notes').value = '';
@@ -2439,15 +2570,16 @@
                     desc: `Epic: ${story.epic} (${story.points} pts)`,
                     status: 'todo',
                     priority: story.points >= 5 ? 'high' : 'med',
+                    energy: 'deep',
                     dueDate: '',
                     important: story.points >= 5,
                     urgent: false,
                     timeSpent: 0,
                     subtasks: story.ac.map(a => ({ id: 's_' + Math.random(), title: a.text, done: a.done }))
                 });
-                AuditEngine.log('task', `Promoted story "${story.title}" into Kanban`);
+                AuditEngine.log('task', `Converted story "${story.title}" to a task`);
                 Data.save();
-                Toast.show('Promoted to Kanban', 'success');
+                Toast.show('Converted to task', 'success');
                 App.router('projects');
             }
         };
@@ -2657,6 +2789,7 @@
                         desc: `Generated from Pathway milestone`,
                         status: 'todo',
                         priority: 'high',
+                        energy: 'deep',
                         dueDate: '',
                         important: true,
                         urgent: false,
@@ -2665,7 +2798,7 @@
                     });
                     Data.addXP(30);
                     Data.save();
-                    Toast.show('Task added to Kanban', 'success');
+                    Toast.show('Task added to the Task Board', 'success');
                     App.router('projects');
                 } else if (step.activityType === 'time') App.router('timeview');
                 else if (step.activityType === 'story') App.router('stories');
@@ -3000,6 +3133,7 @@
                 });
 
                 Data.addXP(10);
+                GamifyEngine.checkBadges();
                 Haptics.tap();
                 Data.save();
                 UI.closeModals();
@@ -3290,6 +3424,7 @@
                     desc: document.getElementById('task-desc').value.trim(),
                     status: document.getElementById('task-status').value,
                     priority: document.getElementById('task-priority').value,
+                    energy: document.getElementById('task-energy').value,
                     dueDate: document.getElementById('task-due-date').value,
                     important: document.getElementById('task-important').checked,
                     urgent: document.getElementById('task-urgent').checked,
@@ -3298,7 +3433,7 @@
                 };
                 State.tasks.push(task);
                 AuditEngine.log('task', `Captured task: "${title}"`);
-                const previousUser = { ...State.user };
+                const previousUser = { ...State.user, badges: [...(State.user.badges || [])] };
                 Data.addXP(25);
                 Haptics.tap();
                 if (!await Data.save()) {
@@ -3312,6 +3447,7 @@
                 document.getElementById('task-title').value = '';
                 document.getElementById('task-desc').value = '';
                 document.getElementById('task-due-date').value = '';
+                document.getElementById('task-energy').value = 'deep';
                 document.getElementById('task-important').checked = false;
                 document.getElementById('task-urgent').checked = false;
             },
@@ -3320,7 +3456,7 @@
                 if (!title) return;
                 State.tasks.push({
                     id: `tsk_${Date.now()}_${Math.random().toString(36).slice(2)}`,
-                    title, desc: '', status, priority: 'med', dueDate: '', important: false, urgent: false, timeSpent: 0, subtasks: []
+                    title, desc: '', status, priority: 'med', energy: 'deep', dueDate: '', important: false, urgent: false, timeSpent: 0, subtasks: []
                 });
                 inputEl.value = '';
                 Data.addXP(25);
@@ -3336,13 +3472,7 @@
                 const currIdx = order.indexOf(task.status);
                 const targetIdx = currIdx + direction;
                 if (targetIdx >= 0 && targetIdx < order.length) {
-                    task.status = order[targetIdx];
-                    if (task.status === 'done') {
-                        Data.addXP(80);
-                        Haptics.taskDone();
-                    } else Haptics.tap();
-                    Data.save();
-                    App.refreshCurrentView();
+                    Data.updateTaskStatus(task.id, order[targetIdx]);
                 }
             },
             updateTaskStatus: async (id, st) => {
@@ -3350,8 +3480,11 @@
                 const task = State.tasks.find(t => t.id === id);
                 if (!task || !statuses.includes(st) || task.status === st) return;
                 const previousStatus = task.status;
-                const previousUser = { ...State.user };
+                const previousUser = { ...State.user, badges: [...(State.user.badges || [])] };
                 task.status = st;
+                if (TaskDrawer.currentTaskId === task.id) {
+                    document.getElementById('drawer-task-status-pill').innerText = st.toUpperCase();
+                }
                 if (st === 'done' && previousStatus !== 'done') {
                     Data.addXP(80);
                     Haptics.taskDone();
@@ -3359,6 +3492,12 @@
                 if (!await Data.save()) {
                     task.status = previousStatus;
                     State.user = previousUser;
+                    if (TaskDrawer.currentTaskId === task.id) {
+                        document.getElementById('drawer-task-status-pill').innerText = previousStatus.toUpperCase();
+                    }
+                    UI.updateGamification();
+                } else if (st === 'done' && previousStatus !== 'done') {
+                    Toast.show('Task completed! +80 XP', 'success');
                 }
                 App.refreshCurrentView();
             },
@@ -3376,17 +3515,115 @@
                     App.refreshCurrentView();
                 }
             },
-            addXP: (amount) => {
+            addXP: (amount, checkAchievements = true) => {
                 State.user.xp += amount;
                 if (State.user.xp < 0) State.user.xp = 0;
-                const next = State.user.level * 1000;
-                if (State.user.xp >= next) {
+                GamifyEngine.recordDailyXP(amount);
+                while (State.user.xp >= State.user.level * 1000) {
                     State.user.level++;
-                    State.user.xp -= next;
+                    State.user.xp -= (State.user.level - 1) * 1000;
                     Haptics.timerComplete();
                     Toast.show(`Level Up! You reached Level ${State.user.level}`, 'success');
                 }
                 UI.updateGamification();
+                if (checkAchievements) GamifyEngine.checkBadges();
+            }
+        };
+
+        const GamifyEngine = {
+            recordDailyXP: amount => {
+                if (!(amount > 0)) return;
+                const today = localDateKey(new Date());
+                const previousDay = new Date();
+                previousDay.setDate(previousDay.getDate() - 1);
+                const yesterday = localDateKey(previousDay);
+                const user = State.user;
+                user.streak = user.streakDate === today
+                    ? user.streak
+                    : user.streakDate === yesterday ? user.streak + 1 : 1;
+                user.streakDate = today;
+                user.dailyXp = user.dailyXpDate === today ? user.dailyXp + amount : amount;
+                user.dailyXpDate = today;
+            },
+            dailyProgress: () => {
+                const today = localDateKey(new Date());
+                const previousDay = new Date();
+                previousDay.setDate(previousDay.getDate() - 1);
+                const streakDate = State.user.streakDate;
+                return {
+                    xp: State.user.dailyXpDate === today ? State.user.dailyXp : 0,
+                    streak: streakDate === today || streakDate === localDateKey(previousDay)
+                        ? State.user.streak
+                        : 0
+                };
+            },
+            catalog: [
+                { id: 'badge_deep_monk', title: 'Deep Work Monk', icon: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>', description: 'Log 10 hours of Deep focus.', reward: 250 },
+                { id: 'badge_reactive_sentinel', title: 'Firefighter', icon: '<path d="M12 3c2 3-1 4 1 7 1-2 2-2 3-4 3 4 4 7 2 11a7 7 0 0 1-13-3c0-3 2-6 5-9 0 3 0 4 2 5 1-3 0-5 0-7z"/>', description: 'Complete 10 Reactive tasks.', reward: 150 },
+                { id: 'badge_task_striker', title: 'Momentum Prime', icon: '<path d="M4 17 10 11l4 4 6-8"/><path d="M14 7h6v6"/>', description: 'Complete 25 tasks.', reward: 300 },
+                { id: 'badge_iron_kinetic', title: 'Kinetic Machine', icon: '<path d="M6 9v6M3 10v4M18 9v6M21 10v4M6 12h12"/>', description: 'Log 10 workouts at RPE 7 or higher.', reward: 300 },
+                { id: 'badge_capital_guardian', title: 'Capital Guardian', icon: '<path d="M12 3 20 7v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M8 12h8M12 8v8"/>', description: 'Log 20 transactions.', reward: 300 },
+                { id: 'badge_grandmaster', title: 'Grandmaster', icon: '<path d="m5 7 3 3 4-5 4 5 3-3-1 11H6z"/><path d="M8 21h8"/>', description: 'Reach Level 10.', reward: 500 }
+            ],
+            progressFor: badge => {
+                const completed = State.tasks.filter(task => task.status === 'done');
+                const progress = {
+                    badge_deep_monk: {
+                        value: (State.timeLogs || []).filter(log => log.category === 'Deep Work')
+                            .reduce((total, log) => total + Math.max(0, Number(log.duration) || 0), 0),
+                        target: 600, unit: 'minutes'
+                    },
+                    badge_reactive_sentinel: {
+                        value: completed.filter(task => task.energy === 'reactive').length, target: 10, unit: 'tasks'
+                    },
+                    badge_task_striker: { value: completed.length, target: 25, unit: 'tasks' },
+                    badge_iron_kinetic: {
+                        value: (State.workouts || []).filter(workout => Number(workout.rpe) >= 7).length,
+                        target: 10, unit: 'workouts'
+                    },
+                    badge_capital_guardian: {
+                        value: (State.finances.transactions || []).length, target: 20, unit: 'transactions'
+                    },
+                    badge_grandmaster: { value: State.user.level, target: 10, unit: 'level' }
+                }[badge.id];
+                const shown = badge.id === 'badge_deep_monk'
+                    ? `${(progress.value / 60).toFixed(progress.value % 60 ? 1 : 0)}/10 hours`
+                    : `${Math.min(progress.value, progress.target)}/${progress.target} ${progress.unit}`;
+                return { ...progress, label: shown, reached: progress.value >= progress.target };
+            },
+            renderTrophyCase: (compact = false) => {
+                const unlocked = State.user.badges || [];
+                return GamifyEngine.catalog.map(badge => {
+                    const record = unlocked.find(item => item.id === badge.id);
+                    const progress = GamifyEngine.progressFor(badge);
+                    const date = record ? new Date(record.unlockedAt).toLocaleDateString() : '';
+                    return `<div class="badge-tile ${record ? 'unlocked' : 'locked'}" title="${esc(record ? `${badge.title} unlocked ${date}` : `${badge.description} Progress: ${progress.label}`)}">
+                        <span class="badge-emblem" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${badge.icon}</svg></span>
+                        ${compact
+                            ? `<span>${record ? esc(badge.title) : badge.id === 'badge_deep_monk'
+                                ? `${Math.min(progress.value / 60, 10).toFixed(progress.value % 60 ? 1 : 0)}/10h`
+                                : `${Math.min(progress.value, progress.target)}/${progress.target}`}</span>`
+                            : `<strong style="display:block;font-size:.78rem;">${esc(badge.title)}</strong><span class="text-muted" style="font-size:.68rem;">${record ? `Unlocked ${esc(date)}` : esc(progress.label)}</span>`}
+                    </div>`;
+                }).join('');
+            },
+            checkBadges: () => {
+                if (!Array.isArray(State.user.badges)) State.user.badges = [];
+                let unlockedAny;
+                do {
+                    unlockedAny = false;
+                    for (const badge of GamifyEngine.catalog) {
+                        if (State.user.badges.some(record => record.id === badge.id) ||
+                            !GamifyEngine.progressFor(badge).reached) continue;
+                        State.user.badges.push({ id: badge.id, unlockedAt: new Date().toISOString() });
+                        Haptics.timerComplete();
+                        Toast.show(`🏆 Achievement Unlocked: ${badge.title}!`, 'success');
+                        Data.addXP(badge.reward, false);
+                        unlockedAny = true;
+                    }
+                } while (unlockedAny && GamifyEngine.catalog.some(badge =>
+                    !State.user.badges.some(record => record.id === badge.id) && GamifyEngine.progressFor(badge).reached));
+                UI.renderSidebarTrophies();
             }
         };
 
@@ -3486,6 +3723,12 @@
             }
         };
 
+        const energyPill = task => {
+            const energy = ['deep', 'shallow', 'reactive'].includes(task.energy) ? task.energy : 'deep';
+            const labels = { deep: '⚡ Deep', shallow: '🍃 Shallow', reactive: '🔥 Reactive' };
+            return `<span class="energy-pill energy-${energy}">${labels[energy]}</span>`;
+        };
+
         const Views = {
             projects: () => {
                 const cols = [
@@ -3497,7 +3740,7 @@
                 return `
                     <div class="flex justify-between items-center" style="margin-bottom: 16px;">
                         <div>
-                            <h2>Project Kanban Pipeline</h2>
+                            <h2>Task Board</h2>
                             <p class="text-muted">Drag tasks between lanes, or use the move controls and mobile lane tabs.</p>
                         </div>
                         <button class="primary sm" onclick="UI.openModal('task-modal')">
@@ -3536,6 +3779,7 @@
                                                     </div>
                                                 </div>
                                                 <div style="font-weight: 500;">${esc(t.title)}</div>
+                                                <div style="margin-top:7px;">${energyPill(t)}</div>
                                                 ${t.desc ? `<div class="text-muted" style="margin-top:4px; font-size:0.75rem;">${esc(t.desc.substring(0,40))}...</div>` : ''}
                                                 ${t.dueDate ? `<div class="text-muted" style="margin-top:5px; font-size:0.7rem;">📅 Due ${esc(t.dueDate)}</div>` : ''}
                                                 
@@ -3666,7 +3910,7 @@
                 return `
                     <div class="flex justify-between items-center" style="margin-bottom: 24px;">
                         <div>
-                            <h2>Kinetic Performance Lab</h2>
+                            <h2>Workouts & Fitness</h2>
                             <p class="text-muted">Biomechanical volume tracking. Not medical or therapy advice.</p>
                         </div>
                         <button class="primary sm" onclick="UI.openModal('workout-modal')">
@@ -3693,7 +3937,7 @@
                         <div class="stat-card"><span class="text-muted">Completed Sessions</span><h3 style="margin-top:6px; font-weight:600; color:var(--md-sys-color-primary);">${list.length}</h3></div>
                         <div class="stat-card"><span class="text-muted">Total Time Under Tension</span><h3 style="margin-top:6px; font-weight:600;">${(totalMinutes / 60).toFixed(1)} hrs</h3></div>
                         <div class="stat-card"><span class="text-muted">Average Strain (RPE)</span><h3 style="margin-top:6px; font-weight:600; color:var(--md-sys-color-warning);">${avgRPE} / 10</h3></div>
-                        <div class="stat-card"><span class="text-muted">Kinetic XP Earned</span><h3 style="margin-top:6px; font-weight:600; color:var(--md-sys-color-success);">+${list.length * 100}</h3></div>
+                        <div class="stat-card"><span class="text-muted">Workout XP Earned</span><h3 style="margin-top:6px; font-weight:600; color:var(--md-sys-color-success);">+${list.length * 100}</h3></div>
                     </div>
 
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
@@ -3729,7 +3973,7 @@
                 return `
                     <div class="flex justify-between items-center" style="margin-bottom: 24px;">
                         <div>
-                            <h2>Chrono Engine & Telemetry</h2>
+                            <h2>Focus Timer</h2>
                             <p class="text-muted">Drift-free epoch delta stopwatch backed by background Web Worker ticks.</p>
                         </div>
                     </div>
@@ -3751,7 +3995,7 @@
                                 <span class="material-symbols-outlined">${ChronoEngine.isRunning ? 'pause' : 'play_arrow'}</span>
                                 ${ChronoEngine.isRunning ? 'Pause Timer' : 'Start Stopwatch'}
                             </button>
-                            <button class="tonal" onclick="ChronoEngine.stopAndLog()"><span class="material-symbols-outlined">save</span> Commit Session</button>
+                            <button class="tonal" onclick="ChronoEngine.stopAndLog()"><span class="material-symbols-outlined">save</span> Save Focus Session</button>
                             <button onclick="ChronoEngine.reset()"><span class="material-symbols-outlined">restart_alt</span> Reset</button>
                         </div>
                     </div>
@@ -3769,7 +4013,7 @@
                 return `
                     <div class="flex justify-between items-center" style="margin-bottom: 24px;">
                         <div>
-                            <h2>Guided Execution Pathways</h2>
+                            <h2>Goal Roadmaps</h2>
                             <p class="text-muted">Create and shape your own step-by-step roadmaps.</p>
                         </div>
                         <button class="primary sm" onclick="PathwayEditor.openNew()"><span class="material-symbols-outlined">add</span> Create Path</button>
@@ -3824,7 +4068,7 @@
                 return `
                     <div class="flex justify-between items-center" style="margin-bottom: 24px;">
                         <div>
-                            <h2>Work Stories & Epics</h2>
+                            <h2>Projects & Milestones</h2>
                             <p class="text-muted">Fibonacci estimation and acceptance criteria verification.</p>
                         </div>
                         <button class="primary sm" onclick="UI.openModal('story-modal')"><span class="material-symbols-outlined">add</span> New Story</button>
@@ -3846,7 +4090,7 @@
                                                     <option value="review" ${s.state==='review'?'selected':''}>Review</option>
                                                     <option value="done" ${s.state==='done'?'selected':''}>Done</option>
                                                 </select>
-                                                <button class="sm tonal" data-action="story-promote" data-story-index="${stories.indexOf(s)}">➔ Kanban</button>
+                                                <button class="sm tonal" data-action="story-promote" data-story-index="${stories.indexOf(s)}">Convert to Task</button>
                                             </div>
                                         </div>
                                     `).join('')}
@@ -4038,7 +4282,7 @@
             `,
             audit: () => `
                 <div class="flex justify-between items-center" style="margin-bottom: 24px;">
-                    <div><h2>Universal Audit Stream</h2><p class="text-muted">Immutable client-side chronological feed.</p></div>
+                    <div><h2>Activity History</h2><p class="text-muted">A timeline of your workspace changes.</p></div>
                 </div>
                 <div class="card">
                     <div class="flex-col gap-2">
@@ -4053,7 +4297,7 @@
             `,
             snapshots: () => `
                 <div class="flex justify-between items-center" style="margin-bottom: 24px;">
-                    <div><h2>Checkpoints & Vault Backups</h2>                    <p class="text-muted">AES-256-GCM encrypted backup bundles.</p></div>
+                    <div><h2>Backup Snapshots</h2>                    <p class="text-muted">Encrypted restore points for your workspace.</p></div>
                     <div class="flex gap-2">
                         <button class="sm" onclick="App.exportVault()"><span class="material-symbols-outlined">download</span> Export Backup</button>
                         <button class="primary sm" onclick="SnapshotEngine.createSnapshot()"><span class="material-symbols-outlined">add</span> Take Checkpoint</button>
@@ -4065,7 +4309,7 @@
                             <div class="flex justify-between items-center" style="background:var(--md-sys-color-surface-container); padding:12px 16px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
                                 <div><strong style="font-size:0.875rem;">${esc(s.label)}</strong><div class="text-muted">Tasks: ${s.state.tasks?.length || 0}</div></div>
                                 <div class="flex gap-2">
-                                    <button class="tonal sm" data-action="snapshot-diff" data-snapshot-index="${snapshotIndex}">Diff</button>
+                                    <button class="tonal sm" data-action="snapshot-diff" data-snapshot-index="${snapshotIndex}">Compare Changes</button>
                                     <button class="sm" data-action="snapshot-restore" data-snapshot-index="${snapshotIndex}">Restore</button>
                                 </div>
                             </div>
@@ -4075,7 +4319,7 @@
             `,
             brain: () => `
                 <div class="flex justify-between items-center" style="margin-bottom: 24px;">
-                    <div><h2>Second Brain Knowledge Base</h2><p class="text-muted">Synthesized technical architecture blueprints.</p></div>
+                    <div><h2>Notes & Ideas</h2><p class="text-muted">Capture useful thoughts and reference material.</p></div>
                     <button class="primary sm" onclick="NoteEditor.openNew()"><span class="material-symbols-outlined">add</span> Create Note</button>
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
@@ -4109,33 +4353,92 @@
                 </div>
             `,
             dashboard: () => {
-                const active = State.tasks.filter(t => ['todo', 'in_progress'].includes(t.status));
+                const priorityRank = { high: 3, med: 2, low: 1 };
+                const dueRank = task => {
+                    if (!task.dueDate) return Infinity;
+                    const date = Date.parse(`${task.dueDate}T00:00:00`);
+                    return Number.isFinite(date) ? date : Infinity;
+                };
+                const active = State.tasks.filter(task => task.status !== 'done').sort((a, b) =>
+                    (priorityRank[b.priority] || 0) - (priorityRank[a.priority] || 0) ||
+                    Number(b.urgent === true) - Number(a.urgent === true) ||
+                    dueRank(a) - dueRank(b)
+                );
+                const topTasks = active.slice(0, 5);
+                const energyCounts = active.reduce((counts, task) => {
+                    const energy = ['deep', 'shallow', 'reactive'].includes(task.energy) ? task.energy : 'deep';
+                    counts[energy]++;
+                    return counts;
+                }, { deep: 0, shallow: 0, reactive: 0 });
+                const totalEnergyTasks = active.length;
+                const energyPercent = key => {
+                    if (!totalEnergyTasks) return 0;
+                    if (key === 'deep') return Math.floor(energyCounts.deep / totalEnergyTasks * 100);
+                    if (key === 'shallow') return Math.floor(energyCounts.shallow / totalEnergyTasks * 100);
+                    return 100 - energyPercent('deep') - energyPercent('shallow');
+                };
+                const energyBalance = energyCounts.deep > energyCounts.shallow + energyCounts.reactive
+                    ? 'Your workload leans toward focused work.'
+                    : energyCounts.reactive > energyCounts.deep + energyCounts.shallow
+                        ? 'Reactive work is taking most of your attention.'
+                        : 'Your workload is spread across energy levels.';
                 return `
                     <div class="flex justify-between items-center" style="margin-bottom: 24px;">
-                        <div><h2>Executive Command Center</h2><p class="text-muted">Holistic pipeline execution telemetry.</p></div>
+                        <div><h2>Dashboard</h2><p class="text-muted">A clear view of what matters next.</p></div>
                         <button class="primary sm" onclick="RetroEngine.open()">
-                            <span class="material-symbols-outlined" style="font-size:18px;">analytics</span> Weekly Retrospective
+                            <span class="material-symbols-outlined" style="font-size:18px;">analytics</span> Weekly Review
                         </button>
                     </div>
-                    <div class="card" style="margin-bottom: 20px; padding: 18px 20px;">
-                        <div class="card-header" style="margin-bottom:12px;">
-                            <h3 style="font-size:1rem; font-weight:600;">System Execution Velocity (Activity Matrix)</h3>
-                            <span class="pill info">Daily Cadence</span>
-                        </div>
-                        <div id="dashboard-heatmap"></div>
-                    </div>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-                        <div class="card">
-                            <div class="card-header"><h3 style="font-size:1rem; font-weight:600;">Active Tasks</h3><span class="pill info">${active.length}</span></div>
+                    <div class="dashboard-grid">
+                        <section class="card">
+                            <div class="card-header"><h3 style="font-size:1rem;font-weight:600;">Top 5 tasks</h3><span class="pill info">${topTasks.length} of ${active.length}</span></div>
                             <div class="flex-col gap-2">
-                                ${active.slice(0, 4).map(t => `
-                                    <div class="dashboard-task-card flex justify-between items-center" data-task-index="${State.tasks.indexOf(t)}" style="background:var(--md-sys-color-surface-container); padding:10px 14px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
-                                        <span style="font-weight:500; font-size:0.84rem;">${esc(t.title)}</span>
-                                        <span class="pill ${['low', 'med', 'high'].includes(t.priority) ? t.priority : 'low'}">${esc(t.priority)}</span>
+                                ${topTasks.map((task, index) => `
+                                    <div class="dashboard-task-row" data-task-index="${State.tasks.indexOf(task)}">
+                                        <span class="task-rank">#${index + 1}</span>
+                                        <div style="min-width:0;">
+                                            <strong style="display:block;overflow-wrap:anywhere;font-size:.85rem;">${esc(task.title)}</strong>
+                                            <span class="pill ${['low','med','high'].includes(task.priority) ? task.priority : 'low'}" style="margin-top:5px;">${esc(task.priority || 'low')}</span>
+                                            ${task.dueDate ? `<span class="pill info" style="margin-top:5px;">Due ${esc(new Date(`${task.dueDate}T00:00:00`).toLocaleDateString([], { month:'short', day:'numeric' }))}</span>` : ''}
+                                        </div>
+                                        ${energyPill(task)}
+                                        <div class="flex items-center gap-1 task-focus">
+                                            <input class="task-complete-toggle" type="checkbox" aria-label="Complete ${esc(task.title)}" title="Mark task complete" data-task-action="complete">
+                                            <button class="sm tonal" data-task-action="focus" aria-label="Focus on ${esc(task.title)}">Focus</button>
+                                        </div>
                                     </div>
-                                `).join('') || '<div class="text-muted">No active items.</div>'}
+                                `).join('') || '<div class="text-muted">No open tasks. Add a task to see your next priorities.</div>'}
                             </div>
-                        </div>
+                        </section>
+                        <section class="card">
+                            <div class="card-header"><h3 style="font-size:1rem;font-weight:600;">Energy balance</h3><span class="pill info">${active.length} open</span></div>
+                            <div class="energy-track" role="img" aria-label="${energyPercent('deep')}% Deep, ${energyPercent('shallow')}% Shallow, ${energyPercent('reactive')}% Reactive tasks">
+                                <span style="width:${energyPercent('deep')}%;background:#a855f7;"></span>
+                                <span style="width:${energyPercent('shallow')}%;background:#10b981;"></span>
+                                <span style="width:${energyPercent('reactive')}%;background:#f59e0b;"></span>
+                            </div>
+                            <p style="font-size:.78rem;margin-top:10px;">${energyPercent('deep')}% Deep • ${energyPercent('shallow')}% Shallow • ${energyPercent('reactive')}% Reactive</p>
+                            <p class="text-muted" style="margin-top:6px;">${energyBalance}</p>
+                        </section>
+                        <section class="card" style="grid-column:1/-1;">
+                            <div class="card-header"><h3 style="font-size:1rem;font-weight:600;">Activity</h3><span class="pill info">Past 52 weeks</span></div>
+                            <div id="dashboard-heatmap"></div>
+                        </section>
+                        <section class="card" style="grid-column:1/-1;">
+                            <div class="card-header"><h3 style="font-size:1rem;font-weight:600;">Trophy Case</h3><span class="pill info">${(State.user.badges || []).length} unlocked</span></div>
+                            <div class="badge-grid">${GamifyEngine.renderTrophyCase()}</div>
+                        </section>
+                        <section class="card" style="grid-column:1/-1;">
+                            <div class="card-header"><h3 style="font-size:1rem;font-weight:600;">Recent Activity</h3></div>
+                            <div class="flex-col gap-2">
+                                ${(State.activityFeed || []).slice(0, 5).map(item => `
+                                    <div class="flex justify-between items-center" style="gap:12px;padding:9px 11px;border-radius:var(--radius-sm);background:var(--md-sys-color-surface-container);">
+                                        <span style="min-width:0;overflow-wrap:anywhere;"><span class="pill info">${esc(item.type || 'activity')}</span> ${esc(item.text || '')}</span>
+                                        <span class="text-muted text-mono" style="flex-shrink:0;">${esc(item.timestamp || '')}</span>
+                                    </div>
+                                `).join('') || '<p class="text-muted">Your recent activity will appear here.</p>'}
+                            </div>
+                        </section>
                     </div>
                 `;
             }
@@ -4184,7 +4487,22 @@
                 document.getElementById('ui-xp').innerText = State.user.xp;
                 const next = State.user.level * 1000;
                 document.getElementById('ui-next-xp').innerText = next;
-                document.getElementById('ui-xp-fill').style.width = `${Math.min((State.user.xp / next) * 100, 100)}%`;
+                document.getElementById('ui-level-label').title =
+                    typeof State.user.title === 'string' ? State.user.title : 'Novice Strategist';
+                const daily = GamifyEngine.dailyProgress();
+                document.getElementById('ui-streak').innerText = daily.streak;
+                document.getElementById('ui-daily-xp').innerText = Math.floor(daily.xp);
+                document.getElementById('ui-daily-goal').innerText = DAILY_XP_GOAL;
+                const dailyPercent = Math.min((daily.xp / DAILY_XP_GOAL) * 100, 100);
+                document.getElementById('ui-daily-fill').style.width = `${dailyPercent}%`;
+                const dailyTrack = document.querySelector('.reward-track');
+                dailyTrack.setAttribute('aria-valuemax', DAILY_XP_GOAL);
+                dailyTrack.setAttribute('aria-valuenow', Math.min(Math.floor(daily.xp), DAILY_XP_GOAL));
+                UI.renderSidebarTrophies();
+            },
+            renderSidebarTrophies: () => {
+                const container = document.getElementById('sidebar-trophy-case');
+                if (container) container.innerHTML = GamifyEngine.renderTrophyCase(true);
             }
         };
 
@@ -4203,8 +4521,8 @@
                 { title: 'Capture New Task', run: () => UI.openModal('task-modal') },
                 { title: 'Export Backup Bundle', run: () => App.exportVault() },
                 { title: 'Weekly Retrospective', run: () => RetroEngine.open() },
-                { title: 'Navigate: Kanban Pipeline', run: () => App.router('projects') },
-                { title: 'Navigate: Kinetic Lab', run: () => App.router('workout') }
+                { title: 'Navigate: Task Board', run: () => App.router('projects') },
+                { title: 'Navigate: Workouts & Fitness', run: () => App.router('workout') }
             ],
             filter: (q) => {
                 const results = document.getElementById('cmd-results');
@@ -4319,8 +4637,8 @@
                 if (!App.requirePersonalUseAcceptance()) return;
                 masterPassphrase = "demo_ephemeral_key";
                 State.tasks = [
-                    { id: '1', title: 'Audit VPC ingress traffic', desc: 'Verify cloud endpoints', status: 'inbox', priority: 'high', dueDate: '', important: true, urgent: false, timeSpent: 30, subtasks: [] },
-                    { id: '2', title: 'Refactor OAuth rotation', desc: 'Deploy PBKDF2 Web Crypto', status: 'todo', priority: 'med', dueDate: '', important: false, urgent: false, timeSpent: 90, subtasks: [] }
+                    { id: '1', title: 'Audit VPC ingress traffic', desc: 'Verify cloud endpoints', status: 'inbox', priority: 'high', energy: 'deep', dueDate: '', important: true, urgent: false, timeSpent: 30, subtasks: [] },
+                    { id: '2', title: 'Refactor OAuth rotation', desc: 'Deploy PBKDF2 Web Crypto', status: 'todo', priority: 'med', energy: 'deep', dueDate: '', important: false, urgent: false, timeSpent: 90, subtasks: [] }
                 ];
                 if (!await Data.save()) return;
                 document.getElementById('auth-screen').style.display = 'none';
@@ -4509,6 +4827,12 @@
                         case 'focus':
                             ChronoEngine.startForTask(task.id);
                             break;
+                        case 'complete':
+                            if (task.status !== 'done') Data.updateTaskStatus(task.id, 'done');
+                            break;
+                        case 'complete':
+                            if (task.status !== 'done') Data.updateTaskStatus(task.id, 'done');
+                            break;
                         case 'move-left':
                             Data.moveTaskStep(task.id, -1);
                             break;
@@ -4655,7 +4979,7 @@
 
                 UI.updateGamification();
                 StorageEngine.checkBackupStatus();
-                App.router('pathways');
+                App.router('dashboard');
             },
 
             setActiveNav: (view) => {
@@ -4680,7 +5004,7 @@
                             <span class="material-symbols-outlined">${ChronoEngine.isRunning ? 'pause' : 'play_arrow'}</span>
                             ${ChronoEngine.isRunning ? 'Pause Timer' : 'Start Stopwatch'}
                         </button>
-                        <button class="tonal" onclick="ChronoEngine.stopAndLog()"><span class="material-symbols-outlined">save</span> Commit Session</button>
+                        <button class="tonal" onclick="ChronoEngine.stopAndLog()"><span class="material-symbols-outlined">save</span> Save Focus Session</button>
                         <button onclick="ChronoEngine.reset()"><span class="material-symbols-outlined">restart_alt</span> Reset</button>
                     `;
                 }

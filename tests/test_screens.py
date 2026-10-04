@@ -9,17 +9,17 @@ from playwright.sync_api import Page, expect
 
 
 SCREENS = [
-    ("pathways", "Guided Execution Pathways"),
-    ("dashboard", "Executive Command Center"),
-    ("workout", "Kinetic Performance Lab"),
-    ("timeview", "Chrono Engine & Telemetry"),
-    ("stories", "Work Stories & Epics"),
-    ("projects", "Project Kanban Pipeline"),
-    ("audit", "Universal Audit Stream"),
+    ("pathways", "Goal Roadmaps"),
+    ("dashboard", "Dashboard"),
+    ("workout", "Workouts & Fitness"),
+    ("timeview", "Focus Timer"),
+    ("stories", "Projects & Milestones"),
+    ("projects", "Task Board"),
+    ("audit", "Activity History"),
     ("finance", "Wealth & Capital Ledger"),
     ("finance-tools", "Finance Calculators"),
-    ("brain", "Second Brain Knowledge Base"),
-    ("snapshots", "Checkpoints & Vault Backups"),
+    ("brain", "Notes & Ideas"),
+    ("snapshots", "Backup Snapshots"),
     ("legal", "Privacy, Security & Use Notices"),
 ]
 
@@ -28,6 +28,29 @@ SCREENS = [
 def test_every_screen_renders_from_navigation(app_page: Page, view: str, heading: str) -> None:
     app_page.locator(f'.nav-item[data-view="{view}"]').click()
     expect(app_page.locator("#content h2").first).to_have_text(heading)
+
+
+def test_dashboard_is_default_and_includes_energy_heatmap_and_trophies(app_page: Page) -> None:
+    expect(app_page.locator("#sidebar .nav-item.active")).to_have_attribute("data-view", "dashboard")
+    expect(app_page.locator("#content h2").first).to_have_text("Dashboard")
+    expect(app_page.locator("#content")).to_contain_text("Top 5 tasks")
+    expect(app_page.locator("#content")).to_contain_text("Energy balance")
+    expect(app_page.locator("#content")).to_contain_text("Trophy Case")
+    expect(app_page.locator("#content .heatmap-cell")).to_have_count(364 + 5)
+    expect(app_page.locator("#content .heatmap-cell[data-tooltip]")).to_have_count(364)
+    expect(app_page.locator("#sidebar-trophy-case .badge-tile")).to_have_count(6)
+    expect(app_page.locator("#sidebar-trophy-case")).to_contain_text("0/10h")
+
+
+def test_legacy_tasks_gain_default_energy_and_badge_storage(app_page: Page) -> None:
+    normalized = app_page.evaluate(
+        """() => normalizeWorkspaceState({
+            tasks: [{ id: 'legacy', title: 'Legacy task', status: 'todo', priority: 'med' }],
+            user: { level: 1, xp: 0 }
+        })"""
+    )
+    assert normalized["tasks"][0]["energy"] == "deep"
+    assert normalized["user"]["badges"] == []
 
 
 def test_sidebar_navigation_uses_one_icon_per_item(app_page: Page) -> None:
@@ -90,7 +113,7 @@ def test_new_vault_rejects_short_passphrases(app_url: str, browser) -> None:
     page = browser.new_page()
     page.goto(app_url, wait_until="domcontentloaded")
     page.get_by_role("button", name="I accept — continue").click()
-    page.get_by_role("button", name="Login as New").click()
+    page.get_by_role("button", name="Create New Vault").click()
     page.locator("#new-key").fill("123456789012345")
     page.get_by_role("button", name="Initialize New Vault").click()
     expect(page.locator("#auth-error")).to_contain_text("at least 16 characters")
@@ -207,7 +230,7 @@ def test_service_worker_caches_only_the_local_app_shell(app_page: Page) -> None:
 def test_mobile_bottom_navigation_and_sidebar_work(app_page: Page) -> None:
     app_page.set_viewport_size({"width": 390, "height": 844})
     app_page.locator('#bottom-nav .bnav-item[data-view="projects"]').click()
-    expect(app_page.locator("#content h2").first).to_have_text("Project Kanban Pipeline")
+    expect(app_page.locator("#content h2").first).to_have_text("Task Board")
 
     app_page.locator("#bottom-nav .bnav-item").last.click()
     app_page.locator('#sidebar .nav-item[data-view="legal"]').click()

@@ -8,12 +8,108 @@ def test_create_task_and_open_its_inspector(app_page: Page) -> None:
     app_page.get_by_role("button", name="Add Task").click()
     app_page.locator("#task-title").fill("Playwright-created task")
     app_page.locator("#task-desc").fill("Created by the browser test")
-    app_page.get_by_role("button", name="Save Item (+25 XP)").click()
+    app_page.locator("#task-energy").select_option("reactive")
+    app_page.get_by_role("button", name="Save Task").click()
 
     card = app_page.locator(".task-card").filter(has_text="Playwright-created task")
     expect(card).to_be_visible()
+    expect(card.locator(".energy-reactive")).to_contain_text("Reactive")
     card.locator("div").filter(has_text="Playwright-created task").first.click()
     expect(app_page.locator("#drawer-task-title")).to_have_value("Playwright-created task")
+    expect(app_page.locator("#drawer-task-energy")).to_have_value("reactive")
+    app_page.locator("#drawer-task-energy").select_option("shallow")
+    assert app_page.evaluate(
+        "() => State.tasks.find(task => task.title === 'Playwright-created task').energy"
+    ) == "shallow"
+
+
+def test_dashboard_orders_five_tasks_and_supports_focus_and_completion(app_page: Page) -> None:
+    app_page.evaluate(
+        """() => {
+            State.tasks = [
+                { id: 'first-high', title: 'First high', status: 'todo', priority: 'high', urgent: true, dueDate: '2026-10-07', energy: 'deep' },
+                { id: 'second-high', title: 'Second high', status: 'todo', priority: 'high', urgent: true, dueDate: '2026-10-08', energy: 'shallow' },
+                { id: 'third-high', title: 'Third high', status: 'todo', priority: 'high', urgent: false, dueDate: '2026-10-01', energy: 'reactive' },
+                { id: 'fourth-med', title: 'Fourth medium', status: 'in_progress', priority: 'med', urgent: true, dueDate: '2026-10-05', energy: 'deep' },
+                { id: 'fifth-low', title: 'Fifth low', status: 'inbox', priority: 'low', urgent: true, dueDate: '2026-10-02', energy: 'shallow' },
+                { id: 'completed', title: 'Completed task', status: 'done', priority: 'high', urgent: true, energy: 'reactive' }
+            ];
+            App.router('dashboard');
+        }"""
+    )
+    rows = app_page.locator(".dashboard-task-row")
+    expect(rows).to_have_count(5)
+    for index, title in enumerate(("First high", "Second high", "Third high", "Fourth medium", "Fifth low")):
+        expect(rows.nth(index)).to_contain_text(f"#{index + 1}")
+        expect(rows.nth(index)).to_contain_text(title)
+
+    rows.first.get_by_role("button", name="Focus on First high").click()
+    assert app_page.evaluate(
+        "() => ({ view: document.querySelector('#sidebar .nav-item.active')?.dataset.view, category: ChronoEngine.activeCategory, taskId: ChronoEngine.boundTaskId })"
+    ) == {"view": "timeview", "category": "Deep Work", "taskId": "first-high"}
+    app_page.evaluate("ChronoEngine.reset()")
+
+    app_page.locator('.nav-item[data-view="dashboard"]').click()
+    before_xp = app_page.evaluate("State.user.xp")
+    app_page.locator('.dashboard-task-row[data-task-index="0"] [data-task-action="complete"]').check()
+    app_page.wait_for_function("State.tasks.find(task => task.id === 'first-high').status === 'done'")
+    assert app_page.evaluate("State.user.xp") == before_xp + 80
+
+
+def test_reactive_task_completion_unlocks_badge_and_rewards_xp(app_page: Page) -> None:
+    app_page.evaluate(
+        """() => {
+            State.user = { level: 1, xp: 0, title: 'Novice Strategist', badges: [] };
+            State.tasks = Array.from({ length: 9 }, (_, index) => ({
+                id: `reactive-${index}`,
+                title: `Reactive completed ${index + 1}`,
+                status: 'done',
+                priority: 'med',
+                energy: 'reactive'
+            }));
+            State.tasks.push({
+                id: 'reactive-final',
+                title: 'Reactive final task',
+                status: 'todo',
+                priority: 'high',
+                energy: 'reactive'
+            });
+            App.router('dashboard');
+        }"""
+    )
+    app_page.locator('.dashboard-task-row [data-task-action="complete"]').check()
+    app_page.wait_for_function(
+        "State.user.badges.some(badge => badge.id === 'badge_reactive_sentinel')"
+    )
+    assert app_page.evaluate("State.user.badges.find(badge => badge.id === 'badge_reactive_sentinel')?.unlockedAt")
+    assert app_page.evaluate("State.user.xp") == 230
+    expect(app_page.locator("#toast-container")).to_contain_text("Achievement Unlocked: Firefighter!")
+    app_page.locator('.nav-item[data-view="dashboard"]').click()
+    expect(app_page.locator("#content .badge-tile.unlocked")).to_contain_text("Firefighter")
+
+
+def test_deep_task_focus_session_awards_completion_bonus(app_page: Page) -> None:
+    result = app_page.evaluate(
+        """() => {
+            State.user.xp = 0;
+            State.user.badges = [];
+            State.tasks = [{
+                id: 'deep-focus',
+                title: 'Deep focus task',
+                status: 'todo',
+                priority: 'high',
+                energy: 'deep'
+            }];
+            ChronoEngine.startForTask('deep-focus');
+            const category = ChronoEngine.activeCategory;
+            ChronoEngine.isRunning = false;
+            ChronoEngine.startTime = null;
+            ChronoEngine.seconds = 60;
+            ChronoEngine.stopAndLog();
+            return { category, xp: State.user.xp };
+        }"""
+    )
+    assert result == {"category": "Deep Work", "xp": 52}
 
 
 def test_drag_task_between_kanban_columns(app_page: Page) -> None:
@@ -140,7 +236,7 @@ def test_eisenhower_matrix_and_calendar_aggregate_workspace_events(app_page: Pag
     app_page.locator("#task-due-date").fill(today)
     app_page.locator("#task-important").check()
     app_page.locator("#task-urgent").check()
-    app_page.get_by_role("button", name="Save Item (+25 XP)").click()
+    app_page.get_by_role("button", name="Save Task").click()
 
     app_page.locator('.nav-item[data-view="eisenhower"]').click()
     expect(app_page.locator('section[aria-label="Do First"]')).to_contain_text("Urgent calendar task")
@@ -148,7 +244,7 @@ def test_eisenhower_matrix_and_calendar_aggregate_workspace_events(app_page: Pag
     app_page.locator('.nav-item[data-view="workout"]').click()
     app_page.get_by_role("button", name="Log Session").click()
     app_page.locator("#wo-title").fill("Calendar workout")
-    app_page.get_by_role("button", name="Commit (+100 XP)").click()
+    app_page.get_by_role("button", name="Save Workout").click()
 
     app_page.locator('.nav-item[data-view="finance"]').click()
     app_page.get_by_role("button", name="Record Outflow").click()
@@ -213,7 +309,7 @@ def test_create_workout_and_render_canvas_chart(app_page: Page) -> None:
     app_page.get_by_role("button", name="Log Session").click()
     app_page.locator("#wo-title").fill("Playwright workout")
     app_page.locator("#wo-duration").fill("30")
-    app_page.get_by_role("button", name="Commit (+100 XP)").click()
+    app_page.get_by_role("button", name="Save Workout").click()
 
     expect(app_page.locator(".flex-col").filter(has_text="Playwright workout").first).to_be_visible()
     expect(app_page.locator("#workout-chart")).to_be_visible()
@@ -224,7 +320,7 @@ def test_create_story_finance_entry_note_and_checkpoint(app_page: Page) -> None:
     app_page.locator('.nav-item[data-view="stories"]').click()
     app_page.get_by_role("button", name="New Story").click()
     app_page.locator("#story-title").fill("Playwright story")
-    app_page.get_by_role("button", name="Commit Story (+50 XP)").click()
+    app_page.get_by_role("button", name="Save Project (+50 XP)").click()
     expect(app_page.locator("#content")).to_contain_text("Playwright story")
 
     app_page.locator('.nav-item[data-view="finance"]').click()
@@ -271,7 +367,7 @@ def test_edit_note_category_and_create_editable_task_from_note(app_page: Page) -
     expect(app_page.locator("#task-title")).to_have_value("Refined note")
     expect(app_page.locator("#task-desc")).to_have_value("Implementation details from the note")
     app_page.locator("#task-title").fill("Task refined from note")
-    app_page.get_by_role("button", name="Save Item (+25 XP)").click()
+    app_page.get_by_role("button", name="Save Task").click()
 
     app_page.locator('.nav-item[data-view="projects"]').click()
     task_card = app_page.locator(".task-card").filter(has_text="Task refined from note")
