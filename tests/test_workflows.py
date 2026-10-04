@@ -1,10 +1,19 @@
 from __future__ import annotations
 
+import re
+
 from playwright.sync_api import Page, expect
 
 
+def navigate_to_view(page: Page, view: str) -> None:
+    item = page.locator(f'.nav-item[data-view="{view}"]')
+    if not item.is_visible():
+        item.locator("xpath=ancestor::details[1]").locator("summary").click()
+    item.click()
+
+
 def test_create_task_and_open_its_inspector(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="projects"]').click()
+    navigate_to_view(app_page, "projects")
     app_page.get_by_role("button", name="Add Task").click()
     app_page.locator("#task-title").fill("Playwright-created task")
     app_page.locator("#task-desc").fill("Created by the browser test")
@@ -24,15 +33,17 @@ def test_create_task_and_open_its_inspector(app_page: Page) -> None:
 
 
 def test_day_planner_builds_non_overlapping_schedule_and_tracks_habits(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="planner"]').click()
+    navigate_to_view(app_page, "planner")
     app_page.locator('#planner-builder-form [name="meetingTitle"]').fill("Planning meeting")
     app_page.locator('#planner-builder-form [name="meetingTime"]').fill("10:00")
     app_page.get_by_role("button", name="Build this day").click()
 
     schedule = app_page.locator(".planner-entry")
-    expect(schedule).to_have_count(6)
+    expect(schedule).to_have_count(8)
     expect(app_page.locator("#content")).to_contain_text("Travel to Planning meeting")
     expect(app_page.locator("#content")).to_contain_text("Travel from Planning meeting")
+    expect(app_page.locator("#content")).to_contain_text("Priority focus block")
+    expect(app_page.locator("#content")).to_contain_text("Lunch / reset")
     assert app_page.evaluate(
         """() => {
             const entries = State.planner.entries.filter(item => item.date === PlannerEngine.displayDate)
@@ -42,9 +53,9 @@ def test_day_planner_builds_non_overlapping_schedule_and_tracks_habits(app_page:
                     entries[index - 1].duration <= item.time.slice(0, 2) * 60 + Number(item.time.slice(3)));
         }"""
     )
-    app_page.locator('.nav-item[data-view="calendar"]').click()
+    navigate_to_view(app_page, "calendar")
     expect(app_page.locator("#content")).to_contain_text("Planning meeting")
-    app_page.locator('.nav-item[data-view="planner"]').click()
+    navigate_to_view(app_page, "planner")
 
     habit = app_page.locator('#planner-habit-form [name="title"]')
     habit.fill("Stretch for two minutes")
@@ -57,8 +68,37 @@ def test_day_planner_builds_non_overlapping_schedule_and_tracks_habits(app_page:
     ) == 1
 
 
+def test_planner_marks_blocks_done_and_starts_focus_blocks(app_page: Page) -> None:
+    navigate_to_view(app_page, "planner")
+    tomorrow = app_page.evaluate(
+        """() => {
+            const date = new Date();
+            date.setDate(date.getDate() + 1);
+            return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'),
+                String(date.getDate()).padStart(2, '0')].join('-');
+        }"""
+    )
+    app_page.locator("#planner-date-filter").fill(tomorrow)
+    app_page.locator("#planner-date-filter").dispatch_event("change")
+    app_page.get_by_role("button", name="Build this day").click()
+
+    app_page.get_by_role("button", name="Complete Priority focus block").click()
+    assert app_page.evaluate(
+        "() => State.planner.entries.find(item => item.title === 'Priority focus block').completed"
+    ) is True
+    expect(app_page.locator('[aria-label="Day plan progress"]')).to_have_attribute("aria-valuenow", "20")
+
+    app_page.get_by_role("button", name="Reopen Priority focus block").click()
+    start_focus = app_page.get_by_role("button", name="Start focus session for Priority focus block")
+    expect(start_focus).to_be_visible()
+    start_focus.click()
+    expect(app_page.locator("#content h2").first).to_have_text("Focus Timer")
+    assert app_page.evaluate("ChronoEngine.activeCategory") == "Priority focus block"
+    expect(app_page.locator("#global-timer-pill")).to_be_visible()
+
+
 def test_planner_rejects_overlapping_day_builder_suggestions(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="planner"]').click()
+    navigate_to_view(app_page, "planner")
     app_page.locator('#planner-builder-form [name="meetingTitle"]').fill("Early meeting")
     app_page.locator('#planner-builder-form [name="meetingTime"]').fill("08:00")
     app_page.get_by_role("button", name="Build this day").click()
@@ -68,7 +108,7 @@ def test_planner_rejects_overlapping_day_builder_suggestions(app_page: Page) -> 
 
 
 def test_planner_clock_stopwatch_and_alarm_creation(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="planner"]').click()
+    navigate_to_view(app_page, "planner")
     expect(app_page.locator("#planner-clock")).to_be_visible()
     expect(app_page.locator("#planner-timezone")).not_to_be_empty()
 
@@ -100,7 +140,7 @@ def test_planner_clock_stopwatch_and_alarm_creation(app_page: Page) -> None:
 
 
 def test_clear_offline_cache_action_explains_data_is_preserved(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="legal"]').click()
+    navigate_to_view(app_page, "legal")
     app_page.get_by_role("button", name="Clear offline cache & refresh").click()
     dialog = app_page.locator("#confirm-modal")
     expect(dialog).to_be_visible()
@@ -135,7 +175,7 @@ def test_dashboard_orders_five_tasks_and_supports_focus_and_completion(app_page:
     ) == {"view": "timeview", "category": "Deep Work", "taskId": "first-high"}
     app_page.evaluate("ChronoEngine.reset()")
 
-    app_page.locator('.nav-item[data-view="dashboard"]').click()
+    navigate_to_view(app_page, "dashboard")
     before_xp = app_page.evaluate("State.user.xp")
     app_page.locator('.dashboard-task-row[data-task-index="0"] [data-task-action="complete"]').check()
     app_page.wait_for_function("State.tasks.find(task => task.id === 'first-high').status === 'done'")
@@ -170,7 +210,7 @@ def test_reactive_task_completion_unlocks_badge_and_rewards_xp(app_page: Page) -
     assert app_page.evaluate("State.user.badges.find(badge => badge.id === 'badge_reactive_sentinel')?.unlockedAt")
     assert app_page.evaluate("State.user.xp") == 230
     expect(app_page.locator("#toast-container")).to_contain_text("Achievement Unlocked: Firefighter!")
-    app_page.locator('.nav-item[data-view="dashboard"]').click()
+    navigate_to_view(app_page, "dashboard")
     expect(app_page.locator("#content .badge-tile.unlocked")).to_contain_text("Firefighter")
 
 
@@ -199,7 +239,7 @@ def test_deep_task_focus_session_awards_completion_bonus(app_page: Page) -> None
 
 
 def test_drag_task_between_kanban_columns(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="projects"]').click()
+    navigate_to_view(app_page, "projects")
     source = app_page.locator("#board-inbox .task-card").first
     task_id = source.get_attribute("data-task-id")
     assert task_id
@@ -219,44 +259,14 @@ def test_drag_task_between_kanban_columns(app_page: Page) -> None:
     ) == "todo"
 
 
-def test_finance_calculators_and_projection_are_live(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="finance"]').click()
-    expect(app_page.locator("#finance-loan-principal")).to_have_count(0)
-
-    app_page.locator('.nav-item[data-view="finance-tools"]').click()
-
-    app_page.locator("#finance-loan-principal").fill("120000")
-    app_page.locator("#finance-loan-rate").fill("0")
-    app_page.locator("#finance-loan-months").fill("12")
-    expect(app_page.locator("#finance-loan-emi")).to_have_text("₹10,000")
-    expect(app_page.locator("#finance-loan-interest")).to_have_text("₹0")
-
-    app_page.locator("#finance-fd-principal").fill("10000")
-    app_page.locator("#finance-fd-rate").fill("0")
-    app_page.locator("#finance-fd-years").fill("2")
-    expect(app_page.locator("#finance-fd-maturity")).to_have_text("₹10,000")
-
-    app_page.locator("#finance-sip-monthly").fill("500")
-    app_page.locator("#finance-sip-rate").fill("0")
-    app_page.locator("#finance-sip-years").fill("1")
-    expect(app_page.locator("#finance-sip-value")).to_have_text("₹6,000")
-    expect(app_page.locator("#finance-projection-note")).to_contain_text("Straight-line estimate")
-    app_page.evaluate(
-        """() => {
-            State.finances.transactions.push({
-                id: 'projection-check',
-                amount: 1000,
-                category: 'Food',
-                isoDate: new Date().toISOString()
-            });
-            FinanceEngine.updateTools();
-        }"""
-    )
-    expect(app_page.locator("#finance-projection-spent")).to_have_text("₹1,000")
+def test_finance_view_remains_available_without_calculator_screen(app_page: Page) -> None:
+    navigate_to_view(app_page, "finance")
+    expect(app_page.locator("#content h2")).to_have_text("Wealth & Capital Ledger")
+    expect(app_page.locator("#content [id^='finance-loan-']")).to_have_count(0)
 
 
 def test_budget_categories_can_be_renamed_added_and_deleted_safely(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="finance"]').click()
+    navigate_to_view(app_page, "finance")
     app_page.evaluate(
         """async () => {
             State.finances.budgetItems.push({
@@ -316,7 +326,7 @@ def test_budget_categories_can_be_renamed_added_and_deleted_safely(app_page: Pag
 
 def test_eisenhower_matrix_and_calendar_aggregate_workspace_events(app_page: Page) -> None:
     today = app_page.evaluate("CalendarView.dateKey(new Date())")
-    app_page.locator('.nav-item[data-view="projects"]').click()
+    navigate_to_view(app_page, "projects")
     app_page.get_by_role("button", name="Add Task").click()
     app_page.locator("#task-title").fill("Urgent calendar task")
     app_page.locator("#task-due-date").fill(today)
@@ -324,15 +334,15 @@ def test_eisenhower_matrix_and_calendar_aggregate_workspace_events(app_page: Pag
     app_page.locator("#task-urgent").check()
     app_page.get_by_role("button", name="Save Task").click()
 
-    app_page.locator('.nav-item[data-view="eisenhower"]').click()
+    navigate_to_view(app_page, "eisenhower")
     expect(app_page.locator('section[aria-label="Do First"]')).to_contain_text("Urgent calendar task")
 
-    app_page.locator('.nav-item[data-view="workout"]').click()
+    navigate_to_view(app_page, "workout")
     app_page.get_by_role("button", name="Log Session").click()
     app_page.locator("#wo-title").fill("Calendar workout")
     app_page.get_by_role("button", name="Save Workout").click()
 
-    app_page.locator('.nav-item[data-view="finance"]').click()
+    navigate_to_view(app_page, "finance")
     app_page.get_by_role("button", name="Record Outflow").click()
     app_page.locator("#tx-desc").fill("Calendar transaction")
     app_page.locator("#tx-amount").fill("75")
@@ -343,13 +353,34 @@ def test_eisenhower_matrix_and_calendar_aggregate_workspace_events(app_page: Pag
     app_page.locator("#finance-expense-due-date").fill(today)
     app_page.get_by_role("button", name="Save Item").click()
 
-    app_page.locator('.nav-item[data-view="calendar"]').click()
+    navigate_to_view(app_page, "calendar")
     for title in ("Urgent calendar task", "Calendar workout", "Calendar transaction", "Calendar bill"):
         expect(app_page.locator(".calendar-grid")).to_contain_text(title)
 
 
+def test_goal_roadmap_templates_are_editable_and_reusable(app_page: Page) -> None:
+    navigate_to_view(app_page, "pathways")
+    template_cards = app_page.locator(".pathway-template-card")
+    expect(template_cards).to_have_count(4)
+    expect(app_page.locator("#content")).to_contain_text("Ship a portfolio project in 4 weeks")
+    expect(app_page.locator("#content")).to_contain_text("Learn a practical skill in 30 days")
+    expect(app_page.locator("#content")).to_contain_text("Build a consistent fitness routine")
+    expect(app_page.locator("#content")).to_contain_text("Build a 3-month emergency fund")
+
+    template_cards.nth(0).get_by_role("button", name="Use and edit").click()
+    expect(app_page.locator("#pathway-title")).to_have_value("Ship a portfolio project in 4 weeks")
+    expect(app_page.locator(".pathway-step-title")).to_have_count(4)
+    app_page.locator("#pathway-title").fill("My portfolio launch")
+    app_page.locator(".pathway-step-title").nth(0).fill("Choose my target audience and project outcome")
+    app_page.get_by_role("button", name="Save Path").click()
+
+    roadmap = app_page.locator("#content .card").filter(has_text="My portfolio launch")
+    expect(roadmap).to_contain_text("Choose my target audience and project outcome")
+    expect(roadmap.locator(".pathway-step-item")).to_have_count(4)
+
+
 def test_create_and_edit_custom_guided_path(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="pathways"]').click()
+    navigate_to_view(app_page, "pathways")
     expect(app_page.locator("#content")).to_contain_text("No guided paths yet")
     expect(app_page.locator("#content")).not_to_contain_text("Peak Physical Architecture")
 
@@ -391,45 +422,48 @@ def test_create_and_edit_custom_guided_path(app_page: Page) -> None:
 
 
 def test_create_workout_and_render_canvas_chart(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="workout"]').click()
+    navigate_to_view(app_page, "workout")
     app_page.get_by_role("button", name="Log Session").click()
     app_page.locator("#wo-title").fill("Playwright workout")
+    app_page.locator("#wo-type").fill("Trail running")
     app_page.locator("#wo-duration").fill("30")
     app_page.get_by_role("button", name="Save Workout").click()
 
     expect(app_page.locator(".flex-col").filter(has_text="Playwright workout").first).to_be_visible()
     expect(app_page.locator("#workout-chart")).to_be_visible()
-    expect(app_page.locator("#workout-chart-legend")).to_contain_text("Strength")
+    expect(app_page.locator("#workout-chart-legend")).to_contain_text("Trail running")
+    expect(app_page.locator('#workout-category-options option[value="Trail running"]')).to_have_count(1)
+    assert app_page.evaluate("State.workouts[0].type") == "Trail running"
 
 
 def test_create_story_finance_entry_note_and_checkpoint(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="stories"]').click()
+    navigate_to_view(app_page, "stories")
     app_page.get_by_role("button", name="New Story").click()
     app_page.locator("#story-title").fill("Playwright story")
     app_page.get_by_role("button", name="Save Project (+50 XP)").click()
     expect(app_page.locator("#content")).to_contain_text("Playwright story")
 
-    app_page.locator('.nav-item[data-view="finance"]').click()
+    navigate_to_view(app_page, "finance")
     app_page.get_by_role("button", name="Record Outflow").click()
     app_page.locator("#tx-desc").fill("Playwright transaction")
     app_page.locator("#tx-amount").fill("12")
     app_page.get_by_role("button", name="Log Entry").click()
     expect(app_page.locator("#content")).to_contain_text("Playwright transaction")
 
-    app_page.locator('.nav-item[data-view="brain"]').click()
+    navigate_to_view(app_page, "brain")
     app_page.get_by_role("button", name="Create Note").click()
     app_page.locator("#note-title").fill("Playwright note")
     app_page.locator("#note-content").fill("Local encrypted test note")
     app_page.get_by_role("button", name="Save Note (+35 XP)").click()
     expect(app_page.locator("#content")).to_contain_text("Playwright note")
 
-    app_page.locator('.nav-item[data-view="snapshots"]').click()
+    navigate_to_view(app_page, "snapshots")
     app_page.get_by_role("button", name="Take Checkpoint").click()
     expect(app_page.locator("#content")).to_contain_text("Checkpoint #")
 
 
 def test_edit_note_category_and_create_editable_task_from_note(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="brain"]').click()
+    navigate_to_view(app_page, "brain")
     app_page.get_by_role("button", name="Create Note").click()
     app_page.locator("#note-title").fill("Note to refine")
     app_page.locator("#note-category").fill("Engineering")
@@ -455,7 +489,7 @@ def test_edit_note_category_and_create_editable_task_from_note(app_page: Page) -
     app_page.locator("#task-title").fill("Task refined from note")
     app_page.get_by_role("button", name="Save Task").click()
 
-    app_page.locator('.nav-item[data-view="projects"]').click()
+    navigate_to_view(app_page, "projects")
     task_card = app_page.locator(".task-card").filter(has_text="Task refined from note")
     expect(task_card).to_be_visible()
     task_card.click()
@@ -463,7 +497,7 @@ def test_edit_note_category_and_create_editable_task_from_note(app_page: Page) -
 
 
 def test_finance_categories_recurring_paid_items_and_amount_visibility(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="finance"]').click()
+    navigate_to_view(app_page, "finance")
     housing = app_page.locator("#content section.stat-card").filter(has_text="Housing").first
     expect(housing).to_be_visible()
 
@@ -525,7 +559,7 @@ def test_finance_categories_recurring_paid_items_and_amount_visibility(app_page:
 
 
 def test_monthly_budget_projections_lock_actuals_and_roll_forward(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="finance"]').click()
+    navigate_to_view(app_page, "finance")
     app_page.get_by_role("button", name="Add projection").click()
     app_page.locator("#finance-decision-title").fill("Weekend trip")
     app_page.locator("#finance-decision-category").select_option("Discretionary")
@@ -578,14 +612,20 @@ def test_monthly_budget_projections_lock_actuals_and_roll_forward(app_page: Page
 
 
 def test_timer_and_theme_controls_work(app_page: Page) -> None:
-    app_page.locator('.nav-item[data-view="timeview"]').click()
+    navigate_to_view(app_page, "timeview")
+    app_page.locator("#chrono-custom-tag").fill("Interview prep")
+    app_page.get_by_role("button", name="Use tag").click()
+    expect(app_page.locator('.chrono-category[data-chrono-category="Interview prep"]')).to_have_class("chip chrono-category active")
     app_page.get_by_role("button", name="Start Stopwatch").click()
     expect(app_page.locator("#global-timer-pill")).to_be_visible()
     expect(app_page.locator("#chrono-actions-row")).to_contain_text("Pause Timer")
     expect(app_page.locator("#chrono-view-clock")).to_have_text("00:01", timeout=3000)
+    app_page.get_by_role("button", name="Save Focus Session").click()
+    assert app_page.evaluate("State.timeLogs[0].category") == "Interview prep"
 
     app_page.locator("#theme-btn").click()
     expect(app_page.locator("html")).to_have_attribute("data-theme", "light")
+    expect(app_page.locator("#system-clock")).to_have_text(re.compile(r"\d{1,2}:\d{2}"))
 
 
 def test_standalone_mode_uses_encrypted_local_storage(app_page: Page, app_url: str) -> None:

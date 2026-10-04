@@ -255,7 +255,7 @@
             border-radius: var(--radius-lg); background: var(--md-sys-color-surface); box-shadow: var(--elevation-3);
         }
 
-        #app { display: none; width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+        #app { display: none; width: 100%; height: 100vh; height: 100dvh; min-height: 0; position: relative; overflow: hidden; }
 
         #sidebar-overlay {
             position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45);
@@ -281,6 +281,13 @@
             font-size: 0.6875rem; text-transform: uppercase; color: var(--md-sys-color-text-muted);
             font-weight: 600; letter-spacing: 0.06em; padding: 12px 14px 6px 14px;
         }
+        .nav-dimension { flex: 0 0 auto; }
+        .nav-dimension > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+        .nav-dimension > summary.nav-label { min-height: 44px; padding: 10px 14px; }
+        .nav-dimension > summary::-webkit-details-marker { display: none; }
+        .nav-dimension > summary::after { content: "+"; font-size: 0.9rem; }
+        .nav-dimension[open] > summary::after { content: "−"; }
+        .nav-dimension-items { display: flex; flex-direction: column; }
         .nav-item {
             padding: 10px 16px; border-radius: var(--radius-pill); cursor: pointer;
             color: var(--md-sys-color-text-secondary); font-size: 0.84rem; font-weight: 500;
@@ -330,6 +337,7 @@
         }
 
         #main-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; overflow: hidden; }
+        #main-wrapper { min-height: 0; }
         
         #topbar {
             height: var(--topbar-height); border-bottom: 1px solid var(--md-sys-color-outline-variant);
@@ -372,8 +380,14 @@
         }
 
         #content {
-            flex: 1; overflow-y: auto; padding: 24px 28px; background: var(--md-sys-color-background);
+            flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain;
+            padding: 24px 28px; background: var(--md-sys-color-background);
             -webkit-overflow-scrolling: touch; padding-bottom: 40px;
+        }
+        .system-clock {
+            flex: 0 0 auto; padding: 7px 10px; border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--radius-pill); color: var(--md-sys-color-text-secondary);
+            font-size: 0.78rem; font-variant-numeric: tabular-nums;
         }
 
         .card {
@@ -780,6 +794,19 @@
         .pathway-step-actions button {
             min-height: 44px;
         }
+        .pathway-templates { margin-bottom: 20px; }
+        .pathway-templates-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; list-style: none; }
+        .pathway-templates-summary::-webkit-details-marker { display: none; }
+        .pathway-templates-summary > span { display: grid; gap: 4px; }
+        .pathway-templates-summary::after { content: "+"; color: var(--md-sys-color-primary); font-size: 1.1rem; }
+        .pathway-templates[open] .pathway-templates-summary::after { content: "−"; }
+        .pathway-template-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 12px; margin-top: 14px; }
+        .pathway-template-card { display: flex; flex-direction: column; align-items: stretch; gap: 9px; min-width: 0; }
+        .pathway-template-card h3 { min-width: 0; font-size: 0.94rem; font-weight: 650; }
+        .pathway-template-card .pill { flex: 0 0 auto; }
+        .pathway-template-card ol { padding-left: 20px; color: var(--md-sys-color-text-secondary); font-size: 0.78rem; line-height: 1.5; }
+        .pathway-template-card li + li { margin-top: 4px; }
+        .pathway-template-card button { margin-top: auto; min-height: 44px; }
         .pathway-step-editor {
             display: grid;
             grid-template-columns: minmax(0, 2fr) minmax(130px, 1fr) minmax(130px, 1fr) auto;
@@ -811,7 +838,8 @@
             #sidebar-overlay.active { display: block; }
             .mobile-only { display: inline-flex !important; }
             .desktop-hide { display: none !important; }
-            #content { padding: 16px; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+            #main-wrapper { min-height: 0; }
+            #content { min-height: 0; padding: 16px 16px calc(84px + env(safe-area-inset-bottom)); }
             #topbar { padding: 0 12px; gap: 8px; }
             #topbar > .topbar-group { gap: 6px; }
             .topbar-rewards { width: 184px; min-width: 142px; }
@@ -872,6 +900,7 @@
             .finance-decision-summary .stat-card { padding: 10px; }
             .finance-decision-summary .stat-card:last-child { grid-column: 1 / -1; }
             .finance-category-summary > strong { text-align: right; }
+            .planner-day-overview { grid-template-columns:minmax(0, 1fr); gap:14px; }
             #topbar {
                 height: auto; min-height: var(--topbar-height); display: grid;
                 grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 44px auto;
@@ -879,6 +908,7 @@
             }
             #topbar > .topbar-group:first-child { grid-column: 1; grid-row: 1; width: 100%; }
             #topbar > .topbar-group:nth-of-type(2) { grid-column: 2; grid-row: 1; gap: 6px; }
+            .system-clock { padding: 6px 7px; font-size: 0.72rem; }
             #topbar > .topbar-rewards {
                 grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: 1fr auto;
                 align-items: center; gap: 3px 10px; width: 100%; min-width: 0;
@@ -943,8 +973,19 @@
         .energy-reactive { background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.3); }
         .planner-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap:16px; }
         .planner-form-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap:10px; }
+        .planner-day-overview { display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(220px, .85fr); gap:20px; align-items:center; margin-bottom:16px; }
+        .planner-day-next { display:grid; justify-items:start; gap:6px; min-width:0; }
+        .planner-day-next h3 { font-size:1.08rem; font-weight:650; overflow-wrap:anywhere; }
+        .planner-day-next button { margin-top:4px; min-height:44px; }
+        .planner-day-progress { display:grid; gap:10px; min-width:0; }
+        .planner-day-stats { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; }
+        .planner-day-stats > div { display:grid; gap:3px; min-width:0; }
+        .planner-day-stats strong { font-size:.9rem; font-weight:700; color:var(--md-sys-color-primary); }
+        .planner-day-stats span { color:var(--md-sys-color-text-muted); font-size:.67rem; }
         .planner-clock { font-size:clamp(2.6rem, 9vw, 4.8rem); line-height:1; letter-spacing:-.06em; font-variant-numeric:tabular-nums; }
         .planner-entry { display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:12px; align-items:center; padding:12px; border:1px solid var(--md-sys-color-outline-variant); border-radius:var(--radius-sm); }
+        .planner-entry-actions { display:flex; align-items:center; gap:6px; }
+        .planner-entry-complete { opacity:.68; }
         .planner-entry-time { color:var(--md-sys-color-primary); font:600 .8rem var(--font-mono); white-space:nowrap; }
         .planner-habit { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--md-sys-color-outline-variant); }
         .planner-habit:last-child { border-bottom:0; }
@@ -1056,7 +1097,10 @@
                 </button>
             </div>
             
-            <div class="nav-label">Workspace</div>
+            <div class="nav-label">Dimensions</div>
+            <details class="nav-dimension">
+                <summary class="nav-label">Workspace</summary>
+                <div class="nav-dimension-items">
             <div class="nav-item" data-view="pathways">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M7 18h3a3 3 0 0 0 3-3V9a3 3 0 0 1 3-3h1"/></svg></span>
                 <span>Goal Roadmaps</span>
@@ -1065,8 +1109,12 @@
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg></span>
                 <span>Dashboard</span>
             </div>
+                </div>
+            </details>
 
-            <div class="nav-label">Health & Focus</div>
+            <details class="nav-dimension">
+                <summary class="nav-label">Health & Focus</summary>
+                <div class="nav-dimension-items">
             <div class="nav-item" data-view="workout">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>
                 <span>Workouts & Fitness</span>
@@ -1079,8 +1127,12 @@
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h3M8 17h6"/></svg></span>
                 <span>Time & Day Planner</span>
             </div>
+                </div>
+            </details>
 
-            <div class="nav-label">Planning</div>
+            <details class="nav-dimension">
+                <summary class="nav-label">Planning</summary>
+                <div class="nav-dimension-items">
             <div class="nav-item" data-view="stories">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 5.5v13A2.5 2.5 0 0 1 6.5 16H20M8 7h8M8 11h6"/></svg></span>
                 <span>Projects & Milestones</span>
@@ -1101,15 +1153,15 @@
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span>
                 <span>Activity History</span>
             </div>
+                </div>
+            </details>
 
-            <div class="nav-label">Money & Ideas</div>
+            <details class="nav-dimension">
+                <summary class="nav-label">Money & Ideas</summary>
+                <div class="nav-dimension-items">
             <div class="nav-item" data-view="finance">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M16 14h2M7 5V3h10v2"/></svg></span>
                 <span>Wallet & Budget</span>
-            </div>
-            <div class="nav-item" data-view="finance-tools">
-                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h2M14 11h2M8 15h2M14 15h2M8 18h2M14 18h2"/></svg></span>
-                <span>Finance Calculators</span>
             </div>
             <div class="nav-item" data-view="brain">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M8 14c-1.5-1-2.5-2.7-2.5-4.7a6.5 6.5 0 1 1 13 0c0 2-1 3.7-2.5 4.7-.6.4-1 1.1-1 1.8h-6c0-.7-.4-1.4-1-1.8z"/><path d="M12 3v2"/></svg></span>
@@ -1119,12 +1171,18 @@
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></svg></span>
                 <span>Backup Snapshots</span>
             </div>
+                </div>
+            </details>
 
-            <div class="nav-label">Privacy</div>
+            <details class="nav-dimension">
+                <summary class="nav-label">Privacy</summary>
+                <div class="nav-dimension-items">
             <div class="nav-item" data-view="legal">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/><path d="m9 12 2 2 4-4"/></svg></span>
                 <span>Privacy & Security</span>
             </div>
+                </div>
+            </details>
 
             <div class="rpg-card sidebar-achievements">
                 <div class="nav-label" style="padding: 0 0 6px;">Achievements</div>
@@ -1151,6 +1209,7 @@
                         <span id="global-timer-label">Tracking</span>
                         <span id="global-timer-clock" class="text-mono">00:00</span>
                     </div>
+                    <time id="system-clock" class="system-clock text-mono" aria-label="Current local time"></time>
 
                     <select id="currency-select" onchange="FinanceEngine.setCurrency(this.value)" class="desktop-hide" style="width: auto; padding: 6px 10px; font-size: 0.78rem; font-weight: 600; border-radius: var(--radius-pill);">
                         <option value="INR">₹ INR</option>
@@ -1402,13 +1461,16 @@
             <h3 style="margin-bottom: 16px; font-weight: 600;">Log Workout</h3>
             <div class="flex-col gap-3">
                 <input type="text" id="wo-title" placeholder="Session Focus (e.g. Upper Body Compound, 5k Run)">
+                <label class="text-muted">Category
+                    <input type="text" id="wo-type" list="workout-category-options" value="Strength" maxlength="48" placeholder="Choose or define a category">
+                    <datalist id="workout-category-options">
+                        <option value="Strength"></option>
+                        <option value="Cardio"></option>
+                        <option value="HIIT"></option>
+                        <option value="Mobility"></option>
+                    </datalist>
+                </label>
                 <div class="flex gap-2 btn-group-responsive">
-                    <select id="wo-type">
-                        <option value="Strength">Strength & Hypertrophy</option>
-                        <option value="Cardio">Zone 2 Cardio / Aerobic</option>
-                        <option value="HIIT">High-Intensity Conditioning</option>
-                        <option value="Mobility">Mobility & Structural Recovery</option>
-                    </select>
                     <input type="number" id="wo-duration" placeholder="Duration (mins)" value="45" style="max-width: 150px;">
                 </div>
                 <div>
@@ -2027,7 +2089,7 @@
 
                     <div class="legal-block">
                         <h4><span class="material-symbols-outlined" style="font-size:18px;">fitness_center</span> 5. Physical Fitness & Health Disclaimer</h4>
-                        <p>The <strong>Workouts & Fitness</strong> screen, RPE calculators, and volume estimators are educational tracking tools only.</p>
+                        <p>The <strong>Workouts & Fitness</strong> screen is for personal activity tracking only.</p>
                         <ul>
                             <li><strong>Not Medical Advice:</strong> Nothing contained in this workspace constitutes sports medicine, orthopedic assessment, physical therapy, or diagnosis.</li>
                             <li><strong>Assumption of Risk:</strong> Consult a certified physician before undertaking physical training. You assume all voluntary risks of injury, illness, or strain.</li>
@@ -2036,7 +2098,7 @@
 
                     <div class="legal-block">
                         <h4><span class="material-symbols-outlined" style="font-size:18px;">payments</span> 6. Financial & Investment Disclaimer</h4>
-                        <p>The <strong>Wealth & Capital Ledger</strong> and compound interest forecasting tools are heuristic computational calculators provided solely for personal budgeting.</p>
+                        <p>The <strong>Wealth & Capital Ledger</strong> is for personal budgeting and record keeping only.</p>
                         <ul>
                             <li><strong>Not Professional Financial Counsel:</strong> This application does not provide investment, portfolio management, legal, tax, or accounting advice.</li>
                             <li><strong>Hypothetical Estimates:</strong> Projections do not guarantee future yields, market liquidity, or inflation adjustments. Consult a certified financial planner (CFP) or chartered accountant.</li>
@@ -2170,6 +2232,9 @@
                 }
             }
             normalized.planner.entries.forEach(entry => {
+                if (entry.completed !== undefined && typeof entry.completed !== 'boolean') {
+                    throw new Error('The decrypted vault has an invalid scheduled item status.');
+                }
                 if (typeof entry.id !== 'string' || !entry.id || entry.id.length > 100 ||
                     typeof entry.title !== 'string' || !entry.title || entry.title.length > 160 ||
                     !plannerDateIsValid(entry.date) || !plannerTimeIsValid(entry.time) ||
@@ -2178,6 +2243,7 @@
                     !Number.isInteger(entry.remindBefore) || ![0, 5, 10, 15, 30, 60].includes(entry.remindBefore)) {
                     throw new Error('The decrypted vault has an invalid scheduled item.');
                 }
+                entry.completed = entry.completed === true;
             });
             normalized.planner.habits.forEach(habit => {
                 if (typeof habit.id !== 'string' || !habit.id || habit.id.length > 100 ||
@@ -2627,9 +2693,26 @@
                 ChronoEngine.boundTaskEnergy = null;
                 const label = document.getElementById('chrono-active-tag');
                 if (label) label.innerText = category;
-                document.querySelectorAll('.chip').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.cat === category);
+                document.querySelectorAll('.chrono-category').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.chronoCategory === category);
                 });
+            },
+
+            setCustomCategory: () => {
+                const input = document.getElementById('chrono-custom-tag');
+                const category = input?.value.trim();
+                if (!category) {
+                    Toast.show('Enter a tag to use for this focus session.', 'error');
+                    input?.focus();
+                    return;
+                }
+                if (category.length > 40) {
+                    Toast.show('Focus tags must be 40 characters or fewer.', 'error');
+                    input?.focus();
+                    return;
+                }
+                ChronoEngine.setCategory(category);
+                App.refreshCurrentView();
             },
 
             startForTask: (taskId) => {
@@ -2939,13 +3022,31 @@
         };
 
         const WorkoutEngine = {
+            refreshCategoryOptions: () => {
+                const list = document.getElementById('workout-category-options');
+                if (!list) return;
+                const savedCategories = (State.workouts || [])
+                    .map(workout => workout.type)
+                    .filter(type => typeof type === 'string' && type.trim() && type.trim().length <= 48)
+                    .map(type => type.trim());
+                const categories = [...new Set(['Strength', 'Cardio', 'HIIT', 'Mobility', ...savedCategories])];
+                list.replaceChildren(...categories.map(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    return option;
+                }));
+            },
             addWorkout: () => {
                 const title = document.getElementById('wo-title').value.trim();
-                const type = document.getElementById('wo-type').value;
+                const type = document.getElementById('wo-type').value.trim();
                 const duration = parseInt(document.getElementById('wo-duration').value) || 45;
                 const rpe = parseInt(document.getElementById('wo-rpe').value) || 8;
                 const notes = document.getElementById('wo-notes').value.trim();
-                if (!title) return;
+                if (!title || !type) {
+                    Toast.show('Add a workout name and category before saving.', 'error');
+                    return;
+                }
 
                 const now = new Date();
                 State.workouts.unshift({
@@ -2961,6 +3062,7 @@
                 Haptics.taskDone();
                 AuditEngine.log('workout', `Logged: "${title}" (${duration}m, RPE ${rpe})`);
                 Data.save();
+                WorkoutEngine.refreshCategoryOptions();
                 UI.closeModals();
                 Toast.show('Workout saved (+100 XP)', 'success');
                 App.refreshCurrentView();
@@ -2978,6 +3080,7 @@
             deleteWorkout: (id) => {
                 State.workouts = State.workouts.filter(w => w.id !== id);
                 Data.save();
+                WorkoutEngine.refreshCategoryOptions();
                 Toast.show('Workout deleted');
                 App.refreshCurrentView();
             }
@@ -3054,6 +3157,48 @@
         const PathwayEditor = {
             pathwayId: null,
             steps: [],
+            templates: [
+                {
+                    title: 'Ship a portfolio project in 4 weeks',
+                    desc: 'Go from a small, clear idea to a published project people can try and review.',
+                    steps: [
+                        { title: 'Choose one audience, problem, and smallest useful outcome', activityType: 'task', actionLabel: 'Define project scope' },
+                        { title: 'Build the core version and write a short project note', activityType: 'note', actionLabel: 'Capture build decisions' },
+                        { title: 'Publish a working demo with a clear setup guide', activityType: 'task', actionLabel: 'Prepare the release' },
+                        { title: 'Ask three people to try it and record the improvements', activityType: 'story', actionLabel: 'Plan the next iteration' }
+                    ]
+                },
+                {
+                    title: 'Learn a practical skill in 30 days',
+                    desc: 'Turn a learning goal into a finished example rather than an endless course queue.',
+                    steps: [
+                        { title: 'Pick one skill and define a small proof-of-skill project', activityType: 'task', actionLabel: 'Set a learning target' },
+                        { title: 'Choose one primary resource and schedule four practice blocks', activityType: 'time', actionLabel: 'Start a practice block' },
+                        { title: 'Build the project in small weekly milestones', activityType: 'task', actionLabel: 'Create a practice task' },
+                        { title: 'Share the result, gather feedback, and choose the next gap', activityType: 'note', actionLabel: 'Capture lessons learned' }
+                    ]
+                },
+                {
+                    title: 'Build a consistent fitness routine',
+                    desc: 'Create a sustainable weekly rhythm, track sessions, and adjust based on recovery.',
+                    steps: [
+                        { title: 'Choose two or three realistic training days and session types', activityType: 'task', actionLabel: 'Set a weekly routine' },
+                        { title: 'Complete and log the first week of sessions', activityType: 'workout', actionLabel: 'Log a workout' },
+                        { title: 'Repeat the plan for three weeks without adding extra volume', activityType: 'workout', actionLabel: 'Log the next session' },
+                        { title: 'Review energy and recovery, then keep or adjust the routine', activityType: 'note', actionLabel: 'Review your routine' }
+                    ]
+                },
+                {
+                    title: 'Build a 3-month emergency fund',
+                    desc: 'Create a simple safety buffer with a clear target and repeatable weekly actions.',
+                    steps: [
+                        { title: 'List essential monthly costs and set a three-month target', activityType: 'finance', actionLabel: 'Review your budget' },
+                        { title: 'Choose a realistic weekly transfer amount and start date', activityType: 'task', actionLabel: 'Set a savings action' },
+                        { title: 'Review spending once a week and log the transfer', activityType: 'finance', actionLabel: 'Review budget progress' },
+                        { title: 'Check progress monthly and adjust the target or transfer', activityType: 'time', actionLabel: 'Run a monthly review' }
+                    ]
+                }
+            ],
             activityTypes: [
                 ['task', 'Create a Task', 'Create Task'],
                 ['workout', 'Log a Workout', 'Log Workout'],
@@ -3069,6 +3214,24 @@
                 document.getElementById('pathway-title').value = '';
                 document.getElementById('pathway-desc').value = '';
                 PathwayEditor.addStep();
+                UI.openModal('pathway-modal');
+            },
+            openTemplate: templateIndex => {
+                if (!Number.isInteger(templateIndex) || templateIndex < 0 || templateIndex >= PathwayEditor.templates.length) {
+                    Toast.show('That roadmap template is not available.', 'error');
+                    return;
+                }
+                const template = PathwayEditor.templates[templateIndex];
+                PathwayEditor.pathwayId = null;
+                PathwayEditor.steps = template.steps.map(step => ({
+                    ...step,
+                    id: null,
+                    done: false
+                }));
+                document.getElementById('pathway-modal-title').textContent = 'Use Goal Roadmap';
+                document.getElementById('pathway-title').value = template.title;
+                document.getElementById('pathway-desc').value = template.desc;
+                PathwayEditor.renderSteps();
                 UI.openModal('pathway-modal');
             },
             open: (pathwayId) => {
@@ -3817,89 +3980,6 @@
                 Toast.show('Transaction deleted');
                 App.refreshCurrentView();
             },
-            updateTools: () => {
-                const maxValues = {
-                    'finance-loan-principal': 1e12,
-                    'finance-loan-rate': 100,
-                    'finance-loan-months': 1200,
-                    'finance-fd-principal': 1e12,
-                    'finance-fd-rate': 100,
-                    'finance-fd-years': 100,
-                    'finance-sip-monthly': 1e9,
-                    'finance-sip-rate': 100,
-                    'finance-sip-years': 100
-                };
-                const read = id => {
-                    const value = Number(document.getElementById(id)?.value);
-                    return Number.isFinite(value) && value >= 0 && value <= maxValues[id] ? value : NaN;
-                };
-                const set = (id, value) => {
-                    const output = document.getElementById(id);
-                    if (output) output.textContent = Number.isFinite(value) ? FinanceEngine.displayAmount(value) : 'Check inputs';
-                };
-
-                const principal = read('finance-loan-principal');
-                const annualRate = read('finance-loan-rate') / 100;
-                const months = Math.floor(read('finance-loan-months'));
-                const monthlyRate = annualRate / 12;
-                const validLoan = Number.isFinite(principal) && Number.isFinite(annualRate) &&
-                    Number.isFinite(months) && months > 0;
-                const emi = validLoan
-                    ? monthlyRate === 0
-                        ? principal / months
-                        : principal * monthlyRate * Math.pow(1 + monthlyRate, months) /
-                            (Math.pow(1 + monthlyRate, months) - 1)
-                    : NaN;
-                set('finance-loan-emi', emi);
-                set('finance-loan-total', emi * months);
-                set('finance-loan-interest', Math.max(0, emi * months - principal));
-
-                const deposit = read('finance-fd-principal');
-                const fdRate = read('finance-fd-rate') / 100;
-                const fdYears = read('finance-fd-years');
-                const maturity = [deposit, fdRate, fdYears].every(Number.isFinite)
-                    ? deposit * Math.pow(1 + fdRate / 4, 4 * fdYears)
-                    : NaN;
-                set('finance-fd-maturity', maturity);
-                set('finance-fd-interest', maturity - deposit);
-
-                const monthlySaving = read('finance-sip-monthly');
-                const savingRate = read('finance-sip-rate') / 1200;
-                const savingMonths = Math.floor(read('finance-sip-years') * 12);
-                const validSaving = [monthlySaving, savingRate, savingMonths].every(Number.isFinite);
-                const investmentValue = validSaving
-                    ? savingRate === 0
-                        ? monthlySaving * savingMonths
-                        : monthlySaving * (Math.pow(1 + savingRate, savingMonths) - 1) / savingRate
-                    : NaN;
-                set('finance-sip-value', investmentValue);
-                set('finance-sip-contributed', validSaving ? monthlySaving * savingMonths : NaN);
-
-                const now = new Date();
-                const month = now.getMonth();
-                const year = now.getFullYear();
-                const monthDays = new Date(year, month + 1, 0).getDate();
-                const elapsedDays = now.getDate();
-                const spent = (State.finances.transactions || []).reduce((sum, transaction) => {
-                    if (transaction.category === 'Income') return sum;
-                    const date = transaction.isoDate
-                        ? new Date(transaction.isoDate)
-                        : new Date(`${transaction.date || ''}, ${year}`);
-                    return !Number.isNaN(date.getTime()) && date.getFullYear() === year && date.getMonth() === month
-                        ? sum + Math.max(0, Number(transaction.amount) || 0)
-                        : sum;
-                }, 0);
-                const forecastSpend = spent / Math.max(1, elapsedDays) * monthDays;
-                const forecastNet = Number(State.finances.monthlyIncome || 0) - forecastSpend;
-                set('finance-projection-spent', spent);
-                set('finance-projection-month-end', forecastSpend);
-                set('finance-projection-net', forecastNet);
-                set('finance-projection-3m', forecastNet * 3);
-                set('finance-projection-6m', forecastNet * 6);
-                set('finance-projection-12m', forecastNet * 12);
-                const note = document.getElementById('finance-projection-note');
-                if (note) note.textContent = `Straight-line estimate from ${elapsedDays} day${elapsedDays === 1 ? '' : 's'} of this month; ${monthDays - elapsedDays} day${monthDays - elapsedDays === 1 ? '' : 's'} remain.`;
-            },
             updateProjections: () => {
                 const inc = parseFloat(document.getElementById('cfg-income').value) || 0;
                 const rate = parseFloat(document.getElementById('cfg-rate').value) || 0;
@@ -4578,6 +4658,12 @@
                         const countdown = document.getElementById('planner-countdown');
                         if (countdown) countdown.textContent = '00:00:00';
                         break;
+                    case 'entry-toggle-done':
+                        PlannerEngine.toggleEntryDone(index);
+                        break;
+                    case 'focus-entry':
+                        PlannerEngine.startFocusEntry(index);
+                        break;
                     case 'entry-delete':
                         if (Number.isInteger(index) && index >= 0 && index < State.planner.entries.length) {
                             State.planner.entries.splice(index, 1);
@@ -4632,10 +4718,38 @@
                 App.refreshCurrentView();
                 return true;
             },
+            toggleEntryDone: async index => {
+                if (!Number.isInteger(index) || index < 0 || index >= State.planner.entries.length) return;
+                const entry = State.planner.entries[index];
+                const previous = entry.completed === true;
+                entry.completed = !previous;
+                if (!await Data.save()) {
+                    entry.completed = previous;
+                    return;
+                }
+                App.refreshCurrentView();
+            },
+            startFocusEntry: index => {
+                if (!Number.isInteger(index) || index < 0 || index >= State.planner.entries.length) return;
+                const entry = State.planner.entries[index];
+                if (entry.category !== 'focus' || entry.completed) return;
+                if (ChronoEngine.isRunning || ChronoEngine.seconds > 0) {
+                    Toast.show('Save or reset your current focus session before starting this block.', 'error');
+                    return;
+                }
+                ChronoEngine.setCategory(entry.title);
+                ChronoEngine.start(entry.title);
+                App.router('timeview');
+            },
             buildDay: async form => {
                 const values = new FormData(form);
                 const date = String(values.get('date') || '');
                 const wake = String(values.get('wake') || '');
+                const focusTitle = String(values.get('focusTitle') || '').trim();
+                const focusTime = String(values.get('focusTime') || '');
+                const focusDuration = Number(values.get('focusDuration'));
+                const breakTime = String(values.get('breakTime') || '');
+                const breakDuration = Number(values.get('breakDuration'));
                 const meetingTitle = String(values.get('meetingTitle') || '').trim();
                 const meetingTime = String(values.get('meetingTime') || '');
                 const meetingDuration = Number(values.get('meetingDuration'));
@@ -4651,9 +4765,14 @@
                     return hour * 60 + minutes;
                 };
                 if (!CalendarView.isDateKey(date) || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(wake) ||
+                    !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(focusTime) ||
+                    !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(breakTime) ||
                     !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(personalTime) ||
                     !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(exerciseTime) ||
                     !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(habitTime) ||
+                    !focusTitle || focusTitle.length > 120 ||
+                    !Number.isInteger(focusDuration) || focusDuration < 1 || focusDuration > 1440 ||
+                    !Number.isInteger(breakDuration) || breakDuration < 1 || breakDuration > 1440 ||
                     !Number.isInteger(personalDuration) || personalDuration < 1 || personalDuration > 1440 ||
                     !Number.isInteger(exerciseDuration) || exerciseDuration < 1 || exerciseDuration > 1440 ||
                     (meetingTitle && (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(meetingTime) ||
@@ -4664,9 +4783,11 @@
                     return;
                 }
                 const makeEntry = (title, time, duration, category) => ({
-                    id: `plan_${crypto.randomUUID()}`, title, date, time, duration, category, remindBefore: 0
+                    id: `plan_${crypto.randomUUID()}`, title, date, time, duration, category, remindBefore: 0, completed: false
                 });
                 const entries = [
+                    makeEntry(focusTitle, focusTime, focusDuration, 'focus'),
+                    makeEntry('Lunch / reset', breakTime, breakDuration, 'personal'),
                     makeEntry('Exercise', exerciseTime, exerciseDuration, 'exercise'),
                     makeEntry('Personal time', personalTime, personalDuration, 'personal'),
                     makeEntry(habitTitle, habitTime, 5, 'habit')
@@ -4726,7 +4847,7 @@
                     return;
                 }
                 if (await PlannerEngine.saveEntries([{
-                    id: `plan_${crypto.randomUUID()}`, title, date, time, duration, category, remindBefore
+                    id: `plan_${crypto.randomUUID()}`, title, date, time, duration, category, remindBefore, completed: false
                 }])) form.reset();
             },
             addAlarm: async form => {
@@ -5025,6 +5146,22 @@
                 const today = PlannerEngine.dateKey(new Date());
                 const habits = State.planner.habits || [];
                 const alarms = State.planner.alarms || [];
+                const now = new Date();
+                const currentMinute = now.getHours() * 60 + now.getMinutes();
+                const toMinute = entry => Number(entry.time.slice(0, 2)) * 60 + Number(entry.time.slice(3));
+                const inProgressEntry = date === today
+                    ? entries.find(entry => !entry.completed && toMinute(entry) <= currentMinute &&
+                        toMinute(entry) + entry.duration > currentMinute)
+                    : null;
+                const nextEntry = inProgressEntry || entries.find(entry => !entry.completed &&
+                    (date !== today || toMinute(entry) >= currentMinute));
+                const nextEntryIndex = nextEntry ? State.planner.entries.indexOf(nextEntry) : -1;
+                const completedEntries = entries.filter(entry => entry.completed).length;
+                const focusMinutes = entries.filter(entry => entry.category === 'focus')
+                    .reduce((total, entry) => total + entry.duration, 0);
+                const exerciseMinutes = entries.filter(entry => entry.category === 'exercise')
+                    .reduce((total, entry) => total + entry.duration, 0);
+                const progressPercent = entries.length ? Math.round(completedEntries / entries.length * 100) : 0;
                 return `
                     <div class="flex justify-between items-center" style="gap:12px; flex-wrap:wrap; margin-bottom:16px;">
                         <div>
@@ -5069,16 +5206,42 @@
                             <div class="text-muted" id="planner-laps" style="margin-top:8px;"></div>
                         </section>
                     </div>
+                    <section class="card planner-day-overview" aria-label="Day overview">
+                        <div class="planner-day-next">
+                            <span class="text-muted" style="text-transform:uppercase; font-size:0.68rem; letter-spacing:0.06em; font-weight:700;">
+                                ${inProgressEntry ? 'Happening now' : date === today ? 'Up next' : 'Next on this day'}
+                            </span>
+                            ${nextEntry
+                                ? `<h3>${esc(nextEntry.title)}</h3><p class="text-muted">${esc(nextEntry.time)} · ${nextEntry.duration} min · ${esc(nextEntry.category)}</p>
+                                    ${nextEntry.category === 'focus' ? `<button class="primary sm" type="button" data-planner-action="focus-entry" data-index="${nextEntryIndex}">Start this focus block</button>` : ''}`
+                                : `<h3>${entries.length ? 'Your plan is complete' : 'Nothing scheduled yet'}</h3><p class="text-muted">${entries.length ? 'You have no remaining blocks on this day.' : 'Build a balanced day or add one block to get started.'}</p>`}
+                        </div>
+                        <div class="planner-day-progress">
+                            <div class="planner-day-stats">
+                                <div><strong>${completedEntries}/${entries.length}</strong><span>blocks done</span></div>
+                                <div><strong>${focusMinutes}m</strong><span>focus planned</span></div>
+                                <div><strong>${exerciseMinutes}m</strong><span>movement planned</span></div>
+                            </div>
+                            <div class="energy-track" role="progressbar" aria-label="Day plan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progressPercent}">
+                                <span style="width:${progressPercent}%; background:var(--md-sys-color-primary);"></span>
+                            </div>
+                        </div>
+                    </section>
                     <section class="card" style="margin-bottom:16px;">
                         <div class="flex justify-between items-center" style="gap:10px; flex-wrap:wrap; margin-bottom:10px;">
                             <div>
                                 <h3 style="font-size:1rem; font-weight:600;">Build a balanced day</h3>
-                                <p class="text-muted">A few prompts turn your meeting, commute, personal time, exercise, and one small habit into a schedule.</p>
+                                <p class="text-muted">Create a realistic day with a priority focus block, recovery break, movement, and personal time. Add a meeting and commute if needed.</p>
                             </div>
                         </div>
                         <form id="planner-builder-form" class="planner-form-grid">
                             <input name="date" type="hidden" value="${esc(date)}">
                             <label class="text-muted">Wake-up time<input name="wake" type="time" value="07:00" required></label>
+                            <label class="text-muted">Priority focus block<input name="focusTitle" type="text" maxlength="120" value="Priority focus block" required></label>
+                            <label class="text-muted">Focus starts<input name="focusTime" type="time" value="08:30" required></label>
+                            <label class="text-muted">Focus minutes<input name="focusDuration" type="number" min="1" max="1440" value="60" required></label>
+                            <label class="text-muted">Lunch / reset starts<input name="breakTime" type="time" value="12:30" required></label>
+                            <label class="text-muted">Break minutes<input name="breakDuration" type="number" min="1" max="1440" value="45" required></label>
                             <label class="text-muted">Meeting (optional)<input name="meetingTitle" type="text" maxlength="160" placeholder="e.g. Project check-in"></label>
                             <label class="text-muted">Meeting start<input name="meetingTime" type="time"></label>
                             <label class="text-muted">Meeting minutes<input name="meetingDuration" type="number" min="1" max="1440" value="60"></label>
@@ -5091,7 +5254,7 @@
                             <label class="text-muted">Habit time<input name="habitTime" type="time" value="07:05" required></label>
                             <button class="primary" type="submit">Build this day</button>
                         </form>
-                        <p class="text-muted" style="margin-top:8px;">Travel blocks are placed before and after the meeting. Overlapping suggestions are rejected so you can adjust the times first.</p>
+                        <p class="text-muted" style="margin-top:8px;">Travel blocks are placed around the meeting. The plan checks wake-up time, overlaps, and midnight boundaries before saving; edit suggested times to fit your day.</p>
                     </section>
                     <div class="planner-grid" style="margin-bottom:16px;">
                         <section class="card">
@@ -5158,12 +5321,16 @@
                             <div class="flex-col gap-2">
                                 ${entries.map(entry => {
                                     const index = State.planner.entries.indexOf(entry);
-                                    return `<div class="planner-entry">
+                                    return `<div class="planner-entry ${entry.completed ? 'planner-entry-complete' : ''}">
                                         <div class="flex items-center gap-2">
                                             <span class="planner-entry-time">${esc(entry.time)}</span>
-                                            <span><strong>${esc(entry.title)}</strong><small class="text-muted" style="display:block;">${esc(entry.category)} · ${entry.duration} min${entry.remindBefore ? ` · reminder ${entry.remindBefore}m before` : ''}</small></span>
+                                            <span><strong>${esc(entry.title)}</strong>${entry.completed ? '<span class="pill low" style="margin-left:6px;">Done</span>' : ''}<small class="text-muted" style="display:block;">${esc(entry.category)} · ${entry.duration} min${entry.remindBefore ? ` · reminder ${entry.remindBefore}m before` : ''}</small></span>
                                         </div>
-                                        <button class="sm danger" type="button" data-planner-action="entry-delete" data-index="${index}" aria-label="Delete ${esc(entry.title)} schedule item">×</button>
+                                        <div class="planner-entry-actions">
+                                            ${entry.category === 'focus' && !entry.completed ? `<button class="sm primary" style="min-height:44px;" type="button" data-planner-action="focus-entry" data-index="${index}" aria-label="Start focus session for ${esc(entry.title)}">Focus</button>` : ''}
+                                            <button class="sm ${entry.completed ? '' : 'tonal'}" style="min-height:44px;" type="button" data-planner-action="entry-toggle-done" data-index="${index}" aria-label="${entry.completed ? 'Reopen' : 'Complete'} ${esc(entry.title)}">${entry.completed ? 'Undo' : 'Done'}</button>
+                                            <button class="sm danger" style="min-height:44px;" type="button" data-planner-action="entry-delete" data-index="${index}" aria-label="Delete ${esc(entry.title)} schedule item">×</button>
+                                        </div>
                                     </div>`;
                                 }).join('') || '<p class="text-muted">No blocks planned for this day yet.</p>'}
                             </div>
@@ -5174,7 +5341,11 @@
             timeview: () => {
                 const logs = State.timeLogs || [];
                 const totalMins = logs.reduce((a,b)=>a+b.duration, 0);
-                const categories = ['Deep Work', 'Workout', 'Architecture', 'Meetings', 'Code Review', 'Research', 'Operations'];
+                const categories = [...new Set([
+                    'Deep Work', 'Workout', 'Architecture', 'Meetings', 'Code Review', 'Research', 'Operations',
+                    ...logs.map(log => log.category).filter(category => typeof category === 'string' && category.trim()),
+                    ChronoEngine.activeCategory
+                ])];
                 return `
                     <div class="flex justify-between items-center" style="margin-bottom: 24px;">
                         <div>
@@ -5192,8 +5363,14 @@
                         <div class="chrono-clock-display text-mono" id="chrono-view-clock">${ChronoEngine.formatTime(ChronoEngine.seconds)}</div>
                         <div class="flex gap-2" style="flex-wrap: wrap; margin-bottom: 20px;">
                             ${categories.map(c => `
-                                <button type="button" class="chip ${(!ChronoEngine.boundTaskId && ChronoEngine.activeCategory === c) ? 'active' : ''}" data-cat="${esc(c)}" onclick="ChronoEngine.setCategory('${esc(c)}')">${esc(c)}</button>
+                                <button type="button" class="chip chrono-category ${(!ChronoEngine.boundTaskId && ChronoEngine.activeCategory === c) ? 'active' : ''}" data-chrono-category="${esc(c)}">${esc(c)}</button>
                             `).join('')}
+                        </div>
+                        <div class="flex gap-2 btn-group-responsive" style="margin-bottom:16px;">
+                            <label class="text-muted" style="flex:1;">Custom session tag
+                                <input id="chrono-custom-tag" type="text" maxlength="40" placeholder="e.g. Exam prep, journaling, or a project">
+                            </label>
+                            <button type="button" class="tonal" style="align-self:flex-end;" onclick="ChronoEngine.setCustomCategory()">Use tag</button>
                         </div>
                         <div class="flex gap-2 btn-group-responsive" id="chrono-actions-row">
                             <button class="${ChronoEngine.isRunning ? 'danger' : 'primary'}" onclick="ChronoEngine.toggle()">
@@ -5237,6 +5414,26 @@
                             </div>
                         </div>
                     ` : ''}
+                    <details class="card pathway-templates" ${State.pathways.length ? '' : 'open'}>
+                        <summary class="pathway-templates-summary">
+                            <span><strong>Ready-to-edit goal roadmaps</strong><small class="text-muted">Four practical starting points for projects, learning, fitness, and savings.</small></span>
+                        </summary>
+                        <div class="pathway-template-grid">
+                            ${PathwayEditor.templates.map((template, templateIndex) => `
+                                <article class="stat-card pathway-template-card">
+                                    <div class="flex justify-between items-center" style="gap:8px;">
+                                        <h3>${esc(template.title)}</h3>
+                                        <span class="pill info">${template.steps.length} steps</span>
+                                    </div>
+                                    <p class="text-muted">${esc(template.desc)}</p>
+                                    <ol>
+                                        ${template.steps.map(step => `<li>${esc(step.title)}</li>`).join('')}
+                                    </ol>
+                                    <button type="button" class="tonal" data-action="pathway-template" data-template-index="${templateIndex}">Use and edit</button>
+                                </article>
+                            `).join('')}
+                        </div>
+                    </details>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
                         ${State.pathways.map((pw, pathwayIndex) => `
                             <div class="card">
@@ -5550,90 +5747,6 @@
                     </div>
                 `;
             },
-            'finance-tools': () => `
-                <div style="margin-bottom:24px;">
-                    <h2>Finance Calculators</h2>
-                    <p class="text-muted">Explore estimates separately from your budget and transaction records.</p>
-                </div>
-                <section class="card" style="margin-bottom:20px;" aria-labelledby="finance-tools-title">
-                    <div class="card-header" style="align-items:flex-start;">
-                        <div>
-                            <h3 id="finance-tools-title" style="font-size:1rem; font-weight:600;">Money Lab · Planning estimates</h3>
-                            <p class="text-muted" style="font-size:0.78rem; margin-top:4px;">Loan, fixed-deposit, savings-growth, and expense outlook calculators. Estimates only; rates and tax are not verified.</p>
-                        </div>
-                    </div>
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap:14px;">
-                        <section class="stat-card" aria-label="Loan payment calculator">
-                            <h4 style="font-size:0.92rem; font-weight:600;">Loan payment</h4>
-                            <label class="text-muted" style="display:block; margin-top:10px;">Loan amount
-                                <input id="finance-loan-principal" type="number" min="0" step="1000" value="500000" data-finance-tool-input style="margin-top:4px;">
-                            </label>
-                            <div class="flex gap-2" style="margin-top:8px;">
-                                <label class="text-muted" style="flex:1;">Annual rate (%)
-                                    <input id="finance-loan-rate" type="number" min="0" step="0.1" value="8.5" data-finance-tool-input style="margin-top:4px;">
-                                </label>
-                                <label class="text-muted" style="flex:1;">Term (months)
-                                    <input id="finance-loan-months" type="number" min="1" step="1" value="60" data-finance-tool-input style="margin-top:4px;">
-                                </label>
-                            </div>
-                            <div class="flex-col gap-1" style="margin-top:12px; font-size:0.8rem;">
-                                <div class="flex justify-between"><span>Monthly payment</span><strong id="finance-loan-emi" aria-live="polite"></strong></div>
-                                <div class="flex justify-between text-muted"><span>Total interest</span><strong id="finance-loan-interest"></strong></div>
-                                <div class="flex justify-between text-muted"><span>Total repayment</span><strong id="finance-loan-total"></strong></div>
-                            </div>
-                        </section>
-                        <section class="stat-card" aria-label="Fixed deposit growth calculator">
-                            <h4 style="font-size:0.92rem; font-weight:600;">Fixed deposit</h4>
-                            <label class="text-muted" style="display:block; margin-top:10px;">Starting deposit
-                                <input id="finance-fd-principal" type="number" min="0" step="1000" value="100000" data-finance-tool-input style="margin-top:4px;">
-                            </label>
-                            <div class="flex gap-2" style="margin-top:8px;">
-                                <label class="text-muted" style="flex:1;">Annual rate (%)
-                                    <input id="finance-fd-rate" type="number" min="0" step="0.1" value="7" data-finance-tool-input style="margin-top:4px;">
-                                </label>
-                                <label class="text-muted" style="flex:1;">Years
-                                    <input id="finance-fd-years" type="number" min="0" step="0.5" value="5" data-finance-tool-input style="margin-top:4px;">
-                                </label>
-                            </div>
-                            <p class="text-muted" style="margin-top:8px;">Quarterly compounding assumption</p>
-                            <div class="flex-col gap-1" style="margin-top:8px; font-size:0.8rem;">
-                                <div class="flex justify-between"><span>Maturity value</span><strong id="finance-fd-maturity" aria-live="polite"></strong></div>
-                                <div class="flex justify-between text-muted"><span>Estimated interest</span><strong id="finance-fd-interest"></strong></div>
-                            </div>
-                        </section>
-                        <section class="stat-card" aria-label="Monthly savings growth calculator">
-                            <h4 style="font-size:0.92rem; font-weight:600;">Monthly investing</h4>
-                            <label class="text-muted" style="display:block; margin-top:10px;">Monthly contribution
-                                <input id="finance-sip-monthly" type="number" min="0" step="500" value="10000" data-finance-tool-input style="margin-top:4px;">
-                            </label>
-                            <div class="flex gap-2" style="margin-top:8px;">
-                                <label class="text-muted" style="flex:1;">Annual return (%)
-                                    <input id="finance-sip-rate" type="number" min="0" step="0.1" value="10" data-finance-tool-input style="margin-top:4px;">
-                                </label>
-                                <label class="text-muted" style="flex:1;">Years
-                                    <input id="finance-sip-years" type="number" min="0" step="1" value="10" data-finance-tool-input style="margin-top:4px;">
-                                </label>
-                            </div>
-                            <p class="text-muted" style="margin-top:8px;">Assumes month-end deposits and monthly compounding; returns are not guaranteed.</p>
-                            <div class="flex-col gap-1" style="margin-top:8px; font-size:0.8rem;">
-                                <div class="flex justify-between"><span>Projected value</span><strong id="finance-sip-value" aria-live="polite"></strong></div>
-                                <div class="flex justify-between text-muted"><span>Total contributed</span><strong id="finance-sip-contributed"></strong></div>
-                            </div>
-                        </section>
-                        <section class="stat-card" aria-label="Expense projection">
-                            <h4 style="font-size:0.92rem; font-weight:600;">Expense outlook</h4>
-                            <p class="text-muted" style="margin-top:8px;">Extrapolates this month's logged outflows against saved monthly income; assumes that pace and income continue, with no inflation or irregular costs.</p>
-                            <div class="flex-col gap-1" style="margin-top:12px; font-size:0.8rem;">
-                                <div class="flex justify-between"><span>Logged this month</span><strong id="finance-projection-spent"></strong></div>
-                                <div class="flex justify-between"><span>Projected month spend</span><strong id="finance-projection-month-end"></strong></div>
-                                <div class="flex justify-between"><span>Projected monthly surplus</span><strong id="finance-projection-net"></strong></div>
-                                <div class="flex justify-between text-muted"><span>Cumulative surplus · 3 / 6 / 12 mo</span><strong><span id="finance-projection-3m"></span> · <span id="finance-projection-6m"></span> · <span id="finance-projection-12m"></span></strong></div>
-                            </div>
-                            <p id="finance-projection-note" class="text-muted" style="margin-top:8px; font-size:0.7rem;" aria-live="polite"></p>
-                        </section>
-                    </div>
-                </section>
-            `,
             audit: () => `
                 <div class="flex justify-between items-center" style="margin-bottom: 24px;">
                     <div><h2>Activity History</h2><p class="text-muted">A timeline of your workspace changes.</p></div>
@@ -5900,6 +6013,15 @@
         const App = {
             instances: { workoutChart: null },
             personalUseAccepted: false,
+            clockInterval: null,
+
+            updateClock: () => {
+                const clock = document.getElementById('system-clock');
+                if (!clock) return;
+                const now = new Date();
+                clock.dateTime = now.toISOString();
+                clock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            },
 
             acceptPersonalUse: () => {
                 App.personalUseAccepted = true;
@@ -6074,6 +6196,11 @@
                     const index = Number(value);
                     return Number.isInteger(index) && index >= 0 && index < items.length ? index : -1;
                 };
+                const categoryButton = target.closest('[data-chrono-category]');
+                if (categoryButton) {
+                    ChronoEngine.setCategory(categoryButton.dataset.chronoCategory);
+                    return;
+                }
                 const actionElement = target.closest('[data-action]');
                 if (actionElement) {
                     const pathwayIndex = getIndex(actionElement.dataset.pathwayIndex, State.pathways);
@@ -6155,6 +6282,11 @@
                         case 'pathway-add-step':
                             PathwayEditor.addStep();
                             return;
+                        case 'pathway-template': {
+                            const templateIndex = getIndex(actionElement.dataset.templateIndex, PathwayEditor.templates);
+                            if (templateIndex >= 0) PathwayEditor.openTemplate(templateIndex);
+                            return;
+                        }
                         case 'pathway-remove-step': {
                             const editorStepIndex = getIndex(actionElement.dataset.editorStepIndex, PathwayEditor.steps);
                             if (editorStepIndex >= 0) PathwayEditor.removeStep(editorStepIndex);
@@ -6282,7 +6414,10 @@
 
             init: () => {
                 App.initPWA();
+                App.updateClock();
+                if (!App.clockInterval) App.clockInterval = setInterval(App.updateClock, 1000);
                 IconSystem.init();
+                WorkoutEngine.refreshCategoryOptions();
                 TaskDrawer.init();
                 document.addEventListener('click', App.handleDataAction);
                 document.addEventListener('keydown', event => {
@@ -6294,10 +6429,6 @@
                     }
                 });
                 document.addEventListener('change', App.handleDataChange);
-                document.addEventListener('input', event => {
-                    const target = event.target instanceof Element ? event.target : null;
-                    if (target?.matches('[data-finance-tool-input]')) FinanceEngine.updateTools();
-                });
                 document.addEventListener('dragstart', event => {
                     const target = event.target instanceof Element ? event.target : null;
                     const card = target?.closest('.task-card[data-task-index]');
@@ -6343,6 +6474,16 @@
                 document.documentElement.setAttribute('data-theme', State.theme || 'dark');
                 document.getElementById('currency-select').value = State.currency || 'INR';
 
+                document.querySelectorAll('#sidebar .nav-dimension > summary').forEach(summary => {
+                    summary.addEventListener('click', () => {
+                        const dimension = summary.parentElement;
+                        if (!dimension.open) {
+                            document.querySelectorAll('#sidebar .nav-dimension').forEach(other => {
+                                if (other !== dimension) other.open = false;
+                            });
+                        }
+                    });
+                });
                 document.querySelectorAll('#sidebar .nav-item').forEach(item => {
                     item.addEventListener('click', (e) => {
                         const view = e.currentTarget.dataset.view;
@@ -6392,6 +6533,12 @@
                 document.querySelectorAll('.nav-item').forEach(n => {
                     n.classList.toggle('active', n.dataset.view === view);
                 });
+                const activeItem = Array.from(document.querySelectorAll('#sidebar .nav-item'))
+                    .find(item => item.dataset.view === view);
+                const activeDimension = activeItem?.closest('.nav-dimension');
+                document.querySelectorAll('#sidebar .nav-dimension').forEach(dimension => {
+                    dimension.open = dimension === activeDimension;
+                });
                 document.querySelectorAll('.bnav-item').forEach(b => {
                     b.classList.toggle('active', b.dataset.view === view);
                 });
@@ -6426,7 +6573,6 @@
                 const content = document.getElementById('content');
                 if (Views[view]) {
                     content.innerHTML = Views[view]();
-                    if (view === 'finance-tools') FinanceEngine.updateTools();
                     App.postRender(view);
                 }
             },
@@ -6441,8 +6587,12 @@
                 if (view === 'workout') {
                     const ctx = document.getElementById('workout-chart');
                     if (ctx) {
-                        const labels = ['Strength', 'Cardio', 'HIIT', 'Mobility'];
-                        const colors = ['#0b57d0', '#0288d1', '#e37400', '#188038'];
+                        const labels = [...new Set([
+                            'Strength', 'Cardio', 'HIIT', 'Mobility',
+                            ...(State.workouts || []).map(workout => workout.type)
+                                .filter(type => typeof type === 'string' && type.trim())
+                        ])];
+                        const colors = ['#0b57d0', '#0288d1', '#e37400', '#188038', '#9334e6', '#d81b60', '#00897b'];
                         const values = labels.map(label => (State.workouts || []).reduce((total, workout) =>
                             workout.type === label && Number.isFinite(Number(workout.duration))
                                 ? total + Math.max(0, Number(workout.duration))
@@ -6474,7 +6624,7 @@
                                     if (!value) return;
                                     const nextAngle = angle + value / total * Math.PI * 2;
                                     context.beginPath();
-                                    context.strokeStyle = colors[index];
+                                    context.strokeStyle = colors[index % colors.length];
                                     context.arc(centerX, centerY, radius, angle, nextAngle);
                                     context.stroke();
                                     angle = nextAngle;
@@ -6487,7 +6637,7 @@
                             item.className = 'chart-legend-item';
                             const swatch = document.createElement('span');
                             swatch.className = 'chart-legend-swatch';
-                            swatch.style.backgroundColor = colors[index];
+                            swatch.style.backgroundColor = colors[index % colors.length];
                             const text = document.createElement('span');
                             text.textContent = label;
                             item.append(swatch, text);

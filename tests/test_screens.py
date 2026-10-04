@@ -18,16 +18,22 @@ SCREENS = [
     ("projects", "Task Board"),
     ("audit", "Activity History"),
     ("finance", "Wealth & Capital Ledger"),
-    ("finance-tools", "Finance Calculators"),
     ("brain", "Notes & Ideas"),
     ("snapshots", "Backup Snapshots"),
     ("legal", "Privacy, Security & Use Notices"),
 ]
 
 
+def navigate_to_view(page: Page, view: str) -> None:
+    item = page.locator(f'.nav-item[data-view="{view}"]')
+    if not item.is_visible():
+        item.locator("xpath=ancestor::details[1]").locator("summary").click()
+    item.click()
+
+
 @pytest.mark.parametrize(("view", "heading"), SCREENS)
 def test_every_screen_renders_from_navigation(app_page: Page, view: str, heading: str) -> None:
-    app_page.locator(f'.nav-item[data-view="{view}"]').click()
+    navigate_to_view(app_page, view)
     expect(app_page.locator("#content h2").first).to_have_text(heading)
 
 
@@ -56,7 +62,7 @@ def test_legacy_tasks_gain_default_energy_and_badge_storage(app_page: Page) -> N
 
 def test_sidebar_navigation_uses_one_icon_per_item(app_page: Page) -> None:
     nav_items = app_page.locator("#sidebar .nav-item")
-    assert nav_items.count() == 15
+    assert nav_items.count() == 14
     expect(app_page.locator("#sidebar .nav-item .material-symbols-outlined")).to_have_count(0)
     for index in range(nav_items.count()):
         expect(nav_items.nth(index).locator(":scope > span")).to_have_count(2)
@@ -234,8 +240,45 @@ def test_mobile_bottom_navigation_and_sidebar_work(app_page: Page) -> None:
     expect(app_page.locator("#content h2").first).to_have_text("Task Board")
 
     app_page.locator("#bottom-nav .bnav-item").last.click()
+    app_page.locator('#sidebar summary:has-text("Privacy")').click()
     app_page.locator('#sidebar .nav-item[data-view="legal"]').click()
     expect(app_page.locator("#content h2").first).to_have_text("Privacy, Security & Use Notices")
+
+
+def test_mobile_content_scrolls_within_iphone_sized_shell(app_page: Page) -> None:
+    app_page.set_viewport_size({"width": 393, "height": 852})
+    app_page.locator("#topbar .topbar-group:first-child button").click()
+    app_page.locator('#sidebar summary:has-text("Health & Focus")').click()
+    app_page.locator('#sidebar .nav-item[data-view="planner"]').click()
+    content = app_page.locator("#content")
+    layout = content.evaluate(
+        """element => ({
+            contentFitsViewport: element.clientHeight > 0,
+            scrollable: element.scrollHeight > element.clientHeight,
+            shellFitsViewport: document.getElementById('app').clientHeight === window.innerHeight
+        })"""
+    )
+    assert layout["contentFitsViewport"]
+    assert layout["scrollable"]
+    assert layout["shellFitsViewport"]
+    content.evaluate("(element) => element.scrollTo(0, element.scrollHeight)")
+    assert content.evaluate("(element) => element.scrollTop > 0")
+
+
+def test_sidebar_dimensions_collapse_navigation(app_page: Page) -> None:
+    dimensions = app_page.locator("#sidebar .nav-dimension")
+    expect(dimensions).to_have_count(5)
+    expect(app_page.locator('#sidebar .nav-dimension:has(.nav-item[data-view="dashboard"])')).to_have_attribute("open", "")
+    expect(app_page.locator('#sidebar .nav-item[data-view="workout"]')).to_have_count(1)
+    expect(app_page.locator('#sidebar .nav-item[data-view="workout"]')).to_be_hidden()
+    app_page.locator('#sidebar summary:has-text("Health & Focus")').click()
+    expect(app_page.locator('#sidebar .nav-item[data-view="workout"]')).to_be_visible()
+    expect(app_page.locator('#sidebar .nav-dimension:has(.nav-item[data-view="dashboard"])')).not_to_have_attribute("open", "")
+
+
+def test_calculators_are_removed_from_navigation_and_views(app_page: Page) -> None:
+    expect(app_page.locator('#sidebar .nav-item[data-view="finance-tools"]')).to_have_count(0)
+    assert app_page.evaluate("'finance-tools' in Views") is False
 
 
 def test_mobile_viewport_allows_zoom_and_github_pages_warning_is_visible(app_url: str, browser) -> None:
