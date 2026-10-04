@@ -29,6 +29,14 @@ def test_every_screen_renders_from_navigation(app_page: Page, view: str, heading
     expect(app_page.locator("#content h2").first).to_have_text(heading)
 
 
+def test_sidebar_navigation_uses_one_icon_per_item(app_page: Page) -> None:
+    nav_items = app_page.locator("#sidebar .nav-item")
+    assert nav_items.count() == 13
+    expect(app_page.locator("#sidebar .nav-item .material-symbols-outlined")).to_have_count(0)
+    for index in range(nav_items.count()):
+        expect(nav_items.nth(index).locator(":scope > span")).to_have_count(1)
+
+
 def test_pathway_steps_fit_iphone_touch_targets(app_page: Page) -> None:
     app_page.set_viewport_size({"width": 393, "height": 852})
     app_page.locator('#bottom-nav .bnav-item[data-view="pathways"]').click()
