@@ -23,6 +23,92 @@ def test_create_task_and_open_its_inspector(app_page: Page) -> None:
     ) == "shallow"
 
 
+def test_day_planner_builds_non_overlapping_schedule_and_tracks_habits(app_page: Page) -> None:
+    app_page.locator('.nav-item[data-view="planner"]').click()
+    app_page.locator('#planner-builder-form [name="meetingTitle"]').fill("Planning meeting")
+    app_page.locator('#planner-builder-form [name="meetingTime"]').fill("10:00")
+    app_page.get_by_role("button", name="Build this day").click()
+
+    schedule = app_page.locator(".planner-entry")
+    expect(schedule).to_have_count(6)
+    expect(app_page.locator("#content")).to_contain_text("Travel to Planning meeting")
+    expect(app_page.locator("#content")).to_contain_text("Travel from Planning meeting")
+    assert app_page.evaluate(
+        """() => {
+            const entries = State.planner.entries.filter(item => item.date === PlannerEngine.displayDate)
+                .sort((a, b) => a.time.localeCompare(b.time));
+            return entries.every((item, index) => index === 0 ||
+                entries[index - 1].time.slice(0, 2) * 60 + Number(entries[index - 1].time.slice(3)) +
+                    entries[index - 1].duration <= item.time.slice(0, 2) * 60 + Number(item.time.slice(3)));
+        }"""
+    )
+    app_page.locator('.nav-item[data-view="calendar"]').click()
+    expect(app_page.locator("#content")).to_contain_text("Planning meeting")
+    app_page.locator('.nav-item[data-view="planner"]').click()
+
+    habit = app_page.locator('#planner-habit-form [name="title"]')
+    habit.fill("Stretch for two minutes")
+    app_page.get_by_role("button", name="Add habit").click()
+    habit_checkbox = app_page.get_by_role("checkbox", name="Mark Stretch for two minutes complete today")
+    habit_checkbox.check()
+    expect(habit_checkbox).to_be_checked()
+    assert app_page.evaluate(
+        "() => State.planner.habits.find(item => item.title === 'Stretch for two minutes').completedDates.length"
+    ) == 1
+
+
+def test_planner_rejects_overlapping_day_builder_suggestions(app_page: Page) -> None:
+    app_page.locator('.nav-item[data-view="planner"]').click()
+    app_page.locator('#planner-builder-form [name="meetingTitle"]').fill("Early meeting")
+    app_page.locator('#planner-builder-form [name="meetingTime"]').fill("08:00")
+    app_page.get_by_role("button", name="Build this day").click()
+
+    expect(app_page.locator("#toast-container")).to_contain_text("overlap")
+    assert app_page.evaluate("() => State.planner.entries.length") == 0
+
+
+def test_planner_clock_stopwatch_and_alarm_creation(app_page: Page) -> None:
+    app_page.locator('.nav-item[data-view="planner"]').click()
+    expect(app_page.locator("#planner-clock")).to_be_visible()
+    expect(app_page.locator("#planner-timezone")).not_to_be_empty()
+
+    app_page.locator("#planner-timer-minutes").fill("1")
+    app_page.get_by_role("button", name="Start", exact=True).click()
+    assert app_page.evaluate("() => PlannerEngine.countdownEndsAt > Date.now()")
+    app_page.get_by_role("button", name="Stop", exact=True).click()
+    expect(app_page.locator("#planner-countdown")).to_have_text("00:00:00")
+
+    app_page.get_by_role("button", name="Start / Pause").click()
+    assert app_page.evaluate("() => Boolean(PlannerEngine.stopwatchStartedAt)")
+    app_page.get_by_role("button", name="Start / Pause").click()
+    assert app_page.evaluate("() => PlannerEngine.stopwatchStartedAt === null")
+
+    app_page.evaluate(
+        """() => {
+            const when = new Date(Date.now() + 3600000);
+            const date = [when.getFullYear(), String(when.getMonth() + 1).padStart(2, '0'),
+                String(when.getDate()).padStart(2, '0')].join('-');
+            document.querySelector('#planner-alarm-form [name="date"]').value = date;
+            document.querySelector('#planner-alarm-form [name="time"]').value =
+                `${String(when.getHours()).padStart(2, '0')}:${String(when.getMinutes()).padStart(2, '0')}`;
+        }"""
+    )
+    app_page.locator('#planner-alarm-form [name="title"]').fill("Leave for the train")
+    app_page.get_by_role("button", name="Set alarm").click()
+    expect(app_page.locator("#content")).to_contain_text("Leave for the train")
+    assert app_page.evaluate("() => State.planner.alarms[0].enabled") is True
+
+
+def test_clear_offline_cache_action_explains_data_is_preserved(app_page: Page) -> None:
+    app_page.locator('.nav-item[data-view="legal"]').click()
+    app_page.get_by_role("button", name="Clear offline cache & refresh").click()
+    dialog = app_page.locator("#confirm-modal")
+    expect(dialog).to_be_visible()
+    expect(dialog).to_contain_text("encrypted vault and checkpoints are not changed")
+    expect(dialog).to_contain_text("network connection")
+    dialog.get_by_role("button", name="Cancel").click()
+
+
 def test_dashboard_orders_five_tasks_and_supports_focus_and_completion(app_page: Page) -> None:
     app_page.evaluate(
         """() => {

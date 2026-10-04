@@ -22,7 +22,9 @@ Plan your days, move work forward, track your habits, and understand your money 
 | --- | --- | --- |
 | Organize work with guided pathways, an Eisenhower matrix, and a calendar. | Track projects on a Kanban board, focus with a timer, and log workouts. | Manage budgets and transactions, and explore loan, savings, and expense estimates. |
 
-Your calendar brings together task due dates, workout sessions, finance transactions, and scheduled budget items. In the budget, add a monthly projection as a provisional decision, then mark it done and enter the actual amount to compare the locked cost with the projection. Monthly totals roll over automatically while earlier decisions remain available in the archive. Notes live in your encrypted workspace alongside the rest of your data.
+Your calendar brings together task due dates, workout sessions, finance transactions, and scheduled budget items. **Time & Day Planner** adds a local clock and time zone, countdown timer, stopwatch, one-time alarms, daily schedule, and small-habit tracker. Its day builder helps fit exercise, personal time, meeting travel, and a starter habit around your day. Planner data is stored in the encrypted vault.
+
+Alarms and schedule reminders are checked while the app is open; browser notifications require permission and a supported browser. They are not guaranteed to fire after the app or browser is closed. The displayed clock uses your device's clock and time-zone settings. In the budget, add a monthly projection as a provisional decision, then mark it done and enter the actual amount to compare the locked cost with the projection. Monthly totals roll over automatically while earlier decisions remain available in the archive. Notes live in your encrypted workspace alongside the rest of your data.
 
 ## Get started
 
@@ -41,6 +43,7 @@ Your calendar brings together task due dates, workout sessions, finance transact
 - **Use a trusted origin.** GitHub Pages sites hosted under the same `github.io` hostname share browser storage across project paths. For sensitive data, use a dedicated origin and do not enter your passphrase on an untrusted page.
 - **Finance tools are estimates.** Loan, deposit, investment, and spending projections are educational calculations, not financial advice. Actual rates, fees, taxes, and returns may differ.
 - **Use HTTPS.** Web Crypto and service-worker features require a secure context. The hosted app uses HTTPS; for local testing, serve it from `http://localhost` rather than opening the file directly.
+- **Refresh the offline app shell.** Use **Privacy & Security → Clear offline cache & refresh** to remove the app-shell cache and reload. This does not delete your encrypted vault or checkpoints, but downloading the app again requires a network connection.
 - **No runtime third-party services.** The app has no required backend or third-party runtime requests. It uses browser APIs, system fonts, Unicode symbols, and Canvas.
 
 ## Run locally

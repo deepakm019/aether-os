@@ -13,6 +13,7 @@ SCREENS = [
     ("dashboard", "Dashboard"),
     ("workout", "Workouts & Fitness"),
     ("timeview", "Focus Timer"),
+    ("planner", "Time & Day Planner"),
     ("stories", "Projects & Milestones"),
     ("projects", "Task Board"),
     ("audit", "Activity History"),
@@ -55,7 +56,7 @@ def test_legacy_tasks_gain_default_energy_and_badge_storage(app_page: Page) -> N
 
 def test_sidebar_navigation_uses_one_icon_per_item(app_page: Page) -> None:
     nav_items = app_page.locator("#sidebar .nav-item")
-    assert nav_items.count() == 14
+    assert nav_items.count() == 15
     expect(app_page.locator("#sidebar .nav-item .material-symbols-outlined")).to_have_count(0)
     for index in range(nav_items.count()):
         expect(nav_items.nth(index).locator(":scope > span")).to_have_count(2)
