@@ -15,12 +15,15 @@
 - Update the service worker cache version when changing app-shell assets. Keep its same-origin app-shell allowlist strict; do not add external origins or arbitrary request caching.
 - Keep runtime assets local. Do not add third-party network dependencies, fonts, or analytics.
 - Vault and snapshot values must be encrypted before IndexedDB/localStorage writes. New encryption uses Web Crypto AES-GCM; any legacy CBC support is migration-only.
+- Task image attachments are part of the encrypted vault state. Validate imported attachment records and image data URLs, limit attachment counts and source sizes, and resize supported raster images before persistence to avoid oversized vault writes. Never persist object URLs or unencrypted image data outside the encrypted vault.
+- Keep task-image previews local: use DOM APIs and textContent for user-controlled filenames, provide accessible preview/remove controls, and revoke any object URLs if introduced for temporary previews.
 - Do not add dependencies without a clear need. If adding a remote dependency, assess its version pinning, integrity, and data-access implications.
 
 ## Validation
 
 - Check modified files for editor diagnostics and JavaScript/JSON syntax errors using available tools.
 - For UI changes, verify the affected view and interactions in a browser when possible.
+- When changing task attachments, verify paste, multi-image selection, preview/removal, encrypted save behavior, and mobile task-drawer layout.
 - Browser end-to-end tests use pytest and Playwright. Configure Python, install `requirements-dev.txt`, install Chromium with `python -m playwright install chromium`, then run `python -m pytest`.
 - Follow `.github/skills/run-playwright-tests/SKILL.md` when executing or extending the browser test suite.
 - Test service-worker behavior on HTTPS or `http://localhost`; `file://` does not support service workers.

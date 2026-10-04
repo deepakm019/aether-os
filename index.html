@@ -2032,6 +2032,13 @@
                 }
             }
             if (typeof normalized.finances.amountsHidden !== 'boolean') normalized.finances.amountsHidden = false;
+            if (!Number.isFinite(Number(normalized.finances.monthlyIncome)) || Number(normalized.finances.monthlyIncome) < 0) {
+                normalized.finances.monthlyIncome = DEFAULT_INITIAL_STATE.finances.monthlyIncome;
+            }
+            if (!Number.isFinite(Number(normalized.finances.targetSavingsRate)) ||
+                Number(normalized.finances.targetSavingsRate) < 0 || Number(normalized.finances.targetSavingsRate) > 100) {
+                normalized.finances.targetSavingsRate = DEFAULT_INITIAL_STATE.finances.targetSavingsRate;
+            }
             for (const pathway of normalized.pathways) {
                 if (pathway.steps !== undefined && !Array.isArray(pathway.steps)) {
                     throw new Error('The decrypted vault has invalid pathway steps.');
@@ -3124,6 +3131,20 @@
                         : total;
                 }, 0);
             },
+            monthlySpent: (now = new Date()) => {
+                const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                return (State.finances.transactions || []).reduce((total, transaction) => {
+                    const transactionDate = transaction.isoDate
+                        ? new Date(transaction.isoDate)
+                        : new Date(`${transaction.date || ''}, ${now.getFullYear()}`);
+                    if (Number.isNaN(transactionDate.getTime())) return total;
+                    const transactionMonth = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
+                    const amount = Number(transaction.amount);
+                    return transaction.category !== 'Income' && transactionMonth === monthKey && Number.isFinite(amount)
+                        ? total + Math.max(0, amount)
+                        : total;
+                }, 0);
+            },
             populateCategorySelect: (select, selected = '', includeIncome = false) => {
                 select.replaceChildren();
                 State.finances.budgets.forEach(budget => {
@@ -3258,6 +3279,26 @@
                     return;
                 }
                 Toast.show('Monthly budget updated.', 'success');
+                App.refreshCurrentView();
+            },
+            savePlanningAssumptions: async () => {
+                const income = Number(document.getElementById('finance-monthly-income')?.value);
+                const savingsRate = Number(document.getElementById('finance-savings-rate')?.value);
+                if (!Number.isFinite(income) || income < 0 ||
+                    !Number.isFinite(savingsRate) || savingsRate < 0 || savingsRate > 100) {
+                    Toast.show('Enter income of 0 or more and a savings target between 0% and 100%.', 'error');
+                    return;
+                }
+                const previousIncome = State.finances.monthlyIncome;
+                const previousSavingsRate = State.finances.targetSavingsRate;
+                State.finances.monthlyIncome = income;
+                State.finances.targetSavingsRate = savingsRate;
+                if (!await Data.save()) {
+                    State.finances.monthlyIncome = previousIncome;
+                    State.finances.targetSavingsRate = previousSavingsRate;
+                    return;
+                }
+                Toast.show('Monthly planning assumptions updated.', 'success');
                 App.refreshCurrentView();
             },
             toggleAmounts: async () => {
@@ -4380,6 +4421,22 @@
                 const budgets = State.finances.budgets || [];
                 const budgetItems = State.finances.budgetItems || [];
                 const amountsHidden = State.finances.amountsHidden === true;
+                const monthlyIncome = Number(State.finances.monthlyIncome) || 0;
+                const savingsRate = Number(State.finances.targetSavingsRate) || 0;
+                const categoryPlan = budgets.reduce((total, budget) => {
+                    const limit = Number(budget.limit);
+                    return total + (Number.isFinite(limit) ? Math.max(0, limit) : 0);
+                }, 0);
+                const monthSpent = FinanceEngine.monthlySpent();
+                const savingsTarget = monthlyIncome * savingsRate / 100;
+                const targetSpend = monthlyIncome - savingsTarget;
+                const plannedSurplus = monthlyIncome - categoryPlan;
+                const actualNetPotential = monthlyIncome - monthSpent;
+                const categoryPlanRoom = categoryPlan - monthSpent;
+                const targetSpendRoom = targetSpend - monthSpent;
+                const targetSpendProgress = targetSpend > 0
+                    ? Math.min(100, Math.max(0, monthSpent / targetSpend * 100))
+                    : (monthSpent > 0 ? 100 : 0);
                 return `
                     <div class="flex justify-between items-center" style="margin-bottom: 24px; gap:12px; flex-wrap:wrap;">
                         <div>
@@ -4393,9 +4450,48 @@
                             <button class="primary sm" onclick="FinanceEngine.openTransaction()"><span class="material-symbols-outlined">add</span> Record Outflow</button>
                         </div>
                     </div>
-                    <div class="stat-grid">
-                        <div class="stat-card"><span class="text-muted">Base Monthly Income</span><h3 style="color:var(--md-sys-color-success); margin-top:6px; font-weight:600;">${FinanceEngine.displayAmount(State.finances.monthlyIncome)}</h3></div>
-                        <div class="stat-card"><span class="text-muted">Logged Transactions</span><h3 style="margin-top:6px; font-weight:600;">${txs.length} entries</h3></div>
+                    <div class="card" style="margin-bottom:20px;">
+                        <div class="card-header" style="align-items:flex-start;">
+                            <div>
+                                <h3 style="font-size:1rem; font-weight:600;">Monthly baseline</h3>
+                                <p class="text-muted" style="font-size:0.78rem; margin-top:4px;">Set take-home monthly income and the share you want to save. These assumptions drive the plan below.</p>
+                            </div>
+                            <span class="text-muted" style="font-size:0.78rem;">${txs.length} logged transaction${txs.length === 1 ? '' : 's'}</span>
+                        </div>
+                        <div class="flex items-end gap-2" style="flex-wrap:wrap;">
+                            <label class="text-muted" style="flex:1; min-width:180px; font-size:0.78rem;">Base monthly income
+                                <input id="finance-monthly-income" type="number" min="0" step="0.01" value="${amountsHidden ? '' : monthlyIncome}" placeholder="${amountsHidden ? 'Hidden' : ''}" ${amountsHidden ? 'disabled' : ''} style="margin-top:5px;">
+                            </label>
+                            <label class="text-muted" style="width:150px; font-size:0.78rem;">Savings target (%)
+                                <input id="finance-savings-rate" type="number" min="0" max="100" step="1" value="${savingsRate}" ${amountsHidden ? 'disabled' : ''} style="margin-top:5px;">
+                            </label>
+                            <button class="sm primary" data-action="finance-save-assumptions" ${amountsHidden ? 'disabled' : ''}>Save baseline</button>
+                        </div>
+                    </div>
+                    <section class="card" aria-labelledby="finance-savings-plan-title" style="margin-bottom:20px;">
+                        <div class="card-header" style="align-items:flex-start;">
+                            <div>
+                                <h3 id="finance-savings-plan-title" style="font-size:1rem; font-weight:600;">Monthly savings plan</h3>
+                                <p class="text-muted" style="font-size:0.78rem; margin-top:4px;">Follow the baseline through category limits and actual outflows. Net potential is an estimate from your configured income, not a bank balance.</p>
+                            </div>
+                        </div>
+                        <div class="stat-grid">
+                            <div class="stat-card"><span class="text-muted">Income baseline</span><h3 style="margin-top:6px; font-weight:600;">${FinanceEngine.displayAmount(monthlyIncome)}</h3></div>
+                            <div class="stat-card"><span class="text-muted">Planned category limits</span><h3 style="margin-top:6px; font-weight:600;">${FinanceEngine.displayAmount(categoryPlan)}</h3></div>
+                            <div class="stat-card"><span class="text-muted">Outflows logged this month</span><h3 style="margin-top:6px; font-weight:600;">${FinanceEngine.displayAmount(monthSpent)}</h3></div>
+                            <div class="stat-card"><span class="text-muted">Room vs category limits</span><h3 style="color:${categoryPlanRoom < 0 ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-success)'}; margin-top:6px; font-weight:600;">${FinanceEngine.displayAmount(categoryPlanRoom)}</h3></div>
+                            <div class="stat-card"><span class="text-muted">Potential after logged outflows</span><h3 style="color:${actualNetPotential < 0 ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-success)'}; margin-top:6px; font-weight:600;">${FinanceEngine.displayAmount(actualNetPotential)}</h3></div>
+                        </div>
+                        <div class="stat-card" style="margin-top:14px;">
+                            <div class="flex justify-between items-center" style="gap:8px; flex-wrap:wrap;">
+                                <div><strong>How the target lines up</strong><p class="text-muted" style="font-size:0.76rem; margin-top:4px;">Target: save ${savingsRate}% (${FinanceEngine.displayAmount(savingsTarget)}); planned surplus after category limits: ${FinanceEngine.displayAmount(plannedSurplus)}.</p></div>
+                                <strong style="color:${targetSpendRoom < 0 ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-success)'};">${targetSpendRoom < 0 ? `Reduce outflows by ${FinanceEngine.displayAmount(Math.abs(targetSpendRoom))}` : `${FinanceEngine.displayAmount(targetSpendRoom)} spend room left`}</strong>
+                            </div>
+                            <div style="height:8px; overflow:hidden; border-radius:999px; background:var(--md-sys-color-surface-container-high); margin-top:12px;" role="progressbar" aria-label="Monthly outflows against spending limit for savings target" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${targetSpendProgress.toFixed(0)}" aria-valuetext="${FinanceEngine.displayAmount(monthSpent)} spent against ${FinanceEngine.displayAmount(targetSpend)} target spending limit">
+                                <div style="height:100%; width:${targetSpendProgress}%; background:${targetSpendRoom < 0 ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-primary)'}; transition:width 180ms ease;"></div>
+                            </div>
+                            <p class="text-muted" style="font-size:0.72rem; margin-top:7px;">Target spend limit: ${FinanceEngine.displayAmount(targetSpend)}. The bar shows logged outflows against that limit; category plans and future recurring items are not counted as paid until logged.</p>
+                        </div>
                     </div>
                     <div class="card" style="margin-bottom:20px;">
                         <div class="card-header" style="align-items:flex-start;">
@@ -4982,6 +5078,9 @@
                     switch (actionElement.dataset.action) {
                         case 'finance-toggle-amounts':
                             FinanceEngine.toggleAmounts();
+                            return;
+                        case 'finance-save-assumptions':
+                            FinanceEngine.savePlanningAssumptions();
                             return;
                         case 'calendar-prev':
                             CalendarView.shiftMonth(-1);
