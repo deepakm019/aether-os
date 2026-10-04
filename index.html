@@ -941,6 +941,14 @@
         .energy-deep { background:rgba(168,85,247,.15); color:#c084fc; border:1px solid rgba(168,85,247,.3); }
         .energy-shallow { background:rgba(16,185,129,.15); color:#34d399; border:1px solid rgba(16,185,129,.3); }
         .energy-reactive { background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.3); }
+        .planner-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap:16px; }
+        .planner-form-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap:10px; }
+        .planner-clock { font-size:clamp(2.6rem, 9vw, 4.8rem); line-height:1; letter-spacing:-.06em; font-variant-numeric:tabular-nums; }
+        .planner-entry { display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:12px; align-items:center; padding:12px; border:1px solid var(--md-sys-color-outline-variant); border-radius:var(--radius-sm); }
+        .planner-entry-time { color:var(--md-sys-color-primary); font:600 .8rem var(--font-mono); white-space:nowrap; }
+        .planner-habit { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--md-sys-color-outline-variant); }
+        .planner-habit:last-child { border-bottom:0; }
+        .planner-countdown { font:600 2.4rem var(--font-mono); letter-spacing:-.05em; }
         .dashboard-grid { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr); gap:16px; }
         .dashboard-task-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; align-items:center; gap:10px; padding:12px; border:1px solid var(--md-sys-color-outline-variant); border-radius:var(--radius-sm); background:var(--md-sys-color-surface); }
         .dashboard-task-row:hover { border-color:var(--md-sys-color-outline); }
@@ -1066,6 +1074,10 @@
             <div class="nav-item" data-view="timeview">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6M12 2v3"/></svg></span>
                 <span>Focus Timer</span>
+            </div>
+            <div class="nav-item" data-view="planner">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h3M8 17h6"/></svg></span>
+                <span>Time & Day Planner</span>
             </div>
 
             <div class="nav-label">Planning</div>
@@ -2088,7 +2100,8 @@
                 transactions: []
             },
             pathways: [],
-            notes: []
+            notes: [],
+            planner: { entries: [], habits: [], alarms: [] }
         };
 
         const DEFAULT_INITIAL_STATE = JSON.parse(JSON.stringify(State));
@@ -2133,8 +2146,55 @@
                 ...JSON.parse(JSON.stringify(DEFAULT_INITIAL_STATE)),
                 ...loadedState,
                 user: { ...DEFAULT_INITIAL_STATE.user, ...(loadedState.user || {}) },
-                finances: { ...DEFAULT_INITIAL_STATE.finances, ...finances }
+                finances: { ...DEFAULT_INITIAL_STATE.finances, ...finances },
+                planner: { ...DEFAULT_INITIAL_STATE.planner, ...(loadedState.planner || {}) }
             };
+            if (loadedState.planner !== undefined &&
+                (!loadedState.planner || typeof loadedState.planner !== 'object' || Array.isArray(loadedState.planner))) {
+                throw new Error('The decrypted vault has invalid planner data.');
+            }
+            const plannerDateIsValid = value => {
+                if (typeof value !== 'string') return false;
+                const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+                if (!match) return false;
+                const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+                return date.getFullYear() === Number(match[1]) &&
+                    date.getMonth() === Number(match[2]) - 1 && date.getDate() === Number(match[3]);
+            };
+            const plannerTimeIsValid = value => typeof value === 'string' &&
+                /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
+            for (const field of ['entries', 'habits', 'alarms']) {
+                if (!Array.isArray(normalized.planner[field]) || normalized.planner[field].length > 1000 ||
+                    normalized.planner[field].some(item => !item || typeof item !== 'object' || Array.isArray(item))) {
+                    throw new Error(`The decrypted vault has invalid planner ${field}.`);
+                }
+            }
+            normalized.planner.entries.forEach(entry => {
+                if (typeof entry.id !== 'string' || !entry.id || entry.id.length > 100 ||
+                    typeof entry.title !== 'string' || !entry.title || entry.title.length > 160 ||
+                    !plannerDateIsValid(entry.date) || !plannerTimeIsValid(entry.time) ||
+                    !Number.isInteger(entry.duration) || entry.duration < 1 || entry.duration > 1440 ||
+                    !['meeting', 'travel', 'personal', 'exercise', 'focus', 'habit', 'other'].includes(entry.category) ||
+                    !Number.isInteger(entry.remindBefore) || ![0, 5, 10, 15, 30, 60].includes(entry.remindBefore)) {
+                    throw new Error('The decrypted vault has an invalid scheduled item.');
+                }
+            });
+            normalized.planner.habits.forEach(habit => {
+                if (typeof habit.id !== 'string' || !habit.id || habit.id.length > 100 ||
+                    typeof habit.title !== 'string' || !habit.title || habit.title.length > 120 ||
+                    !Array.isArray(habit.completedDates) ||
+                    habit.completedDates.some(date => !plannerDateIsValid(date))) {
+                    throw new Error('The decrypted vault has an invalid habit.');
+                }
+            });
+            normalized.planner.alarms.forEach(alarm => {
+                if (typeof alarm.id !== 'string' || !alarm.id || alarm.id.length > 100 ||
+                    typeof alarm.title !== 'string' || !alarm.title || alarm.title.length > 120 ||
+                    !plannerDateIsValid(alarm.date) || !plannerTimeIsValid(alarm.time) ||
+                    typeof alarm.enabled !== 'boolean') {
+                    throw new Error('The decrypted vault has an invalid alarm.');
+                }
+            });
             if (!Array.isArray(normalized.user.badges) ||
                 normalized.user.badges.some(badge => !badge || typeof badge !== 'object' ||
                     typeof badge.id !== 'string' || typeof badge.unlockedAt !== 'string')) {
@@ -4268,6 +4328,15 @@
                         add(date, { kind: 'workout', title: workout.title, detail: workout.type || 'Workout' });
                     }
                 }
+                for (const entry of State.planner?.entries || []) {
+                    if (entry.date.startsWith(yearMonth)) {
+                        add(entry.date, {
+                            kind: 'planner',
+                            title: entry.title,
+                            detail: `${entry.time} · ${entry.category}`
+                        });
+                    }
+                }
                 for (const transaction of State.finances.transactions || []) {
                     const date = CalendarView.localDateKey(transaction.isoDate) ||
                         CalendarView.localDateKey(transaction.date ? `${transaction.date}, ${Number(yearMonth.slice(0, 4))}` : '');
@@ -4330,6 +4399,368 @@
                     1
                 );
                 App.router('calendar');
+            }
+        };
+
+        const PlannerEngine = {
+            interval: null,
+            displayDate: CalendarView.dateKey(new Date()),
+            countdownEndsAt: null,
+            stopwatchStartedAt: null,
+            stopwatchElapsedMs: 0,
+            laps: [],
+            categories: ['meeting', 'travel', 'personal', 'exercise', 'focus', 'habit', 'other'],
+            dateKey: date => CalendarView.dateKey(date),
+            formatDuration: milliseconds => {
+                const seconds = Math.max(0, Math.floor(milliseconds / 1000));
+                return [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60]
+                    .map(value => String(value).padStart(2, '0')).join(':');
+            },
+            eventDate: item => new Date(`${item.date}T${item.time}:00`),
+            sortedEntries: date => (State.planner?.entries || [])
+                .filter(item => item.date === date)
+                .sort((a, b) => a.time.localeCompare(b.time)),
+            notify: (title, body) => {
+                Haptics.timerComplete();
+                Toast.show(`${title}: ${body}`, 'success');
+                if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+                try {
+                    new Notification(title, { body, tag: `astralsurge-${Date.now()}` });
+                } catch (error) {
+                    console.warn('Browser notification could not be shown.', error);
+                }
+            },
+            enableNotifications: async () => {
+                if (typeof Notification === 'undefined') {
+                    Toast.show('This browser does not support system notifications.', 'error');
+                    return;
+                }
+                try {
+                    const permission = Notification.permission === 'default'
+                        ? await Notification.requestPermission()
+                        : Notification.permission;
+                    Toast.show(permission === 'granted'
+                        ? 'Notifications enabled while this app is open.'
+                        : 'Notifications were not enabled. In-app alerts will still appear while the app is open.',
+                    permission === 'granted' ? 'success' : 'info');
+                    App.refreshCurrentView();
+                } catch (error) {
+                    console.error('Unable to request notification permission:', error);
+                    Toast.show('Unable to request notification permission in this browser.', 'error');
+                }
+            },
+            startCountdown: () => {
+                const input = document.getElementById('planner-timer-minutes');
+                const minutes = Number(input?.value);
+                if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) {
+                    Toast.show('Enter a timer duration from 1 to 1,440 minutes.', 'error');
+                    return;
+                }
+                PlannerEngine.countdownEndsAt = Date.now() + minutes * 60000;
+                PlannerEngine.tick();
+                Toast.show(`Timer started for ${minutes} minute${minutes === 1 ? '' : 's'}.`, 'success');
+            },
+            toggleStopwatch: () => {
+                if (PlannerEngine.stopwatchStartedAt) {
+                    PlannerEngine.stopwatchElapsedMs += Date.now() - PlannerEngine.stopwatchStartedAt;
+                    PlannerEngine.stopwatchStartedAt = null;
+                } else {
+                    PlannerEngine.stopwatchStartedAt = Date.now();
+                }
+                PlannerEngine.tick();
+            },
+            resetStopwatch: () => {
+                PlannerEngine.stopwatchStartedAt = null;
+                PlannerEngine.stopwatchElapsedMs = 0;
+                PlannerEngine.laps = [];
+                PlannerEngine.tick();
+            },
+            addLap: () => {
+                if (!PlannerEngine.stopwatchStartedAt) return;
+                const elapsed = PlannerEngine.stopwatchElapsedMs + Date.now() - PlannerEngine.stopwatchStartedAt;
+                PlannerEngine.laps.unshift(PlannerEngine.formatDuration(elapsed));
+                PlannerEngine.laps = PlannerEngine.laps.slice(0, 8);
+                PlannerEngine.tick();
+            },
+            checkReminders: now => {
+                let changed = false;
+                for (const alarm of State.planner.alarms) {
+                    if (!alarm.enabled) continue;
+                    const due = PlannerEngine.eventDate(alarm).getTime();
+                    if (now >= due && now - due <= 60000) {
+                        alarm.enabled = false;
+                        changed = true;
+                        PlannerEngine.notify('Alarm', alarm.title);
+                    } else if (now - due > 60000) {
+                        alarm.enabled = false;
+                        changed = true;
+                    }
+                }
+                for (const entry of State.planner.entries) {
+                    if (!entry.remindBefore || entry.remindedAt === entry.date) continue;
+                    const remindAt = PlannerEngine.eventDate(entry).getTime() - entry.remindBefore * 60000;
+                    if (now >= remindAt && now - remindAt <= 60000) {
+                        entry.remindedAt = entry.date;
+                        changed = true;
+                        PlannerEngine.notify('Coming up', `${entry.title} starts at ${entry.time}.`);
+                    } else if (now - remindAt > 60000) {
+                        entry.remindedAt = entry.date;
+                        changed = true;
+                    }
+                }
+                if (changed) Data.save();
+            },
+            tick: () => {
+                const now = new Date();
+                const clock = document.getElementById('planner-clock');
+                if (clock) clock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const date = document.getElementById('planner-date');
+                if (date) date.textContent = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                const zone = document.getElementById('planner-timezone');
+                if (zone) zone.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local time';
+                const countdown = document.getElementById('planner-countdown');
+                if (countdown && PlannerEngine.countdownEndsAt) {
+                    const remaining = PlannerEngine.countdownEndsAt - Date.now();
+                    countdown.textContent = PlannerEngine.formatDuration(Math.max(0, remaining));
+                    if (remaining <= 0) {
+                        PlannerEngine.countdownEndsAt = null;
+                        PlannerEngine.notify('Timer complete', 'Your countdown has finished.');
+                    }
+                }
+                const stopwatch = document.getElementById('planner-stopwatch');
+                if (stopwatch) {
+                    const elapsed = PlannerEngine.stopwatchElapsedMs +
+                        (PlannerEngine.stopwatchStartedAt ? Date.now() - PlannerEngine.stopwatchStartedAt : 0);
+                    stopwatch.textContent = PlannerEngine.formatDuration(elapsed);
+                }
+                const lapList = document.getElementById('planner-laps');
+                if (lapList) lapList.textContent = PlannerEngine.laps.map((lap, index) => `Lap ${PlannerEngine.laps.length - index}: ${lap}`).join(' · ');
+                PlannerEngine.checkReminders(Date.now());
+            },
+            start: () => {
+                if (PlannerEngine.interval) clearInterval(PlannerEngine.interval);
+                PlannerEngine.tick();
+                PlannerEngine.interval = setInterval(PlannerEngine.tick, 1000);
+                document.addEventListener('visibilitychange', PlannerEngine.tick);
+                document.addEventListener('submit', PlannerEngine.handleSubmit);
+                document.addEventListener('click', PlannerEngine.handleAction);
+                document.addEventListener('change', PlannerEngine.handleChange);
+            },
+            handleSubmit: event => {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement)) return;
+                if (form.id === 'planner-builder-form') {
+                    event.preventDefault();
+                    PlannerEngine.buildDay(form);
+                } else if (form.id === 'planner-entry-form') {
+                    event.preventDefault();
+                    PlannerEngine.addEntry(form);
+                } else if (form.id === 'planner-alarm-form') {
+                    event.preventDefault();
+                    PlannerEngine.addAlarm(form);
+                } else if (form.id === 'planner-habit-form') {
+                    event.preventDefault();
+                    PlannerEngine.addHabit(form);
+                }
+            },
+            handleAction: event => {
+                const target = event.target instanceof Element ? event.target.closest('[data-planner-action]') : null;
+                if (!target) return;
+                const index = Number(target.dataset.index);
+                switch (target.dataset.plannerAction) {
+                    case 'countdown-start': PlannerEngine.startCountdown(); break;
+                    case 'stopwatch-toggle': PlannerEngine.toggleStopwatch(); break;
+                    case 'stopwatch-reset': PlannerEngine.resetStopwatch(); break;
+                    case 'stopwatch-lap': PlannerEngine.addLap(); break;
+                    case 'notifications': PlannerEngine.enableNotifications(); break;
+                    case 'countdown-stop':
+                        PlannerEngine.countdownEndsAt = null;
+                        const countdown = document.getElementById('planner-countdown');
+                        if (countdown) countdown.textContent = '00:00:00';
+                        break;
+                    case 'entry-delete':
+                        if (Number.isInteger(index) && index >= 0 && index < State.planner.entries.length) {
+                            State.planner.entries.splice(index, 1);
+                            Data.save();
+                            App.refreshCurrentView();
+                        }
+                        break;
+                    case 'alarm-delete':
+                        if (Number.isInteger(index) && index >= 0 && index < State.planner.alarms.length) {
+                            State.planner.alarms.splice(index, 1);
+                            Data.save();
+                            App.refreshCurrentView();
+                        }
+                        break;
+                    case 'habit-delete':
+                        if (Number.isInteger(index) && index >= 0 && index < State.planner.habits.length) {
+                            State.planner.habits.splice(index, 1);
+                            Data.save();
+                            App.refreshCurrentView();
+                        }
+                        break;
+                }
+            },
+            handleChange: event => {
+                const target = event.target;
+                if (!(target instanceof Element)) return;
+                if (target.id === 'planner-date-filter') {
+                    if (!CalendarView.isDateKey(target.value)) return;
+                    PlannerEngine.displayDate = target.value;
+                    App.refreshCurrentView();
+                } else if (target.matches('[data-planner-action="habit-toggle"]') &&
+                    target instanceof HTMLInputElement) {
+                    const index = Number(target.dataset.index);
+                    if (!Number.isInteger(index) || index < 0 || index >= State.planner.habits.length) return;
+                    const dates = State.planner.habits[index].completedDates;
+                    const today = PlannerEngine.dateKey(new Date());
+                    State.planner.habits[index].completedDates = target.checked
+                        ? [...new Set([...dates, today])]
+                        : dates.filter(date => date !== today);
+                    Data.save();
+                    App.refreshCurrentView();
+                }
+            },
+            saveEntries: async entries => {
+                const existing = State.planner.entries;
+                State.planner.entries = [...existing, ...entries].sort((a, b) =>
+                    a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+                if (!await Data.save()) {
+                    State.planner.entries = existing;
+                    return false;
+                }
+                App.refreshCurrentView();
+                return true;
+            },
+            buildDay: async form => {
+                const values = new FormData(form);
+                const date = String(values.get('date') || '');
+                const wake = String(values.get('wake') || '');
+                const meetingTitle = String(values.get('meetingTitle') || '').trim();
+                const meetingTime = String(values.get('meetingTime') || '');
+                const meetingDuration = Number(values.get('meetingDuration'));
+                const travelDuration = Number(values.get('travelDuration'));
+                const personalTime = String(values.get('personalTime') || '');
+                const personalDuration = Number(values.get('personalDuration'));
+                const exerciseTime = String(values.get('exerciseTime') || '');
+                const exerciseDuration = Number(values.get('exerciseDuration'));
+                const habitTitle = String(values.get('habitTitle') || '').trim();
+                const habitTime = String(values.get('habitTime') || '');
+                const minute = time => {
+                    const [hour, minutes] = time.split(':').map(Number);
+                    return hour * 60 + minutes;
+                };
+                if (!CalendarView.isDateKey(date) || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(wake) ||
+                    !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(personalTime) ||
+                    !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(exerciseTime) ||
+                    !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(habitTime) ||
+                    !Number.isInteger(personalDuration) || personalDuration < 1 || personalDuration > 1440 ||
+                    !Number.isInteger(exerciseDuration) || exerciseDuration < 1 || exerciseDuration > 1440 ||
+                    (meetingTitle && (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(meetingTime) ||
+                        !Number.isInteger(meetingDuration) || meetingDuration < 1 || meetingDuration > 1440 ||
+                        !Number.isInteger(travelDuration) || travelDuration < 0 || travelDuration > 720)) ||
+                    !habitTitle || habitTitle.length > 120) {
+                    Toast.show('Check the day plan times and durations, then try again.', 'error');
+                    return;
+                }
+                const makeEntry = (title, time, duration, category) => ({
+                    id: `plan_${crypto.randomUUID()}`, title, date, time, duration, category, remindBefore: 0
+                });
+                const entries = [
+                    makeEntry('Exercise', exerciseTime, exerciseDuration, 'exercise'),
+                    makeEntry('Personal time', personalTime, personalDuration, 'personal'),
+                    makeEntry(habitTitle, habitTime, 5, 'habit')
+                ];
+                if (meetingTitle) {
+                    const meetingStart = minute(meetingTime);
+                    if (meetingStart < travelDuration || meetingStart + meetingDuration + travelDuration > 1440) {
+                        Toast.show('Travel blocks would cross midnight. Shorten the meeting or travel time.', 'error');
+                        return;
+                    }
+                    if (travelDuration > 0) {
+                        entries.push(
+                            makeEntry(`Travel to ${meetingTitle}`, `${String(Math.floor((meetingStart - travelDuration) / 60)).padStart(2, '0')}:${String((meetingStart - travelDuration) % 60).padStart(2, '0')}`, travelDuration, 'travel'),
+                            makeEntry(`Travel from ${meetingTitle}`, `${String(Math.floor((meetingStart + meetingDuration) / 60)).padStart(2, '0')}:${String((meetingStart + meetingDuration) % 60).padStart(2, '0')}`, travelDuration, 'travel')
+                        );
+                    }
+                    entries.push(makeEntry(meetingTitle, meetingTime, meetingDuration, 'meeting'));
+                }
+                const sorted = [...entries].sort((a, b) => a.time.localeCompare(b.time));
+                const existing = PlannerEngine.sortedEntries(date);
+                const allEntries = [...existing, ...sorted].sort((a, b) => a.time.localeCompare(b.time));
+                if (sorted.some(item => minute(item.time) < minute(wake)) ||
+                    allEntries.some((item, index) => item.duration > 1440 - minute(item.time) ||
+                        (index > 0 && minute(allEntries[index - 1].time) + allEntries[index - 1].duration > minute(item.time)))) {
+                    Toast.show('A block starts before wake-up or overlaps another item. Adjust your times.', 'error');
+                    return;
+                }
+                if (await PlannerEngine.saveEntries(entries)) {
+                    Toast.show(`${entries.length} blocks added to your day.`, 'success');
+                    form.reset();
+                }
+            },
+            addEntry: async form => {
+                const values = new FormData(form);
+                const title = String(values.get('title') || '').trim();
+                const date = String(values.get('date') || '');
+                const time = String(values.get('time') || '');
+                const duration = Number(values.get('duration'));
+                const category = String(values.get('category') || '');
+                const remindBefore = Number(values.get('remindBefore') || 0);
+                if (!title || title.length > 160 || !CalendarView.isDateKey(date) ||
+                    !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time) ||
+                    !Number.isInteger(duration) || duration < 1 || duration > 1440 ||
+                    !PlannerEngine.categories.includes(category) || ![0, 5, 10, 15, 30, 60].includes(remindBefore)) {
+                    Toast.show('Enter a valid schedule item before saving.', 'error');
+                    return;
+                }
+                const start = Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
+                const end = start + duration;
+                const conflicts = PlannerEngine.sortedEntries(date).some(entry => {
+                    const otherStart = Number(entry.time.slice(0, 2)) * 60 + Number(entry.time.slice(3));
+                    const otherEnd = otherStart + entry.duration;
+                    return start < otherEnd && otherStart < end;
+                });
+                if (end > 1440 || conflicts) {
+                    Toast.show('This schedule block overlaps another item or crosses midnight.', 'error');
+                    return;
+                }
+                if (await PlannerEngine.saveEntries([{
+                    id: `plan_${crypto.randomUUID()}`, title, date, time, duration, category, remindBefore
+                }])) form.reset();
+            },
+            addAlarm: async form => {
+                const values = new FormData(form);
+                const title = String(values.get('title') || '').trim();
+                const date = String(values.get('date') || '');
+                const time = String(values.get('time') || '');
+                if (!title || title.length > 120 || !CalendarView.isDateKey(date) ||
+                    !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time) ||
+                    PlannerEngine.eventDate({ date, time }).getTime() <= Date.now()) {
+                    Toast.show('Choose an alarm label and a future local date and time.', 'error');
+                    return;
+                }
+                const alarm = { id: `alarm_${crypto.randomUUID()}`, title, date, time, enabled: true };
+                State.planner.alarms.push(alarm);
+                if (!await Data.save()) State.planner.alarms.pop();
+                else {
+                    form.reset();
+                    App.refreshCurrentView();
+                }
+            },
+            addHabit: async form => {
+                const title = String(new FormData(form).get('title') || '').trim();
+                if (!title || title.length > 120) {
+                    Toast.show('Habit names must be 1 to 120 characters.', 'error');
+                    return;
+                }
+                const habit = { id: `habit_${crypto.randomUUID()}`, title, createdAt: PlannerEngine.dateKey(new Date()), completedDates: [] };
+                State.planner.habits.push(habit);
+                if (!await Data.save()) State.planner.habits.pop();
+                else {
+                    form.reset();
+                    App.refreshCurrentView();
+                }
             }
         };
 
@@ -4498,7 +4929,7 @@
                                     <div class="flex-col gap-1">
                                         ${dayEvents.slice(0, 4).map(item => `
                                             <button class="calendar-event ${item.kind}" ${item.taskId ? `data-calendar-task-id="${esc(item.taskId)}"` : 'type="button"'} title="${esc(`${item.title} · ${item.detail}${Number.isFinite(Number(item.amount)) ? ` · ${FinanceEngine.displayAmount(item.amount)}` : ''}`)}">
-                                                <span class="calendar-event-kind">${item.kind === 'task' ? 'Task' : item.kind === 'workout' ? 'Move' : item.kind === 'income' ? 'In' : item.kind === 'bill' ? 'Bill' : '£'}</span>
+                                                <span class="calendar-event-kind">${item.kind === 'task' ? 'Task' : item.kind === 'workout' ? 'Move' : item.kind === 'planner' ? 'Time' : item.kind === 'income' ? 'In' : item.kind === 'bill' ? 'Bill' : '£'}</span>
                                                 <span class="calendar-event-title">${esc(item.title)}</span>
                                                 ${Number.isFinite(Number(item.amount)) ? `<span class="calendar-event-amount">${FinanceEngine.displayAmount(item.amount)}</span>` : ''}
                                             </button>
@@ -4580,6 +5011,163 @@
                                 `).join('') || '<div class="text-muted" style="text-align:center; padding:32px 0;">No sessions recorded yet.</div>'}
                             </div>
                         </div>
+                    </div>
+                `;
+            },
+            planner: () => {
+                const date = PlannerEngine.displayDate || PlannerEngine.dateKey(new Date());
+                const entries = PlannerEngine.sortedEntries(date);
+                const notificationState = typeof Notification === 'undefined'
+                    ? 'System notifications are not supported by this browser.'
+                    : Notification.permission === 'granted'
+                        ? 'System notifications enabled; keep this app open for alarms and reminders.'
+                        : 'In-app alerts work while open. Enable system notifications for desktop alerts.';
+                const today = PlannerEngine.dateKey(new Date());
+                const habits = State.planner.habits || [];
+                const alarms = State.planner.alarms || [];
+                return `
+                    <div class="flex justify-between items-center" style="gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+                        <div>
+                            <h2>Time & Day Planner</h2>
+                            <p class="text-muted">Your device's local clock and time zone. Keep device time synchronized for accurate alarms.</p>
+                        </div>
+                        <label class="text-muted">Plan date
+                            <input id="planner-date-filter" type="date" value="${esc(date)}" aria-label="Choose a day to plan">
+                        </label>
+                    </div>
+                    <div class="planner-grid" style="margin-bottom:16px;">
+                        <section class="card" aria-label="Local time" style="display:flex; flex-direction:column; justify-content:center; min-height:180px;">
+                            <span class="text-muted">LOCAL TIME</span>
+                            <time class="planner-clock text-mono" id="planner-clock" aria-live="off">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time>
+                            <div class="text-secondary" id="planner-date">${new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                            <div class="text-muted" id="planner-timezone">${esc(Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local time')}</div>
+                        </section>
+                        <section class="card" aria-label="Countdown timer">
+                            <div class="flex justify-between items-center" style="margin-bottom:12px;">
+                                <h3 style="font-size:1rem; font-weight:600;">Countdown timer</h3>
+                                <span class="pill info">While app is open</span>
+                            </div>
+                            <output class="planner-countdown" id="planner-countdown" aria-live="off">00:00:00</output>
+                            <div class="flex gap-2 items-center" style="margin-top:12px; flex-wrap:wrap;">
+                                <label class="text-muted" for="planner-timer-minutes">Minutes</label>
+                                <input id="planner-timer-minutes" type="number" min="1" max="1440" step="1" value="25" style="width:100px;">
+                                <button class="primary sm" type="button" data-planner-action="countdown-start">Start</button>
+                                <button class="sm" type="button" data-planner-action="countdown-stop">Stop</button>
+                            </div>
+                        </section>
+                        <section class="card" aria-label="Stopwatch">
+                            <div class="flex justify-between items-center" style="margin-bottom:12px;">
+                                <h3 style="font-size:1rem; font-weight:600;">Stopwatch</h3>
+                                <button class="sm" type="button" onclick="App.router('timeview')">Focus timer →</button>
+                            </div>
+                            <output class="planner-countdown" id="planner-stopwatch" aria-live="off">00:00:00</output>
+                            <div class="flex gap-2" style="flex-wrap:wrap; margin-top:12px;">
+                                <button class="primary sm" type="button" data-planner-action="stopwatch-toggle">Start / Pause</button>
+                                <button class="sm" type="button" data-planner-action="stopwatch-lap">Lap</button>
+                                <button class="sm" type="button" data-planner-action="stopwatch-reset">Reset</button>
+                            </div>
+                            <div class="text-muted" id="planner-laps" style="margin-top:8px;"></div>
+                        </section>
+                    </div>
+                    <section class="card" style="margin-bottom:16px;">
+                        <div class="flex justify-between items-center" style="gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+                            <div>
+                                <h3 style="font-size:1rem; font-weight:600;">Build a balanced day</h3>
+                                <p class="text-muted">A few prompts turn your meeting, commute, personal time, exercise, and one small habit into a schedule.</p>
+                            </div>
+                        </div>
+                        <form id="planner-builder-form" class="planner-form-grid">
+                            <input name="date" type="hidden" value="${esc(date)}">
+                            <label class="text-muted">Wake-up time<input name="wake" type="time" value="07:00" required></label>
+                            <label class="text-muted">Meeting (optional)<input name="meetingTitle" type="text" maxlength="160" placeholder="e.g. Project check-in"></label>
+                            <label class="text-muted">Meeting start<input name="meetingTime" type="time"></label>
+                            <label class="text-muted">Meeting minutes<input name="meetingDuration" type="number" min="1" max="1440" value="60"></label>
+                            <label class="text-muted">Travel each way (min)<input name="travelDuration" type="number" min="0" max="720" value="30"></label>
+                            <label class="text-muted">Exercise start<input name="exerciseTime" type="time" value="07:30" required></label>
+                            <label class="text-muted">Exercise minutes<input name="exerciseDuration" type="number" min="1" max="1440" value="30" required></label>
+                            <label class="text-muted">Personal time start<input name="personalTime" type="time" value="17:30" required></label>
+                            <label class="text-muted">Personal time minutes<input name="personalDuration" type="number" min="1" max="1440" value="60" required></label>
+                            <label class="text-muted">Small habit to start<input name="habitTitle" type="text" maxlength="120" value="Drink a glass of water" required></label>
+                            <label class="text-muted">Habit time<input name="habitTime" type="time" value="07:05" required></label>
+                            <button class="primary" type="submit">Build this day</button>
+                        </form>
+                        <p class="text-muted" style="margin-top:8px;">Travel blocks are placed before and after the meeting. Overlapping suggestions are rejected so you can adjust the times first.</p>
+                    </section>
+                    <div class="planner-grid" style="margin-bottom:16px;">
+                        <section class="card">
+                            <div style="margin-bottom:12px;">
+                                <h3 style="font-size:1rem; font-weight:600;">Schedule a block</h3>
+                                <p class="text-muted">Add a custom event or a reminder to your selected day.</p>
+                            </div>
+                            <form id="planner-entry-form" class="planner-form-grid">
+                                <input name="date" type="hidden" value="${esc(date)}">
+                                <label class="text-muted">What is it?<input name="title" type="text" maxlength="160" placeholder="e.g. Deep work" required></label>
+                                <label class="text-muted">Type<select name="category">${PlannerEngine.categories.map(category => `<option value="${category}">${category[0].toUpperCase()}${category.slice(1)}</option>`).join('')}</select></label>
+                                <label class="text-muted">Start time<input name="time" type="time" value="09:00" required></label>
+                                <label class="text-muted">Minutes<input name="duration" type="number" min="1" max="1440" value="30" required></label>
+                                <label class="text-muted">Notify before<select name="remindBefore"><option value="0">No reminder</option><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option></select></label>
+                                <button class="tonal" type="submit">Add to schedule</button>
+                            </form>
+                        </section>
+                        <section class="card">
+                            <div class="flex justify-between items-center" style="gap:8px; margin-bottom:12px;">
+                                <div><h3 style="font-size:1rem; font-weight:600;">One-time alarms</h3><p class="text-muted">Alarms notify only while this app is open.</p></div>
+                                <button class="sm" type="button" data-planner-action="notifications">${typeof Notification !== 'undefined' && Notification.permission === 'granted' ? 'Notifications on' : 'Enable notifications'}</button>
+                            </div>
+                            <p class="text-muted" style="margin-bottom:10px;">${esc(notificationState)}</p>
+                            <form id="planner-alarm-form" class="planner-form-grid">
+                                <label class="text-muted">Alarm label<input name="title" type="text" maxlength="120" placeholder="e.g. Leave for the station" required></label>
+                                <label class="text-muted">Date<input name="date" type="date" value="${esc(date)}" required></label>
+                                <label class="text-muted">Time<input name="time" type="time" required></label>
+                                <button class="tonal" type="submit">Set alarm</button>
+                            </form>
+                            <div class="flex-col gap-2" style="margin-top:12px;">
+                                ${alarms.map((alarm, index) => `
+                                    <div class="planner-entry">
+                                        <div><strong>${esc(alarm.title)}</strong><div class="text-muted">${esc(alarm.date)} · ${esc(alarm.time)} · ${alarm.enabled ? 'Armed' : 'Done'}</div></div>
+                                        <button class="sm danger" type="button" data-planner-action="alarm-delete" data-index="${index}" aria-label="Delete ${esc(alarm.title)} alarm">Delete</button>
+                                    </div>
+                                `).join('') || '<p class="text-muted">No alarms set.</p>'}
+                            </div>
+                        </section>
+                    </div>
+                    <div class="planner-grid">
+                        <section class="card">
+                            <div class="flex justify-between items-center" style="gap:8px; margin-bottom:8px;">
+                                <div><h3 style="font-size:1rem; font-weight:600;">Small habits</h3><p class="text-muted">Start tiny; track one repeatable action at a time.</p></div>
+                            </div>
+                            <form id="planner-habit-form" class="flex gap-2" style="flex-wrap:wrap; margin-bottom:10px;">
+                                <label class="text-muted" style="flex:1; min-width:160px;">A habit to build<input name="title" type="text" maxlength="120" placeholder="e.g. Stretch for two minutes" required></label>
+                                <button class="tonal" type="submit">Add habit</button>
+                            </form>
+                            ${habits.map((habit, index) => `
+                                <div class="planner-habit">
+                                    <label class="flex items-center gap-2" style="flex:1; white-space:normal;">
+                                        <input type="checkbox" data-planner-action="habit-toggle" data-index="${index}" ${habit.completedDates.includes(today) ? 'checked' : ''} aria-label="Mark ${esc(habit.title)} complete today">
+                                        <span>${esc(habit.title)}<small class="text-muted" style="display:block;">${habit.completedDates.length} day${habit.completedDates.length === 1 ? '' : 's'} practiced</small></span>
+                                    </label>
+                                    <button class="sm danger" type="button" data-planner-action="habit-delete" data-index="${index}" aria-label="Delete ${esc(habit.title)} habit">×</button>
+                                </div>
+                            `).join('') || '<p class="text-muted">Add one small action you can repeat each day.</p>'}
+                        </section>
+                        <section class="card">
+                            <div style="margin-bottom:12px;">
+                                <h3 style="font-size:1rem; font-weight:600;">${date === today ? "Today's schedule" : `Schedule for ${esc(date)}`}</h3>
+                                <p class="text-muted">${entries.length} planned block${entries.length === 1 ? '' : 's'} · ${PlannerEngine.formatDuration(entries.reduce((total, item) => total + item.duration * 60000, 0))} scheduled</p>
+                            </div>
+                            <div class="flex-col gap-2">
+                                ${entries.map(entry => {
+                                    const index = State.planner.entries.indexOf(entry);
+                                    return `<div class="planner-entry">
+                                        <div class="flex items-center gap-2">
+                                            <span class="planner-entry-time">${esc(entry.time)}</span>
+                                            <span><strong>${esc(entry.title)}</strong><small class="text-muted" style="display:block;">${esc(entry.category)} · ${entry.duration} min${entry.remindBefore ? ` · reminder ${entry.remindBefore}m before` : ''}</small></span>
+                                        </div>
+                                        <button class="sm danger" type="button" data-planner-action="entry-delete" data-index="${index}" aria-label="Delete ${esc(entry.title)} schedule item">×</button>
+                                    </div>`;
+                                }).join('') || '<p class="text-muted">No blocks planned for this day yet.</p>'}
+                            </div>
+                        </section>
                     </div>
                 `;
             },
@@ -5106,6 +5694,9 @@
                         <p class="text-muted">Local storage, encryption, hosting, and use information.</p>
                     </div>
                     <div class="flex gap-2">
+                        <button class="sm" data-action="refresh-app-shell">
+                            <span class="material-symbols-outlined" style="font-size:18px;">restart_alt</span> Clear offline cache & refresh
+                        </button>
                         <button class="danger sm" onclick="UI.confirmPurgeAllData()">
                             <span class="material-symbols-outlined" style="font-size:18px;">delete_forever</span> Delete This Browser's App Data
                         </button>
@@ -5333,6 +5924,26 @@
                 }
             },
 
+            refreshAppShell: () => {
+                UI.confirm(
+                    'Clear offline app cache?',
+                    'This removes only AstralSurge app-shell cache entries and reloads the app. Your encrypted vault and checkpoints are not changed. You will need a network connection to download the app shell again.',
+                    async () => {
+                        try {
+                            if (!('caches' in window)) throw new Error('Cache Storage is unavailable in this browser.');
+                            const keys = await caches.keys();
+                            const appCaches = keys.filter(key =>
+                                key.startsWith('astralsurge-os-') || key.startsWith('aether-os-'));
+                            await Promise.all(appCaches.map(key => caches.delete(key)));
+                            location.reload();
+                        } catch (error) {
+                            console.error('Unable to clear the app-shell cache:', error);
+                            Toast.show('Unable to clear the offline app cache.', 'error');
+                        }
+                    }
+                );
+            },
+
             setAuthMode: (mode) => {
                 document.getElementById('tab-fetch').className = mode === 'fetch' ? 'primary sm' : 'sm';
                 document.getElementById('tab-new').className = mode === 'new' ? 'primary sm' : 'sm';
@@ -5507,6 +6118,9 @@
                         case 'calendar-today':
                             CalendarView.displayedMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
                             App.router('calendar');
+                            return;
+                        case 'refresh-app-shell':
+                            App.refreshAppShell();
                             return;
                         case 'finance-add-item': {
                             const budgetIndex = getIndex(actionElement.dataset.budgetIndex, State.finances.budgets);
@@ -5770,6 +6384,7 @@
 
                 UI.updateGamification();
                 StorageEngine.checkBackupStatus();
+                PlannerEngine.start();
                 App.router('dashboard');
             },
 
@@ -5817,6 +6432,8 @@
             },
 
             postRender: (view) => {
+                if (view === 'planner') PlannerEngine.tick();
+
                 if (view === 'dashboard') {
                     HeatmapEngine.render('dashboard-heatmap');
                 }
