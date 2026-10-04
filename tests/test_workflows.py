@@ -16,6 +16,94 @@ def test_create_task_and_open_its_inspector(app_page: Page) -> None:
     expect(app_page.locator("#drawer-task-title")).to_have_value("Playwright-created task")
 
 
+def test_drag_task_between_kanban_columns(app_page: Page) -> None:
+    app_page.locator('.nav-item[data-view="projects"]').click()
+    source = app_page.locator("#board-inbox .task-card").first
+    task_id = source.get_attribute("data-task-id")
+    assert task_id
+    source_handle = source.locator(".drag-handle")
+    source_box = source_handle.bounding_box()
+    target_box = app_page.locator("#board-todo").bounding_box()
+    assert source_box and target_box
+    app_page.mouse.move(source_box["x"] + source_box["width"] / 2, source_box["y"] + source_box["height"] / 2)
+    app_page.mouse.down()
+    app_page.mouse.move(target_box["x"] + 20, target_box["y"] + 40, steps=12)
+    app_page.mouse.up()
+
+    moved_task = app_page.locator(f'#board-todo .task-card[data-task-id="{task_id}"]')
+    expect(moved_task).to_be_visible()
+    assert app_page.evaluate(
+        "(taskId) => State.tasks.find(task => task.id === taskId)?.status", task_id
+    ) == "todo"
+
+
+def test_finance_calculators_and_projection_are_live(app_page: Page) -> None:
+    app_page.locator('.nav-item[data-view="finance"]').click()
+
+    app_page.locator("#finance-loan-principal").fill("120000")
+    app_page.locator("#finance-loan-rate").fill("0")
+    app_page.locator("#finance-loan-months").fill("12")
+    expect(app_page.locator("#finance-loan-emi")).to_have_text("₹10,000")
+    expect(app_page.locator("#finance-loan-interest")).to_have_text("₹0")
+
+    app_page.locator("#finance-fd-principal").fill("10000")
+    app_page.locator("#finance-fd-rate").fill("0")
+    app_page.locator("#finance-fd-years").fill("2")
+    expect(app_page.locator("#finance-fd-maturity")).to_have_text("₹10,000")
+
+    app_page.locator("#finance-sip-monthly").fill("500")
+    app_page.locator("#finance-sip-rate").fill("0")
+    app_page.locator("#finance-sip-years").fill("1")
+    expect(app_page.locator("#finance-sip-value")).to_have_text("₹6,000")
+    expect(app_page.locator("#finance-projection-note")).to_contain_text("Straight-line estimate")
+    app_page.evaluate(
+        """() => {
+            State.finances.transactions.push({
+                id: 'projection-check',
+                amount: 1000,
+                category: 'Food',
+                isoDate: new Date().toISOString()
+            });
+            FinanceEngine.updateTools();
+        }"""
+    )
+    expect(app_page.locator("#finance-projection-spent")).to_have_text("₹1,000")
+
+
+def test_eisenhower_matrix_and_calendar_aggregate_workspace_events(app_page: Page) -> None:
+    today = app_page.evaluate("CalendarView.dateKey(new Date())")
+    app_page.locator('.nav-item[data-view="projects"]').click()
+    app_page.get_by_role("button", name="Add Task").click()
+    app_page.locator("#task-title").fill("Urgent calendar task")
+    app_page.locator("#task-due-date").fill(today)
+    app_page.locator("#task-important").check()
+    app_page.locator("#task-urgent").check()
+    app_page.get_by_role("button", name="Save Item (+25 XP)").click()
+
+    app_page.locator('.nav-item[data-view="eisenhower"]').click()
+    expect(app_page.locator('section[aria-label="Do First"]')).to_contain_text("Urgent calendar task")
+
+    app_page.locator('.nav-item[data-view="workout"]').click()
+    app_page.get_by_role("button", name="Log Session").click()
+    app_page.locator("#wo-title").fill("Calendar workout")
+    app_page.get_by_role("button", name="Commit (+100 XP)").click()
+
+    app_page.locator('.nav-item[data-view="finance"]').click()
+    app_page.get_by_role("button", name="Record Outflow").click()
+    app_page.locator("#tx-desc").fill("Calendar transaction")
+    app_page.locator("#tx-amount").fill("75")
+    app_page.get_by_role("button", name="Log Entry").click()
+    app_page.get_by_role("button", name="Add Budget Item").click()
+    app_page.locator("#finance-expense-title").fill("Calendar bill")
+    app_page.locator("#finance-expense-amount").fill("200")
+    app_page.locator("#finance-expense-due-date").fill(today)
+    app_page.get_by_role("button", name="Save Item").click()
+
+    app_page.locator('.nav-item[data-view="calendar"]').click()
+    for title in ("Urgent calendar task", "Calendar workout", "Calendar transaction", "Calendar bill"):
+        expect(app_page.locator(".calendar-grid")).to_contain_text(title)
+
+
 def test_create_and_edit_custom_guided_path(app_page: Page) -> None:
     app_page.locator('.nav-item[data-view="pathways"]').click()
     expect(app_page.locator("#content")).to_contain_text("No guided paths yet")

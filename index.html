@@ -4,87 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="AstralSurge OS is a private, client-side encrypted productivity, kinetic, and capital tracking workspace.">
-    <meta name="theme-color" content="#121316">
+    <meta name="theme-color" content="#14111b">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
     <title>AstralSurge OS | Autonomous Local-First Workspace</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23004a77' width='100' height='100' rx='20'/><text fill='%23a8c7fa' x='50' y='68' font-size='52' font-family='sans-serif' text-anchor='middle'>S</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23493276' width='100' height='100' rx='28'/><text fill='%23f0e8ff' x='50' y='68' font-size='52' font-family='sans-serif' text-anchor='middle'>S</text></svg>">
     <link rel="manifest" href="./manifest.json">
 
     <style>
         :root[data-theme="dark"] {
-            --md-sys-color-background: #121316;
-            --md-sys-color-surface: #1a1c1e;
-            --md-sys-color-surface-container: #202226;
-            --md-sys-color-surface-container-high: #2a2c31;
-            --md-sys-color-surface-variant: #34373c;
-            --md-sys-color-outline: #3c4043;
-            --md-sys-color-outline-variant: #282a2d;
+            --md-sys-color-background: #14111b;
+            --md-sys-color-surface: #1d1927;
+            --md-sys-color-surface-container: #242032;
+            --md-sys-color-surface-container-high: #302a40;
+            --md-sys-color-surface-variant: #393249;
+            --md-sys-color-outline: #514860;
+            --md-sys-color-outline-variant: #332d40;
             
-            --md-sys-color-primary: #a8c7fa;
-            --md-sys-color-on-primary: #041e49;
-            --md-sys-color-primary-container: #004a77;
-            --md-sys-color-on-primary-container: #c2e7ff;
+            --md-sys-color-primary: #c4a5ff;
+            --md-sys-color-on-primary: #27104f;
+            --md-sys-color-primary-container: #493276;
+            --md-sys-color-on-primary-container: #f0e8ff;
             
             --md-sys-color-text-main: #e3e3e3;
             --md-sys-color-text-secondary: #c4c7c5;
             --md-sys-color-text-muted: #8e918f;
             
-            --md-sys-color-success: #81c995;
-            --md-sys-color-success-container: rgba(129, 201, 149, 0.15);
-            --md-sys-color-warning: #fdd663;
-            --md-sys-color-warning-container: rgba(253, 214, 99, 0.15);
-            --md-sys-color-error: #f28b82;
-            --md-sys-color-error-container: rgba(242, 139, 130, 0.15);
-            --md-sys-color-info: #78d9ec;
+            --md-sys-color-success: #78e2bd;
+            --md-sys-color-success-container: rgba(120, 226, 189, 0.15);
+            --md-sys-color-warning: #ffc66d;
+            --md-sys-color-warning-container: rgba(255, 198, 109, 0.15);
+            --md-sys-color-error: #ff8b83;
+            --md-sys-color-error-container: rgba(255, 139, 131, 0.15);
+            --md-sys-color-info: #ff9e89;
 
-            --heatmap-cell-0: #25282c;
-            --heatmap-cell-1: #0e3759;
-            --heatmap-cell-2: #16568a;
-            --heatmap-cell-3: #2b77b8;
-            --heatmap-cell-4: #a8c7fa;
+            --heatmap-cell-0: #302a40;
+            --heatmap-cell-1: #503879;
+            --heatmap-cell-2: #7551a8;
+            --heatmap-cell-3: #a17add;
+            --heatmap-cell-4: #d0b5ff;
             
             --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4);
             --elevation-2: 0 4px 8px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
             --elevation-3: 0 8px 24px rgba(0, 0, 0, 0.5);
-            --glass-header: rgba(26, 28, 30, 0.9);
+            --glass-header: rgba(29, 25, 39, 0.9);
         }
 
         :root[data-theme="light"] {
-            --md-sys-color-background: #f8fafd;
-            --md-sys-color-surface: #ffffff;
-            --md-sys-color-surface-container: #f0f4f9;
-            --md-sys-color-surface-container-high: #e9eef6;
-            --md-sys-color-surface-variant: #e0e2ec;
-            --md-sys-color-outline: #dadce0;
-            --md-sys-color-outline-variant: #eef0f4;
+            --md-sys-color-background: #fff9f0;
+            --md-sys-color-surface: #fffdf9;
+            --md-sys-color-surface-container: #f8f0e8;
+            --md-sys-color-surface-container-high: #f1e6dc;
+            --md-sys-color-surface-variant: #ece1d8;
+            --md-sys-color-outline: #d8c9bd;
+            --md-sys-color-outline-variant: #eee3da;
             
-            --md-sys-color-primary: #0b57d0;
+            --md-sys-color-primary: #7046c8;
             --md-sys-color-on-primary: #ffffff;
-            --md-sys-color-primary-container: #d3e3fd;
-            --md-sys-color-on-primary-container: #041e49;
+            --md-sys-color-primary-container: #eadfff;
+            --md-sys-color-on-primary-container: #351c65;
             
             --md-sys-color-text-main: #1f1f1f;
             --md-sys-color-text-secondary: #444746;
             --md-sys-color-text-muted: #747775;
             
-            --md-sys-color-success: #188038;
-            --md-sys-color-success-container: #e6f4ea;
-            --md-sys-color-warning: #e37400;
-            --md-sys-color-warning-container: #fef7e0;
-            --md-sys-color-error: #d93025;
-            --md-sys-color-error-container: #fce8e6;
+            --md-sys-color-success: #167a5a;
+            --md-sys-color-success-container: #dff7ec;
+            --md-sys-color-warning: #a75a0b;
+            --md-sys-color-warning-container: #fff0d9;
+            --md-sys-color-error: #ba3f3a;
+            --md-sys-color-error-container: #ffe5df;
             --md-sys-color-info: #0288d1;
 
-            --heatmap-cell-0: #eef0f4;
-            --heatmap-cell-1: #c2e7ff;
-            --heatmap-cell-2: #7fc2ff;
-            --heatmap-cell-3: #338cf0;
-            --heatmap-cell-4: #0b57d0;
+            --heatmap-cell-0: #f1e9e1;
+            --heatmap-cell-1: #e6d6ff;
+            --heatmap-cell-2: #c7aaff;
+            --heatmap-cell-3: #9b73ed;
+            --heatmap-cell-4: #7046c8;
             
             --elevation-1: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
             --elevation-2: 0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15);
             --elevation-3: 0 8px 28px rgba(60,64,67,.28);
-            --glass-header: rgba(255, 255, 255, 0.9);
+            --glass-header: rgba(255, 253, 249, 0.9);
         }
 
         :root {
@@ -93,9 +93,9 @@
             --nav-width: 272px;
             --topbar-height: 64px;
             --radius-xs: 4px;
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 18px;
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 26px;
             --radius-pill: 9999px;
         }
 
@@ -278,6 +278,7 @@
             color: var(--md-sys-color-text-secondary); font-size: 0.84rem; font-weight: 500;
             transition: all 0.15s ease; display: flex; align-items: center; gap: 14px; margin-bottom: 3px;
         }
+        .nav-item > .material-symbols-outlined { display: none; }
         .nav-item:hover { background: var(--md-sys-color-surface-container); color: var(--md-sys-color-text-main); }
         .nav-item.active {
             background: var(--md-sys-color-primary-container);
@@ -712,6 +713,11 @@
             .kanban-col { width: 100%; display: none; }
             .kanban-col.active-mobile-col { display: flex; }
             #task-drawer { width: 100vw; max-width: 100vw; }
+            .calendar-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+            .calendar-day { min-height: 84px; padding: 4px; }
+            .calendar-event { padding: 3px 4px !important; gap: 2px !important; }
+            .calendar-event-kind { display: none; }
+            .calendar-event-amount { display: none; }
         }
 
         @media (max-width: 640px) {
@@ -722,6 +728,54 @@
             .kanban-board { height: calc(100vh - 210px); }
             .pathway-step-editor { grid-template-columns: minmax(0, 1fr); }
         }
+        .drag-handle[draggable="true"] { cursor: grab; }
+        .task-card.is-dragging { opacity: 0.45; transform: rotate(-1deg) scale(0.98); }
+        .kanban-tasks.is-drop-target {
+            background: color-mix(in srgb, var(--md-sys-color-primary) 10%, transparent);
+            outline: 2px dashed var(--md-sys-color-primary);
+            outline-offset: -4px;
+            border-radius: var(--radius-md);
+        }
+        .xp-track { height: 8px; background: var(--md-sys-color-surface-variant); }
+        .xp-progress {
+            background: linear-gradient(90deg, #9c72ff, #ff8a7b, #ffc66d, #78e2bd, #9c72ff);
+            background-size: 220% 100%;
+            box-shadow: 0 0 14px rgba(196, 165, 255, 0.45);
+            animation: xp-shimmer 5s linear infinite;
+        }
+        @keyframes xp-shimmer { to { background-position: 220% 0; } }
+        .stat-card, .card, .kanban-col { border-radius: var(--radius-md); }
+        .card { border-color: color-mix(in srgb, var(--md-sys-color-primary) 16%, var(--md-sys-color-outline-variant)); }
+        button, .chip { transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease; }
+        button:hover, .chip:hover { transform: translateY(-2px); box-shadow: var(--elevation-1); }
+        button:active, .chip:active { transform: scale(0.97); }
+        :focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 3px; }
+        .rpg-card { border-color: color-mix(in srgb, var(--md-sys-color-primary) 32%, var(--md-sys-color-outline-variant)); }
+        #ui-xp { display: inline-block; padding: 2px 7px; border-radius: var(--radius-pill); background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+        }
+        .calendar-grid { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:6px; }
+        .calendar-weekday { padding:7px 4px; text-align:center; color:var(--md-sys-color-text-muted); font-size:0.72rem; font-weight:600; }
+        .calendar-day { min-width:0; min-height:116px; padding:7px; border:1px solid var(--md-sys-color-outline-variant); border-radius:var(--radius-sm); background:var(--md-sys-color-surface); overflow:hidden; }
+        .calendar-outside { opacity:0.48; }
+        .calendar-today { border-color:var(--md-sys-color-primary); box-shadow:inset 0 0 0 1px var(--md-sys-color-primary); }
+        .calendar-date { display:block; margin-bottom:5px; font-size:0.76rem; font-weight:600; }
+        .calendar-event { min-width:0; width:100%; padding:4px 5px !important; border:0; border-radius:6px !important; background:var(--md-sys-color-primary-container); color:var(--md-sys-color-on-primary-container); display:flex; align-items:center; justify-content:flex-start; gap:4px; font-size:0.66rem; text-align:left; overflow:hidden; }
+        .calendar-event.workout { background:var(--md-sys-color-success-container); color:var(--md-sys-color-success); }
+        .calendar-event.finance, .calendar-event.bill { background:var(--md-sys-color-error-container); color:var(--md-sys-color-error); }
+        .calendar-event.income { background:var(--md-sys-color-success-container); color:var(--md-sys-color-success); }
+        .calendar-event-kind { flex:0 0 auto; font-weight:700; }
+        .calendar-event-title, .calendar-event-amount { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .calendar-event-amount { flex:0 0 auto; font-variant-numeric:tabular-nums; }
+        .calendar-more { display:block; padding:2px 4px; color:var(--md-sys-color-text-muted); font-size:0.65rem; }
+        @media (max-width: 768px) {
+            .calendar-grid { grid-template-columns:repeat(7, minmax(0, 1fr)); gap:3px; }
+            .calendar-day { min-height:84px; padding:4px; }
+            .calendar-event { padding:3px 4px !important; gap:2px !important; }
+            .calendar-event-kind, .calendar-event-amount { display:none; }
+        }
+        @media (max-width: 420px) { .calendar-day { min-height:72px; padding:3px; } .calendar-event-title { font-size:0.62rem; } }
     </style>
 </head>
 <body>
@@ -800,60 +854,68 @@
             <div class="nav-label">Core Engine</div>
             <div class="nav-item active" data-view="pathways">
                 <span class="material-symbols-outlined">explore</span>
-                <span>Guided Pathways</span>
+                <span>🗺️ Quests & Pathways</span>
             </div>
             <div class="nav-item" data-view="dashboard">
                 <span class="material-symbols-outlined">dashboard</span>
-                <span>Command Center</span>
+                <span>✨ Command Center</span>
             </div>
 
             <div class="nav-label">Kinetic & Focus</div>
             <div class="nav-item" data-view="workout">
                 <span class="material-symbols-outlined">fitness_center</span>
-                <span>Kinetic Lab</span>
+                <span>👟 Kinetic Lab</span>
             </div>
             <div class="nav-item" data-view="timeview">
                 <span class="material-symbols-outlined">timer</span>
-                <span>Chrono Distro</span>
+                <span>⏱️ Focus Flow</span>
             </div>
 
             <div class="nav-label">Agile & Operations</div>
             <div class="nav-item" data-view="stories">
                 <span class="material-symbols-outlined">menu_book</span>
-                <span>Stories & Epics</span>
+                <span>📚 Stories & Epics</span>
             </div>
             <div class="nav-item" data-view="projects">
                 <span class="material-symbols-outlined">view_kanban</span>
-                <span>Kanban Pipeline</span>
+                <span>🎯 Action Board</span>
+            </div>
+            <div class="nav-item" data-view="eisenhower">
+                <span class="material-symbols-outlined">grid_view</span>
+                <span>🧭 Eisenhower Matrix</span>
+            </div>
+            <div class="nav-item" data-view="calendar">
+                <span class="material-symbols-outlined">calendar_month</span>
+                <span>📅 Life Calendar</span>
             </div>
             <div class="nav-item" data-view="audit">
                 <span class="material-symbols-outlined">receipt_long</span>
-                <span>Audit Stream</span>
+                <span>🧾 Audit Stream</span>
             </div>
 
             <div class="nav-label">Capital & Intellect</div>
             <div class="nav-item" data-view="finance">
                 <span class="material-symbols-outlined">account_balance</span>
-                <span>Financial Ledger</span>
+                <span>💰 Wallet & Piggy</span>
             </div>
             <div class="nav-item" data-view="brain">
                 <span class="material-symbols-outlined">psychology</span>
-                <span>Second Brain</span>
+                <span>🧠 Idea Vault</span>
             </div>
             <div class="nav-item" data-view="snapshots">
                 <span class="material-symbols-outlined">history</span>
-                <span>Checkpoints</span>
+                <span>🪄 Checkpoints</span>
             </div>
 
             <div class="nav-label">Governance</div>
             <div class="nav-item" data-view="legal">
                 <span class="material-symbols-outlined">gavel</span>
-                <span>Legal & Privacy</span>
+                <span>🛡️ Legal & Privacy</span>
             </div>
 
             <div class="rpg-card">
                 <div class="flex justify-between items-center">
-                    <span style="font-weight: 600; font-size: 0.825rem;">Level <span id="ui-level">1</span></span>
+                    <span style="font-weight: 600; font-size: 0.825rem;">✨ Level <span id="ui-level">1</span></span>
                     <span class="text-muted" style="font-size: 0.72rem;"><span id="ui-xp">0</span> / <span id="ui-next-xp">1000</span> XP</span>
                 </div>
                 <div class="xp-track"><div class="xp-progress" id="ui-xp-fill"></div></div>
@@ -957,6 +1019,15 @@
                 </div>
 
                 <div>
+                    <label class="text-muted" style="font-size:0.75rem; display:block; margin-bottom:4px;">Due date</label>
+                    <input type="date" id="drawer-task-due-date" onchange="TaskDrawer.saveField('dueDate', this.value)">
+                </div>
+                <div class="flex gap-3" style="flex-wrap:wrap;">
+                    <label class="flex items-center gap-2 text-secondary"><input type="checkbox" id="drawer-task-important" onchange="TaskDrawer.saveField('important', this.checked)"> Important</label>
+                    <label class="flex items-center gap-2 text-secondary"><input type="checkbox" id="drawer-task-urgent" onchange="TaskDrawer.saveField('urgent', this.checked)"> Urgent</label>
+                </div>
+
+                <div>
                     <label class="text-muted" style="font-size: 0.75rem; display:block; margin-bottom:4px;">Details & Execution Context</label>
                     <textarea id="drawer-task-desc" rows="4" onchange="TaskDrawer.saveField('desc', this.value)"></textarea>
                 </div>
@@ -993,6 +1064,10 @@
             <div class="bnav-item" data-view="projects" onclick="App.router('projects')">
                 <span class="material-symbols-outlined">view_kanban</span>
                 <span>Kanban</span>
+            </div>
+            <div class="bnav-item" data-view="calendar" onclick="App.router('calendar')">
+                <span class="material-symbols-outlined">calendar_month</span>
+                <span>Calendar</span>
             </div>
             <div class="bnav-item" data-view="finance" onclick="App.router('finance')">
                 <span class="material-symbols-outlined">account_balance</span>
@@ -1100,6 +1175,13 @@
                         <option value="high">High Priority</option>
                     </select>
                 </div>
+                <label class="text-muted" style="font-size:0.75rem;">Due date
+                    <input type="date" id="task-due-date" style="margin-top:4px;">
+                </label>
+                <div class="flex gap-3" style="flex-wrap:wrap;">
+                    <label class="flex items-center gap-2 text-secondary"><input type="checkbox" id="task-important"> Important</label>
+                    <label class="flex items-center gap-2 text-secondary"><input type="checkbox" id="task-urgent"> Urgent</label>
+                </div>
                 <div class="flex gap-2 btn-group-responsive" style="margin-top: 8px;">
                     <button class="primary" style="flex:1;" onclick="Data.addTask()">Save Item (+25 XP)</button>
                     <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
@@ -1139,6 +1221,9 @@
                     <option value="yearly">Yearly</option>
                     <option value="once">One-time</option>
                 </select>
+                <label class="text-muted" style="font-size:0.75rem;">Next due date (optional, shown on calendar)
+                    <input type="date" id="finance-expense-due-date" style="margin-top:4px;">
+                </label>
                 <div class="flex gap-2 btn-group-responsive">
                     <button class="primary" style="flex:1;" onclick="FinanceEngine.saveExpense()">Save Item</button>
                     <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
@@ -1749,6 +1834,11 @@
                     throw new Error('The decrypted vault has invalid pathway entries.');
                 }
             }
+            for (const task of normalized.tasks) {
+                if (typeof task.important !== 'boolean') task.important = task.priority === 'high';
+                if (typeof task.urgent !== 'boolean') task.urgent = false;
+                if (typeof task.dueDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(task.dueDate)) task.dueDate = '';
+            }
             return normalized;
         };
 
@@ -1782,6 +1872,10 @@
                 document.getElementById('drawer-task-desc').value = task.desc || '';
                 document.getElementById('drawer-task-status').value = task.status;
                 document.getElementById('drawer-task-priority').value = task.priority;
+                document.getElementById('drawer-task-due-date').value = task.dueDate || '';
+                document.getElementById('drawer-task-important').checked =
+                    typeof task.important === 'boolean' ? task.important : task.priority === 'high';
+                document.getElementById('drawer-task-urgent').checked = task.urgent === true;
                 document.getElementById('drawer-task-status-pill').innerText = task.status.toUpperCase();
                 document.getElementById('drawer-task-time').innerText = `${task.timeSpent || 0}m Logged`;
 
@@ -2321,6 +2415,9 @@
                     desc: `Epic: ${story.epic} (${story.points} pts)`,
                     status: 'todo',
                     priority: story.points >= 5 ? 'high' : 'med',
+                    dueDate: '',
+                    important: story.points >= 5,
+                    urgent: false,
                     timeSpent: 0,
                     subtasks: story.ac.map(a => ({ id: 's_' + Math.random(), title: a.text, done: a.done }))
                 });
@@ -2536,6 +2633,9 @@
                         desc: `Generated from Pathway milestone`,
                         status: 'todo',
                         priority: 'high',
+                        dueDate: '',
+                        important: true,
+                        urgent: false,
                         timeSpent: 0,
                         subtasks: []
                     });
@@ -2682,6 +2782,7 @@
                 document.getElementById('finance-expense-title').value = item?.title || '';
                 document.getElementById('finance-expense-amount').value = item?.amount ?? '';
                 document.getElementById('finance-expense-recurrence').value = item?.recurrence || 'monthly';
+                document.getElementById('finance-expense-due-date').value = item?.dueDate || '';
                 FinanceEngine.populateCategorySelect(document.getElementById('finance-expense-category'), item?.category || category);
                 UI.openModal('finance-expense-modal');
             },
@@ -2690,8 +2791,10 @@
                 const amount = Number(document.getElementById('finance-expense-amount').value);
                 const category = document.getElementById('finance-expense-category').value;
                 const recurrence = document.getElementById('finance-expense-recurrence').value;
+                const dueDate = document.getElementById('finance-expense-due-date').value;
                 if (!title || !Number.isFinite(amount) || amount <= 0 || !category ||
-                    !Object.prototype.hasOwnProperty.call(FinanceEngine.recurrenceLabels, recurrence)) {
+                    !Object.prototype.hasOwnProperty.call(FinanceEngine.recurrenceLabels, recurrence) ||
+                    (dueDate && !CalendarView.isDateKey(dueDate))) {
                     Toast.show('Enter an expense name, valid amount, category, and recurrence.', 'error');
                     return;
                 }
@@ -2708,7 +2811,7 @@
                     id: `budget_item_${Date.now()}_${Math.random().toString(36).slice(2)}`,
                     paidPeriod: null
                 };
-                Object.assign(item, { title, amount, category, recurrence });
+                Object.assign(item, { title, amount, category, recurrence, dueDate });
                 if (!existingItem) State.finances.budgetItems.unshift(item);
                 if (!await Data.save()) {
                     if (previous) Object.assign(existingItem, previous);
@@ -2811,6 +2914,89 @@
                 Data.save();
                 Toast.show('Transaction deleted');
                 App.refreshCurrentView();
+            },
+            updateTools: () => {
+                const maxValues = {
+                    'finance-loan-principal': 1e12,
+                    'finance-loan-rate': 100,
+                    'finance-loan-months': 1200,
+                    'finance-fd-principal': 1e12,
+                    'finance-fd-rate': 100,
+                    'finance-fd-years': 100,
+                    'finance-sip-monthly': 1e9,
+                    'finance-sip-rate': 100,
+                    'finance-sip-years': 100
+                };
+                const read = id => {
+                    const value = Number(document.getElementById(id)?.value);
+                    return Number.isFinite(value) && value >= 0 && value <= maxValues[id] ? value : NaN;
+                };
+                const set = (id, value) => {
+                    const output = document.getElementById(id);
+                    if (output) output.textContent = Number.isFinite(value) ? FinanceEngine.displayAmount(value) : 'Check inputs';
+                };
+
+                const principal = read('finance-loan-principal');
+                const annualRate = read('finance-loan-rate') / 100;
+                const months = Math.floor(read('finance-loan-months'));
+                const monthlyRate = annualRate / 12;
+                const validLoan = Number.isFinite(principal) && Number.isFinite(annualRate) &&
+                    Number.isFinite(months) && months > 0;
+                const emi = validLoan
+                    ? monthlyRate === 0
+                        ? principal / months
+                        : principal * monthlyRate * Math.pow(1 + monthlyRate, months) /
+                            (Math.pow(1 + monthlyRate, months) - 1)
+                    : NaN;
+                set('finance-loan-emi', emi);
+                set('finance-loan-total', emi * months);
+                set('finance-loan-interest', Math.max(0, emi * months - principal));
+
+                const deposit = read('finance-fd-principal');
+                const fdRate = read('finance-fd-rate') / 100;
+                const fdYears = read('finance-fd-years');
+                const maturity = [deposit, fdRate, fdYears].every(Number.isFinite)
+                    ? deposit * Math.pow(1 + fdRate / 4, 4 * fdYears)
+                    : NaN;
+                set('finance-fd-maturity', maturity);
+                set('finance-fd-interest', maturity - deposit);
+
+                const monthlySaving = read('finance-sip-monthly');
+                const savingRate = read('finance-sip-rate') / 1200;
+                const savingMonths = Math.floor(read('finance-sip-years') * 12);
+                const validSaving = [monthlySaving, savingRate, savingMonths].every(Number.isFinite);
+                const investmentValue = validSaving
+                    ? savingRate === 0
+                        ? monthlySaving * savingMonths
+                        : monthlySaving * (Math.pow(1 + savingRate, savingMonths) - 1) / savingRate
+                    : NaN;
+                set('finance-sip-value', investmentValue);
+                set('finance-sip-contributed', validSaving ? monthlySaving * savingMonths : NaN);
+
+                const now = new Date();
+                const month = now.getMonth();
+                const year = now.getFullYear();
+                const monthDays = new Date(year, month + 1, 0).getDate();
+                const elapsedDays = now.getDate();
+                const spent = (State.finances.transactions || []).reduce((sum, transaction) => {
+                    if (transaction.category === 'Income') return sum;
+                    const date = transaction.isoDate
+                        ? new Date(transaction.isoDate)
+                        : new Date(`${transaction.date || ''}, ${year}`);
+                    return !Number.isNaN(date.getTime()) && date.getFullYear() === year && date.getMonth() === month
+                        ? sum + Math.max(0, Number(transaction.amount) || 0)
+                        : sum;
+                }, 0);
+                const forecastSpend = spent / Math.max(1, elapsedDays) * monthDays;
+                const forecastNet = Number(State.finances.monthlyIncome || 0) - forecastSpend;
+                set('finance-projection-spent', spent);
+                set('finance-projection-month-end', forecastSpend);
+                set('finance-projection-net', forecastNet);
+                set('finance-projection-3m', forecastNet * 3);
+                set('finance-projection-6m', forecastNet * 6);
+                set('finance-projection-12m', forecastNet * 12);
+                const note = document.getElementById('finance-projection-note');
+                if (note) note.textContent = `Straight-line estimate from ${elapsedDays} day${elapsedDays === 1 ? '' : 's'} of this month; ${monthDays - elapsedDays} day${monthDays - elapsedDays === 1 ? '' : 's'} remain.`;
             },
             updateProjections: () => {
                 const inc = parseFloat(document.getElementById('cfg-income').value) || 0;
@@ -2996,34 +3182,46 @@
                     return false;
                 }
             },
-            addTask: () => {
+            addTask: async () => {
                 const title = document.getElementById('task-title').value.trim();
                 if (!title) return;
-                State.tasks.push({
+                const task = {
                     id: 'tsk_' + Date.now(),
                     title,
                     desc: document.getElementById('task-desc').value.trim(),
                     status: document.getElementById('task-status').value,
                     priority: document.getElementById('task-priority').value,
+                    dueDate: document.getElementById('task-due-date').value,
+                    important: document.getElementById('task-important').checked,
+                    urgent: document.getElementById('task-urgent').checked,
                     timeSpent: 0,
                     subtasks: []
-                });
+                };
+                State.tasks.push(task);
                 AuditEngine.log('task', `Captured task: "${title}"`);
+                const previousUser = { ...State.user };
                 Data.addXP(25);
                 Haptics.tap();
-                Data.save();
+                if (!await Data.save()) {
+                    State.tasks = State.tasks.filter(item => item.id !== task.id);
+                    State.user = previousUser;
+                    return;
+                }
                 UI.closeModals();
                 Toast.show('Task added (+25 XP)', 'success');
                 App.refreshCurrentView();
                 document.getElementById('task-title').value = '';
                 document.getElementById('task-desc').value = '';
+                document.getElementById('task-due-date').value = '';
+                document.getElementById('task-important').checked = false;
+                document.getElementById('task-urgent').checked = false;
             },
             quickAddTask: (status, inputEl) => {
                 const title = inputEl.value.trim();
                 if (!title) return;
                 State.tasks.push({
-                    id: 'tsk_' + Date.now(),
-                    title, desc: '', status, priority: 'med', timeSpent: 0, subtasks: []
+                    id: `tsk_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+                    title, desc: '', status, priority: 'med', dueDate: '', important: false, urgent: false, timeSpent: 0, subtasks: []
                 });
                 inputEl.value = '';
                 Data.addXP(25);
@@ -3048,18 +3246,22 @@
                     App.refreshCurrentView();
                 }
             },
-            updateTaskStatus: (id, st) => {
+            updateTaskStatus: async (id, st) => {
+                const statuses = ['inbox', 'todo', 'in_progress', 'done'];
                 const task = State.tasks.find(t => t.id === id);
-                if (task) {
-                    if (st === 'done' && task.status !== 'done') {
-                        Data.addXP(80);
-                        Haptics.taskDone();
-                    } else {
-                        Haptics.dragDrop();
-                    }
-                    task.status = st;
-                    Data.save();
+                if (!task || !statuses.includes(st) || task.status === st) return;
+                const previousStatus = task.status;
+                const previousUser = { ...State.user };
+                task.status = st;
+                if (st === 'done' && previousStatus !== 'done') {
+                    Data.addXP(80);
+                    Haptics.taskDone();
+                } else Haptics.dragDrop();
+                if (!await Data.save()) {
+                    task.status = previousStatus;
+                    State.user = previousUser;
                 }
+                App.refreshCurrentView();
             },
             toggleStep: (pwId, sId) => {
                 const pw = State.pathways.find(p => p.id === pwId);
@@ -3089,6 +3291,102 @@
             }
         };
 
+        const CalendarView = {
+            displayedMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+            dateKey: date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`,
+            isDateKey: value => {
+                if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+                const date = new Date(`${value}T00:00:00`);
+                return !Number.isNaN(date.getTime()) && CalendarView.dateKey(date) === value;
+            },
+            localDateKey: value => {
+                if (!value) return '';
+                if (CalendarView.isDateKey(value)) return value;
+                const date = new Date(value);
+                return Number.isNaN(date.getTime()) ? '' : CalendarView.dateKey(date);
+            },
+            eventsForMonth: yearMonth => {
+                const events = new Map();
+                const add = (date, item) => {
+                    if (!events.has(date)) events.set(date, []);
+                    events.get(date).push(item);
+                };
+                for (const task of State.tasks) {
+                    if (CalendarView.isDateKey(task.dueDate)) {
+                        add(task.dueDate, { kind: 'task', title: task.title, detail: task.status, taskId: task.id });
+                    }
+                }
+                for (const workout of State.workouts || []) {
+                    const date = CalendarView.localDateKey(workout.isoDate);
+                    if (date.startsWith(yearMonth)) {
+                        add(date, { kind: 'workout', title: workout.title, detail: workout.type || 'Workout' });
+                    }
+                }
+                for (const transaction of State.finances.transactions || []) {
+                    const date = CalendarView.localDateKey(transaction.isoDate) ||
+                        CalendarView.localDateKey(transaction.date ? `${transaction.date}, ${Number(yearMonth.slice(0, 4))}` : '');
+                    if (date.startsWith(yearMonth)) {
+                        add(date, {
+                            kind: transaction.category === 'Income' ? 'income' : 'finance',
+                            title: transaction.desc,
+                            detail: transaction.category || 'Outflow',
+                            amount: transaction.amount
+                        });
+                    }
+                }
+                const monthDate = new Date(`${yearMonth}-01T00:00:00`);
+                const month = monthDate.getMonth();
+                const daysInMonth = new Date(monthDate.getFullYear(), month + 1, 0).getDate();
+                const monthIndex = monthDate.getFullYear() * 12 + month;
+                for (const item of State.finances.budgetItems || []) {
+                    if (!CalendarView.isDateKey(item.dueDate)) continue;
+                    const dueDate = new Date(`${item.dueDate}T00:00:00`);
+                    const recurrence = item.recurrence || 'monthly';
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        const date = new Date(monthDate.getFullYear(), month, day);
+                        let due = false;
+                        if (recurrence === 'once') {
+                            due = CalendarView.dateKey(date) === item.dueDate;
+                        } else if (recurrence === 'weekly') {
+                            const daysSinceStart = Math.floor((
+                                Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) -
+                                Date.UTC(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate())
+                            ) / 86400000);
+                            due = daysSinceStart >= 0 && daysSinceStart % 7 === 0;
+                        } else {
+                            const dueMonthIndex = dueDate.getFullYear() * 12 + dueDate.getMonth();
+                            const monthDifference = monthIndex - dueMonthIndex;
+                            const isScheduledMonth = recurrence === 'yearly'
+                                ? monthDifference >= 0 && monthDifference % 12 === 0
+                                : recurrence === 'quarterly'
+                                    ? monthDifference >= 0 && monthDifference % 3 === 0
+                                    : monthDifference >= 0;
+                            due = isScheduledMonth && day === Math.min(dueDate.getDate(), daysInMonth);
+                        }
+                        if (due) {
+                            const period = FinanceEngine.cycleKey(recurrence, date);
+                            const isPaid = item.paidPeriod === period;
+                            add(CalendarView.dateKey(date), {
+                                kind: 'bill',
+                                title: item.title,
+                                detail: `${item.category} · ${isPaid ? 'Paid' : 'Due'}`,
+                                amount: item.amount
+                            });
+                        }
+                    }
+                }
+                return events;
+            },
+            shiftMonth: offset => {
+                CalendarView.displayedMonth = new Date(
+                    CalendarView.displayedMonth.getFullYear(),
+                    CalendarView.displayedMonth.getMonth() + offset,
+                    1
+                );
+                App.router('calendar');
+            }
+        };
+
         const Views = {
             projects: () => {
                 const cols = [
@@ -3101,7 +3399,7 @@
                     <div class="flex justify-between items-center" style="margin-bottom: 16px;">
                         <div>
                             <h2>Project Kanban Pipeline</h2>
-                            <p class="text-muted">Touch-friendly board with inspector drawer and mobile segmented tabs.</p>
+                            <p class="text-muted">Drag tasks between lanes, or use the move controls and mobile lane tabs.</p>
                         </div>
                         <button class="primary sm" onclick="UI.openModal('task-modal')">
                             <span class="material-symbols-outlined" style="font-size:18px;">add</span> Add Task
@@ -3130,8 +3428,8 @@
                                     </div>
                                     <div class="kanban-tasks" id="board-${col.id}" data-status="${col.id}">
                                         ${tasks.map(t => `
-                                            <div class="task-card" draggable="true" data-task-index="${State.tasks.indexOf(t)}">
-                                                <div class="drag-handle">
+                                            <div class="task-card" data-task-index="${State.tasks.indexOf(t)}" data-task-id="${esc(t.id)}">
+                                                <div class="drag-handle" draggable="true">
                                                     <span>⋮⋮ DRAG</span>
                                                     <div class="flex items-center gap-1">
                                                         ${t.timeSpent ? `<span class="pill info" style="font-size:0.68rem;"><span class="material-symbols-outlined" style="font-size:11px;">timer</span> ${esc(t.timeSpent)}m</span>` : ''}
@@ -3140,6 +3438,7 @@
                                                 </div>
                                                 <div style="font-weight: 500;">${esc(t.title)}</div>
                                                 ${t.desc ? `<div class="text-muted" style="margin-top:4px; font-size:0.75rem;">${esc(t.desc.substring(0,40))}...</div>` : ''}
+                                                ${t.dueDate ? `<div class="text-muted" style="margin-top:5px; font-size:0.7rem;">📅 Due ${esc(t.dueDate)}</div>` : ''}
                                                 
                                                 <div class="task-card-actions flex justify-between items-center" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--md-sys-color-outline-variant);">
                                                     <button class="sm tonal" style="padding: 2px 8px; font-size:0.7rem; min-height:24px;" data-task-action="focus">
@@ -3154,6 +3453,99 @@
                                         `).join('')}
                                     </div>
                                 </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            },
+            eisenhower: () => {
+                const quadrants = [
+                    { important: true, urgent: true, title: 'Do First', subtitle: 'Important · Urgent', color: 'var(--md-sys-color-error)' },
+                    { important: true, urgent: false, title: 'Schedule', subtitle: 'Important · Not urgent', color: 'var(--md-sys-color-primary)' },
+                    { important: false, urgent: true, title: 'Delegate', subtitle: 'Not important · Urgent', color: 'var(--md-sys-color-warning)' },
+                    { important: false, urgent: false, title: 'Consider / Drop', subtitle: 'Not important · Not urgent', color: 'var(--md-sys-color-success)' }
+                ];
+                return `
+                    <div style="margin-bottom:20px;">
+                        <h2>🧭 Eisenhower Matrix</h2>
+                        <p class="text-muted">Choose what deserves attention. Open a task to set its importance, urgency, and due date.</p>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px;">
+                        ${quadrants.map(quadrant => {
+                            const tasks = State.tasks.filter(task =>
+                                task.status !== 'done' &&
+                                (task.important === true || (typeof task.important !== 'boolean' && task.priority === 'high')) === quadrant.important &&
+                                task.urgent === quadrant.urgent
+                            );
+                            return `
+                                <section class="card" aria-label="${quadrant.title}" style="min-height:210px;">
+                                    <div class="flex justify-between items-center" style="gap:8px; margin-bottom:4px;">
+                                        <h3 style="font-size:1rem; font-weight:600; color:${quadrant.color};">${quadrant.title}</h3>
+                                        <span class="pill info">${tasks.length}</span>
+                                    </div>
+                                    <p class="text-muted" style="margin-bottom:12px;">${quadrant.subtitle}</p>
+                                    <div class="flex-col gap-2">
+                                        ${tasks.map(task => `
+                                            <button class="stat-card" data-task-index="${State.tasks.indexOf(task)}" style="width:100%; text-align:left; justify-content:space-between; white-space:normal;">
+                                                <span><strong>${esc(task.title)}</strong>${task.dueDate ? `<small class="text-muted" style="display:block;">Due ${esc(task.dueDate)}</small>` : ''}</span>
+                                                <span class="pill ${['low', 'med', 'high'].includes(task.priority) ? task.priority : 'low'}">${esc(task.priority || 'low')}</span>
+                                            </button>
+                                        `).join('') || '<p class="text-muted" style="font-size:0.8rem;">Nothing in this quadrant.</p>'}
+                                    </div>
+                                </section>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            },
+            calendar: () => {
+                const month = CalendarView.displayedMonth;
+                const yearMonth = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
+                const events = CalendarView.eventsForMonth(yearMonth);
+                const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
+                const mondayOffset = (firstDay.getDay() + 6) % 7;
+                const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+                const cellCount = Math.ceil((mondayOffset + daysInMonth) / 7) * 7;
+                const startDate = new Date(month.getFullYear(), month.getMonth(), 1 - mondayOffset);
+                const today = CalendarView.dateKey(new Date());
+                const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                return `
+                    <div class="flex justify-between items-center" style="gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+                        <div>
+                            <h2>📅 Life Calendar</h2>
+                            <p class="text-muted">Tasks, logged workouts, ledger activity, and scheduled budget items in one timeline.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="sm" data-action="calendar-prev" aria-label="Previous month">‹</button>
+                            <h3 style="min-width:150px; text-align:center;">${month.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</h3>
+                            <button class="sm" data-action="calendar-next" aria-label="Next month">›</button>
+                            <button class="sm tonal" data-action="calendar-today">Today</button>
+                        </div>
+                    </div>
+                    <div class="flex gap-2" style="flex-wrap:wrap; margin-bottom:12px;">
+                        <span class="pill info">Task due</span><span class="pill low">Workout</span>
+                        <span class="pill high">Outflow / bill</span><span class="pill" style="background:var(--md-sys-color-success-container); color:var(--md-sys-color-success);">Income</span>
+                    </div>
+                    <div class="calendar-grid">
+                        ${days.map(day => `<div class="calendar-weekday">${day}</div>`).join('')}
+                        ${Array.from({ length: cellCount }, (_, index) => {
+                            const date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + index);
+                            const key = CalendarView.dateKey(date);
+                            const dayEvents = events.get(key) || [];
+                            return `
+                                <section class="calendar-day ${date.getMonth() === month.getMonth() ? '' : 'calendar-outside'} ${key === today ? 'calendar-today' : ''}" aria-label="${date.toLocaleDateString()}">
+                                    <span class="calendar-date">${date.getDate()}</span>
+                                    <div class="flex-col gap-1">
+                                        ${dayEvents.slice(0, 4).map(item => `
+                                            <button class="calendar-event ${item.kind}" ${item.taskId ? `data-calendar-task-id="${esc(item.taskId)}"` : 'type="button"'} title="${esc(`${item.title} · ${item.detail}${Number.isFinite(Number(item.amount)) ? ` · ${FinanceEngine.displayAmount(item.amount)}` : ''}`)}">
+                                                <span class="calendar-event-kind">${item.kind === 'task' ? 'Task' : item.kind === 'workout' ? 'Move' : item.kind === 'income' ? 'In' : item.kind === 'bill' ? 'Bill' : '£'}</span>
+                                                <span class="calendar-event-title">${esc(item.title)}</span>
+                                                ${Number.isFinite(Number(item.amount)) ? `<span class="calendar-event-amount">${FinanceEngine.displayAmount(item.amount)}</span>` : ''}
+                                            </button>
+                                        `).join('')}
+                                        ${dayEvents.length > 4 ? `<span class="calendar-more">+${dayEvents.length - 4} more</span>` : ''}
+                                    </div>
+                                </section>
                             `;
                         }).join('')}
                     </div>
@@ -3387,6 +3779,84 @@
                         <div class="stat-card"><span class="text-muted">Base Monthly Income</span><h3 style="color:var(--md-sys-color-success); margin-top:6px; font-weight:600;">${FinanceEngine.displayAmount(State.finances.monthlyIncome)}</h3></div>
                         <div class="stat-card"><span class="text-muted">Logged Transactions</span><h3 style="margin-top:6px; font-weight:600;">${txs.length} entries</h3></div>
                     </div>
+                    <section class="card" style="margin-bottom:20px;" aria-labelledby="finance-tools-title">
+                        <div class="card-header" style="align-items:flex-start;">
+                            <div>
+                                <h3 id="finance-tools-title" style="font-size:1rem; font-weight:600;">Money Lab · Plan before you commit</h3>
+                                <p class="text-muted" style="font-size:0.78rem; margin-top:4px;">Interactive loan, fixed-deposit, savings-growth, and expense outlook tools. Estimates only; rates and tax are not verified.</p>
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap:14px;">
+                            <section class="stat-card" aria-label="Loan payment calculator">
+                                <h4 style="font-size:0.92rem; font-weight:600;">🏠 Loan payment</h4>
+                                <label class="text-muted" style="display:block; margin-top:10px;">Loan amount
+                                    <input id="finance-loan-principal" type="number" min="0" step="1000" value="500000" data-finance-tool-input style="margin-top:4px;">
+                                </label>
+                                <div class="flex gap-2" style="margin-top:8px;">
+                                    <label class="text-muted" style="flex:1;">Annual rate (%)
+                                        <input id="finance-loan-rate" type="number" min="0" step="0.1" value="8.5" data-finance-tool-input style="margin-top:4px;">
+                                    </label>
+                                    <label class="text-muted" style="flex:1;">Term (months)
+                                        <input id="finance-loan-months" type="number" min="1" step="1" value="60" data-finance-tool-input style="margin-top:4px;">
+                                    </label>
+                                </div>
+                                <div class="flex-col gap-1" style="margin-top:12px; font-size:0.8rem;">
+                                    <div class="flex justify-between"><span>Monthly payment</span><strong id="finance-loan-emi" aria-live="polite"></strong></div>
+                                    <div class="flex justify-between text-muted"><span>Total interest</span><strong id="finance-loan-interest"></strong></div>
+                                    <div class="flex justify-between text-muted"><span>Total repayment</span><strong id="finance-loan-total"></strong></div>
+                                </div>
+                            </section>
+                            <section class="stat-card" aria-label="Fixed deposit growth calculator">
+                                <h4 style="font-size:0.92rem; font-weight:600;">🌅 Fixed deposit</h4>
+                                <label class="text-muted" style="display:block; margin-top:10px;">Starting deposit
+                                    <input id="finance-fd-principal" type="number" min="0" step="1000" value="100000" data-finance-tool-input style="margin-top:4px;">
+                                </label>
+                                <div class="flex gap-2" style="margin-top:8px;">
+                                    <label class="text-muted" style="flex:1;">Annual rate (%)
+                                        <input id="finance-fd-rate" type="number" min="0" step="0.1" value="7" data-finance-tool-input style="margin-top:4px;">
+                                    </label>
+                                    <label class="text-muted" style="flex:1;">Years
+                                        <input id="finance-fd-years" type="number" min="0" step="0.5" value="5" data-finance-tool-input style="margin-top:4px;">
+                                    </label>
+                                </div>
+                                <p class="text-muted" style="margin-top:8px;">Quarterly compounding assumption</p>
+                                <div class="flex-col gap-1" style="margin-top:8px; font-size:0.8rem;">
+                                    <div class="flex justify-between"><span>Maturity value</span><strong id="finance-fd-maturity" aria-live="polite"></strong></div>
+                                    <div class="flex justify-between text-muted"><span>Estimated interest</span><strong id="finance-fd-interest"></strong></div>
+                                </div>
+                            </section>
+                            <section class="stat-card" aria-label="Monthly savings growth calculator">
+                                <h4 style="font-size:0.92rem; font-weight:600;">🌱 Monthly investing</h4>
+                                <label class="text-muted" style="display:block; margin-top:10px;">Monthly contribution
+                                    <input id="finance-sip-monthly" type="number" min="0" step="500" value="10000" data-finance-tool-input style="margin-top:4px;">
+                                </label>
+                                <div class="flex gap-2" style="margin-top:8px;">
+                                    <label class="text-muted" style="flex:1;">Annual return (%)
+                                        <input id="finance-sip-rate" type="number" min="0" step="0.1" value="10" data-finance-tool-input style="margin-top:4px;">
+                                    </label>
+                                    <label class="text-muted" style="flex:1;">Years
+                                        <input id="finance-sip-years" type="number" min="0" step="1" value="10" data-finance-tool-input style="margin-top:4px;">
+                                    </label>
+                                </div>
+                                <p class="text-muted" style="margin-top:8px;">Assumes month-end deposits and monthly compounding; returns are not guaranteed.</p>
+                                <div class="flex-col gap-1" style="margin-top:8px; font-size:0.8rem;">
+                                    <div class="flex justify-between"><span>Projected value</span><strong id="finance-sip-value" aria-live="polite"></strong></div>
+                                    <div class="flex justify-between text-muted"><span>Total contributed</span><strong id="finance-sip-contributed"></strong></div>
+                                </div>
+                            </section>
+                            <section class="stat-card" aria-label="Expense projection">
+                                <h4 style="font-size:0.92rem; font-weight:600;">🔮 Expense outlook</h4>
+                                <p class="text-muted" style="margin-top:8px;">Extrapolates this month's logged outflows against saved monthly income; assumes that pace and income continue, with no inflation or irregular costs.</p>
+                                <div class="flex-col gap-1" style="margin-top:12px; font-size:0.8rem;">
+                                    <div class="flex justify-between"><span>Logged this month</span><strong id="finance-projection-spent"></strong></div>
+                                    <div class="flex justify-between"><span>Projected month spend</span><strong id="finance-projection-month-end"></strong></div>
+                                    <div class="flex justify-between"><span>Projected monthly surplus</span><strong id="finance-projection-net"></strong></div>
+                                    <div class="flex justify-between text-muted"><span>Cumulative surplus · 3 / 6 / 12 mo</span><strong><span id="finance-projection-3m"></span> · <span id="finance-projection-6m"></span> · <span id="finance-projection-12m"></span></strong></div>
+                                </div>
+                                <p id="finance-projection-note" class="text-muted" style="margin-top:8px; font-size:0.7rem;" aria-live="polite"></p>
+                            </section>
+                        </div>
+                    </section>
                     <div class="card" style="margin-bottom:20px;">
                         <div class="card-header" style="align-items:flex-start;">
                             <div>
@@ -3721,8 +4191,8 @@
             loadDemoData: async () => {
                 masterPassphrase = "demo_ephemeral_key";
                 State.tasks = [
-                    { id: '1', title: 'Audit VPC ingress traffic', desc: 'Verify cloud endpoints', status: 'inbox', priority: 'high', timeSpent: 30, subtasks: [] },
-                    { id: '2', title: 'Refactor OAuth rotation', desc: 'Deploy PBKDF2 Web Crypto', status: 'todo', priority: 'med', timeSpent: 90, subtasks: [] }
+                    { id: '1', title: 'Audit VPC ingress traffic', desc: 'Verify cloud endpoints', status: 'inbox', priority: 'high', dueDate: '', important: true, urgent: false, timeSpent: 30, subtasks: [] },
+                    { id: '2', title: 'Refactor OAuth rotation', desc: 'Deploy PBKDF2 Web Crypto', status: 'todo', priority: 'med', dueDate: '', important: false, urgent: false, timeSpent: 90, subtasks: [] }
                 ];
                 if (!await Data.save()) return;
                 document.getElementById('auth-screen').style.display = 'none';
@@ -3790,6 +4260,16 @@
                     switch (actionElement.dataset.action) {
                         case 'finance-toggle-amounts':
                             FinanceEngine.toggleAmounts();
+                            return;
+                        case 'calendar-prev':
+                            CalendarView.shiftMonth(-1);
+                            return;
+                        case 'calendar-next':
+                            CalendarView.shiftMonth(1);
+                            return;
+                        case 'calendar-today':
+                            CalendarView.displayedMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                            App.router('calendar');
                             return;
                         case 'finance-add-item': {
                             const budgetIndex = getIndex(actionElement.dataset.budgetIndex, State.finances.budgets);
@@ -3873,6 +4353,11 @@
                     }
                 }
 
+                const calendarTask = target.closest('[data-calendar-task-id]');
+                if (calendarTask) {
+                    TaskDrawer.open(calendarTask.dataset.calendarTaskId);
+                    return;
+                }
                 const taskCard = target.closest('[data-task-index]');
                 if (!taskCard) return;
                 const taskIndex = getIndex(taskCard.dataset.taskIndex, State.tasks);
@@ -3941,6 +4426,10 @@
                     }
                 });
                 document.addEventListener('change', App.handleDataChange);
+                document.addEventListener('input', event => {
+                    const target = event.target instanceof Element ? event.target : null;
+                    if (target?.matches('[data-finance-tool-input]')) FinanceEngine.updateTools();
+                });
                 document.addEventListener('dragstart', event => {
                     const target = event.target instanceof Element ? event.target : null;
                     const card = target?.closest('.task-card[data-task-index]');
@@ -3948,23 +4437,40 @@
                         event.preventDefault();
                         return;
                     }
-                    event.dataTransfer?.setData('text/plain', card.dataset.taskIndex);
+                    const taskId = card.dataset.taskId;
+                    if (!taskId || !State.tasks.some(task => task.id === taskId)) {
+                        event.preventDefault();
+                        return;
+                    }
+                    event.dataTransfer?.setData('text/plain', taskId);
                     if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+                    card.classList.add('is-dragging');
                 });
                 document.addEventListener('dragover', event => {
                     const target = event.target instanceof Element ? event.target : null;
-                    if (target?.closest('.kanban-tasks[data-status]')) event.preventDefault();
+                    const board = target?.closest('.kanban-tasks[data-status]');
+                    if (board) {
+                        event.preventDefault();
+                        if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+                        board.classList.add('is-drop-target');
+                    }
                 });
                 document.addEventListener('drop', event => {
                     const target = event.target instanceof Element ? event.target : null;
                     const board = target?.closest('.kanban-tasks[data-status]');
                     if (!board) return;
                     event.preventDefault();
-                    const taskIndex = Number(event.dataTransfer?.getData('text/plain'));
+                    document.querySelectorAll('.kanban-tasks.is-drop-target').forEach(element => element.classList.remove('is-drop-target'));
+                    const taskId = event.dataTransfer?.getData('text/plain');
                     const statuses = ['inbox', 'todo', 'in_progress', 'done'];
-                    const task = Number.isInteger(taskIndex) ? State.tasks[taskIndex] : null;
+                    const task = State.tasks.find(item => item.id === taskId);
                     const status = board.dataset.status;
                     if (task && statuses.includes(status)) Data.updateTaskStatus(task.id, status);
+                });
+                document.addEventListener('dragend', event => {
+                    const target = event.target instanceof Element ? event.target : null;
+                    target?.closest('.task-card')?.classList.remove('is-dragging');
+                    document.querySelectorAll('.kanban-tasks.is-drop-target').forEach(element => element.classList.remove('is-drop-target'));
                 });
                 document.documentElement.setAttribute('data-theme', State.theme || 'dark');
                 document.getElementById('currency-select').value = State.currency || 'INR';
@@ -4051,6 +4557,7 @@
                 const content = document.getElementById('content');
                 if (Views[view]) {
                     content.innerHTML = Views[view]();
+                    if (view === 'finance') FinanceEngine.updateTools();
                     App.postRender(view);
                 }
             },
