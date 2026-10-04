@@ -446,6 +446,68 @@
             border-radius: var(--radius-md);
             box-shadow: var(--elevation-1);
         }
+        .finance-expander-summary,
+        .finance-category-summary,
+        .finance-history-expander > summary,
+        .finance-history-month > summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 44px;
+            cursor: pointer;
+            list-style: none;
+        }
+        .finance-expander-summary::-webkit-details-marker,
+        .finance-category-summary::-webkit-details-marker,
+        .finance-history-expander > summary::-webkit-details-marker,
+        .finance-history-month > summary::-webkit-details-marker { display: none; }
+        .finance-expander-summary::after,
+        .finance-category-summary::after,
+        .finance-history-expander > summary::after,
+        .finance-history-month > summary::after {
+            content: '';
+            flex: 0 0 auto;
+            color: var(--md-sys-color-text-muted);
+            width: 8px;
+            height: 8px;
+            margin-right: 4px;
+            border: solid currentColor;
+            border-width: 0 1.5px 1.5px 0;
+            transform: rotate(45deg);
+            transition: transform 150ms ease;
+        }
+        details[open] > .finance-expander-summary::after,
+        details[open] > .finance-category-summary::after,
+        .finance-history-expander[open] > summary::after,
+        .finance-history-month[open] > summary::after { transform: rotate(225deg); }
+        .finance-expander-summary > span,
+        .finance-category-summary > span { display: grid; gap: 3px; min-width: 0; }
+        .finance-expander-summary small,
+        .finance-category-summary small { font-size: 0.72rem; font-weight: 400; }
+        .finance-expander-content { padding-top: 12px; }
+        .finance-category-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 10px; }
+        .finance-category-expander > summary { font-size: 0.84rem; }
+        .finance-category-content { padding-top: 12px; }
+        .finance-budget-item,
+        .finance-decision-row {
+            min-width: 0;
+            padding: 9px 10px;
+            gap: 10px;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--radius-sm);
+            background: var(--md-sys-color-surface-container);
+        }
+        .finance-decision-row { display: flex; align-items: center; justify-content: space-between; }
+        .finance-decision-copy { display: grid; min-width: 0; gap: 3px; overflow-wrap: anywhere; font-size: 0.8rem; }
+        .finance-decision-copy > span { font-size: 0.72rem; }
+        .finance-decision-actions { flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+        .finance-decision-status { color: var(--md-sys-color-primary); font-weight: 600; }
+        .finance-decision-summary { margin-bottom: 0; }
+        .finance-history-expander { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--md-sys-color-outline-variant); }
+        .finance-history-expander > summary,
+        .finance-history-month > summary { justify-content: flex-start; font-size: 0.78rem; font-weight: 600; }
+        .finance-history-month { padding: 9px 10px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--radius-sm); }
         .chart-wrapper {
             position: relative;
             height: 250px;
@@ -801,6 +863,15 @@
             .task-drawer-fields { gap: 10px; }
             .task-drawer-section { padding: 11px; }
             .task-attachments { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .finance-category-list { grid-template-columns: minmax(0, 1fr); }
+            .finance-category-list > .stat-card { padding: 11px 12px; }
+            .finance-decision-row { align-items: flex-start; flex-direction: column; }
+            .finance-decision-actions { width: 100%; justify-content: flex-start; }
+            .finance-decision-actions button { flex: 1; }
+            .finance-decision-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+            .finance-decision-summary .stat-card { padding: 10px; }
+            .finance-decision-summary .stat-card:last-child { grid-column: 1 / -1; }
+            .finance-category-summary > strong { text-align: right; }
             #topbar {
                 height: auto; min-height: var(--topbar-height); display: grid;
                 grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 44px auto;
@@ -1362,6 +1433,13 @@
                         <option value="high">High Priority</option>
                     </select>
                 </div>
+                <label class="text-muted" style="font-size:0.75rem;">Energy
+                    <select id="task-energy" style="margin-top:4px;">
+                        <option value="deep">⚡ Deep focus</option>
+                        <option value="shallow">🍃 Shallow work</option>
+                        <option value="reactive">🔥 Reactive</option>
+                    </select>
+                </label>
                 <label class="text-muted" style="font-size:0.75rem;">Due date
                     <input type="date" id="task-due-date" style="margin-top:4px;">
                 </label>
@@ -1413,6 +1491,38 @@
                 </label>
                 <div class="flex gap-2 btn-group-responsive">
                     <button class="primary" style="flex:1;" onclick="FinanceEngine.saveExpense()">Save Item</button>
+                    <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="finance-decision-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card">
+            <h3 style="margin-bottom: 8px; font-weight: 600;">Add provisional decision</h3>
+            <p class="text-muted" style="font-size:0.78rem; margin-bottom:16px;">Record this month's projected amount. Mark it done later to lock in the actual cost.</p>
+            <div class="flex-col gap-3">
+                <input type="text" id="finance-decision-title" placeholder="Decision or planned expense">
+                <select id="finance-decision-category" aria-label="Category"></select>
+                <input type="number" id="finance-decision-projected" min="0.01" step="0.01" placeholder="Projected amount">
+                <div class="flex gap-2 btn-group-responsive">
+                    <button class="primary" style="flex:1;" onclick="FinanceEngine.saveBudgetDecision()">Save projection</button>
+                    <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="finance-decision-complete-modal" onclick="if(event.target===this) UI.closeModals()">
+        <div class="modal-card">
+            <h3 style="margin-bottom: 8px; font-weight: 600;">Lock actual amount</h3>
+            <p id="finance-decision-projected-label" class="text-muted" style="font-size:0.78rem; margin-bottom:16px;"></p>
+            <div class="flex-col gap-3">
+                <label class="text-muted" style="font-size:0.78rem;">Actual amount
+                    <input type="number" id="finance-decision-actual" min="0" step="0.01" placeholder="Actual amount" style="margin-top:4px;">
+                </label>
+                <div class="flex gap-2 btn-group-responsive">
+                    <button class="primary" style="flex:1;" onclick="FinanceEngine.completeBudgetDecision()">Lock actual</button>
                     <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
                 </div>
             </div>
@@ -1973,6 +2083,7 @@
                     { category: 'Discretionary', limit: 10000 }
                 ],
                 budgetItems: [],
+                budgetDecisions: [],
                 amountsHidden: false,
                 transactions: []
             },
@@ -2012,6 +2123,11 @@
                     throw new Error(`The decrypted vault has invalid financial ${field}.`);
                 }
             }
+            if (finances.budgetDecisions !== undefined &&
+                (!Array.isArray(finances.budgetDecisions) ||
+                    finances.budgetDecisions.some(item => !item || typeof item !== 'object' || Array.isArray(item)))) {
+                throw new Error('The decrypted vault has invalid financial budget decisions.');
+            }
 
             const normalized = {
                 ...JSON.parse(JSON.stringify(DEFAULT_INITIAL_STATE)),
@@ -2032,6 +2148,24 @@
                 }
             }
             if (typeof normalized.finances.amountsHidden !== 'boolean') normalized.finances.amountsHidden = false;
+            normalized.finances.budgetDecisions.forEach(decision => {
+                if (typeof decision.id !== 'string' || !decision.id ||
+                    typeof decision.title !== 'string' || !decision.title ||
+                    typeof decision.category !== 'string' || !decision.category ||
+                    typeof decision.monthKey !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(decision.monthKey) ||
+                    !Number.isFinite(decision.projectedAmount) || decision.projectedAmount <= 0 ||
+                    !['provisional', 'done'].includes(decision.status) ||
+                    (decision.status === 'done' &&
+                        (!Number.isFinite(decision.actualAmount) || decision.actualAmount < 0 ||
+                            typeof decision.transactionId !== 'string'))) {
+                    throw new Error('The decrypted vault has an invalid budget decision.');
+                }
+                if (decision.status === 'provisional') {
+                    decision.actualAmount = null;
+                    decision.transactionId = null;
+                    decision.completedAt = null;
+                }
+            });
             if (!Number.isFinite(Number(normalized.finances.monthlyIncome)) || Number(normalized.finances.monthlyIncome) < 0) {
                 normalized.finances.monthlyIncome = DEFAULT_INITIAL_STATE.finances.monthlyIncome;
             }
@@ -3084,6 +3218,7 @@
         const FinanceEngine = {
             expenseEditingId: null,
             categoryEditingIndex: null,
+            decisionCompletingId: null,
             recurrenceLabels: {
                 weekly: 'Weekly',
                 monthly: 'Monthly',
@@ -3116,6 +3251,17 @@
             },
             itemIsPaid: (item, now = new Date()) =>
                 item.paidPeriod === FinanceEngine.cycleKey(item.recurrence, now),
+            monthKey: (date = new Date()) =>
+                `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`,
+            budgetDecisionTotals: (monthKey, decisions = State.finances.budgetDecisions || []) =>
+                decisions.filter(decision => decision.monthKey === monthKey).reduce((totals, decision) => {
+                    totals.projected += decision.projectedAmount;
+                    if (decision.status === 'done') {
+                        totals.actual += decision.actualAmount;
+                        totals.saved += decision.projectedAmount - decision.actualAmount;
+                    }
+                    return totals;
+                }, { projected: 0, actual: 0, saved: 0 }),
             categorySpent: (category, now = new Date()) => {
                 const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
                 return (State.finances.transactions || []).reduce((total, transaction) => {
@@ -3204,6 +3350,9 @@
                 const previousTransactionCategories = existingBudget
                     ? State.finances.transactions.map(transaction => transaction.category)
                     : null;
+                const previousDecisionCategories = existingBudget
+                    ? State.finances.budgetDecisions.map(decision => decision.category)
+                    : null;
                 if (existingBudget) {
                     const previousCategory = existingBudget.category;
                     Object.assign(existingBudget, { category, limit });
@@ -3212,6 +3361,9 @@
                     });
                     State.finances.transactions.forEach(transaction => {
                         if (transaction.category === previousCategory) transaction.category = category;
+                    });
+                    State.finances.budgetDecisions.forEach(decision => {
+                        if (decision.category === previousCategory) decision.category = category;
                     });
                 } else {
                     State.finances.budgets.push({ category, limit });
@@ -3224,6 +3376,9 @@
                         });
                         State.finances.transactions.forEach((transaction, index) => {
                             transaction.category = previousTransactionCategories[index];
+                        });
+                        State.finances.budgetDecisions.forEach((decision, index) => {
+                            decision.category = previousDecisionCategories[index];
                         });
                     } else {
                         State.finances.budgets.pop();
@@ -3239,25 +3394,30 @@
                 if (!Number.isInteger(budgetIndex) || budgetIndex < 0 || budgetIndex >= State.finances.budgets.length) return;
                 const budget = State.finances.budgets[budgetIndex];
                 const linkedItems = State.finances.budgetItems.filter(item => item.category === budget.category);
+                const linkedDecisions = State.finances.budgetDecisions.filter(decision => decision.category === budget.category);
                 const fallbackName = budget.category.toLowerCase() === 'uncategorized' ? 'Other' : 'Uncategorized';
                 const existingFallback = State.finances.budgets.find((entry, index) =>
                     index !== budgetIndex && entry.category.toLowerCase() === fallbackName.toLowerCase());
                 const fallbackCategory = existingFallback?.category || fallbackName;
-                const needsFallback = linkedItems.length > 0 &&
+                const needsFallback = (linkedItems.length > 0 || linkedDecisions.length > 0) &&
                     !existingFallback;
-                const message = linkedItems.length
-                    ? `Delete "${budget.category}"? Its ${linkedItems.length} budget item${linkedItems.length === 1 ? '' : 's'} will move to ${fallbackCategory}${needsFallback ? ', which will be added as a budget category' : ''}. Historical transactions will remain unchanged.`
+                const linkedCount = linkedItems.length + linkedDecisions.length;
+                const message = linkedCount
+                    ? `Delete "${budget.category}"? Its ${linkedCount} budget item${linkedCount === 1 ? '' : 's'} and projections will move to ${fallbackCategory}${needsFallback ? ', which will be added as a budget category' : ''}. Historical transactions will remain unchanged.`
                     : `Delete "${budget.category}"? Historical transactions will remain unchanged.`;
                 UI.confirm('Delete Budget Category', message, async () => {
                     const originalItems = linkedItems.map(item => ({ item, category: item.category }));
+                    const originalDecisions = linkedDecisions.map(decision => ({ decision, category: decision.category }));
                     const fallbackBudget = needsFallback ? { category: fallbackCategory, limit: 0 } : null;
                     if (fallbackBudget) State.finances.budgets.push(fallbackBudget);
                     linkedItems.forEach(item => { item.category = fallbackCategory; });
+                    linkedDecisions.forEach(decision => { decision.category = fallbackCategory; });
                     State.finances.budgets.splice(budgetIndex, 1);
                     if (!await Data.save()) {
                         State.finances.budgets.splice(budgetIndex, 0, budget);
                         if (fallbackBudget) State.finances.budgets.splice(State.finances.budgets.indexOf(fallbackBudget), 1);
                         originalItems.forEach(({ item, category }) => { item.category = category; });
+                        originalDecisions.forEach(({ decision, category }) => { decision.category = category; });
                         return;
                     }
                     Toast.show('Budget category deleted.', 'success');
@@ -3419,6 +3579,147 @@
                     return;
                 }
                 Toast.show('Budget item deleted. Historical transactions remain in the ledger.', 'success');
+                App.refreshCurrentView();
+            },
+            openBudgetDecision: (category = '') => {
+                if (!State.finances.budgets.length) {
+                    Toast.show('Add a budget category before recording a projection.', 'error');
+                    return;
+                }
+                FinanceEngine.populateCategorySelect(document.getElementById('finance-decision-category'), category);
+                document.getElementById('finance-decision-title').value = '';
+                document.getElementById('finance-decision-projected').value = '';
+                UI.openModal('finance-decision-modal');
+            },
+            saveBudgetDecision: async () => {
+                const title = document.getElementById('finance-decision-title').value.trim();
+                const category = document.getElementById('finance-decision-category').value;
+                const projectedAmount = Number(document.getElementById('finance-decision-projected').value);
+                if (!title || !category || !State.finances.budgets.some(budget => budget.category === category) ||
+                    !Number.isFinite(projectedAmount) || projectedAmount <= 0) {
+                    Toast.show('Enter a name, category, and projected amount greater than zero.', 'error');
+                    return;
+                }
+                const decision = {
+                    id: `budget_decision_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+                    title,
+                    category,
+                    monthKey: FinanceEngine.monthKey(),
+                    projectedAmount,
+                    status: 'provisional',
+                    actualAmount: null,
+                    transactionId: null,
+                    completedAt: null
+                };
+                State.finances.budgetDecisions.unshift(decision);
+                if (!await Data.save()) {
+                    State.finances.budgetDecisions = State.finances.budgetDecisions.filter(item => item.id !== decision.id);
+                    return;
+                }
+                UI.closeModals();
+                Toast.show('Monthly projection added.', 'success');
+                App.refreshCurrentView();
+            },
+            openBudgetDecisionCompletion: (decisionId) => {
+                const decision = State.finances.budgetDecisions.find(item => item.id === decisionId);
+                if (!decision || decision.status !== 'provisional') {
+                    Toast.show('This provisional decision is no longer available.', 'error');
+                    return;
+                }
+                FinanceEngine.decisionCompletingId = decision.id;
+                document.getElementById('finance-decision-projected-label').textContent =
+                    `${decision.title} · projected ${FinanceEngine.displayAmount(decision.projectedAmount)}`;
+                document.getElementById('finance-decision-actual').value = '';
+                UI.openModal('finance-decision-complete-modal');
+                document.getElementById('finance-decision-actual').focus();
+            },
+            completeBudgetDecision: async () => {
+                const decision = State.finances.budgetDecisions.find(item => item.id === FinanceEngine.decisionCompletingId);
+                const actualInput = document.getElementById('finance-decision-actual').value.trim();
+                const actualAmount = Number(actualInput);
+                if (!decision || decision.status !== 'provisional') {
+                    Toast.show('This provisional decision is no longer available.', 'error');
+                    UI.closeModals();
+                    return;
+                }
+                if (!actualInput || !Number.isFinite(actualAmount) || actualAmount < 0) {
+                    Toast.show('Enter the actual amount, including 0 if nothing was spent.', 'error');
+                    return;
+                }
+                const now = new Date();
+                const transaction = {
+                    id: `tx_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+                    desc: decision.title,
+                    amount: actualAmount,
+                    category: decision.category,
+                    date: now.toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                    isoDate: now.toISOString(),
+                    budgetDecisionId: decision.id
+                };
+                const previous = {
+                    status: decision.status,
+                    actualAmount: decision.actualAmount,
+                    transactionId: decision.transactionId,
+                    completedAt: decision.completedAt
+                };
+                Object.assign(decision, {
+                    status: 'done',
+                    actualAmount,
+                    transactionId: transaction.id,
+                    completedAt: now.toISOString()
+                });
+                State.finances.transactions.unshift(transaction);
+                if (!await Data.save()) {
+                    Object.assign(decision, previous);
+                    State.finances.transactions = State.finances.transactions.filter(item => item.id !== transaction.id);
+                    return;
+                }
+                FinanceEngine.decisionCompletingId = null;
+                UI.closeModals();
+                const difference = decision.projectedAmount - actualAmount;
+                Toast.show(difference >= 0
+                    ? 'Decision completed under projection.'
+                    : 'Decision completed over projection.',
+                'success');
+                App.refreshCurrentView();
+            },
+            reopenBudgetDecision: async (decisionId) => {
+                const decision = State.finances.budgetDecisions.find(item => item.id === decisionId);
+                if (!decision || decision.status !== 'done') {
+                    Toast.show('This completed decision is no longer available.', 'error');
+                    return;
+                }
+                const previous = {
+                    status: decision.status,
+                    actualAmount: decision.actualAmount,
+                    transactionId: decision.transactionId,
+                    completedAt: decision.completedAt
+                };
+                const previousTransactions = State.finances.transactions.filter(item =>
+                    item.id === decision.transactionId);
+                decision.status = 'provisional';
+                decision.actualAmount = null;
+                decision.transactionId = null;
+                decision.completedAt = null;
+                State.finances.transactions = State.finances.transactions.filter(item =>
+                    item.id !== previous.transactionId);
+                if (!await Data.save()) {
+                    Object.assign(decision, previous);
+                    State.finances.transactions.unshift(...previousTransactions);
+                    return;
+                }
+                Toast.show('Decision reopened; its transaction was removed.', 'success');
+                App.refreshCurrentView();
+            },
+            deleteBudgetDecision: async (decisionId) => {
+                const index = State.finances.budgetDecisions.findIndex(item => item.id === decisionId);
+                if (index < 0) return;
+                const [decision] = State.finances.budgetDecisions.splice(index, 1);
+                if (!await Data.save()) {
+                    State.finances.budgetDecisions.splice(index, 0, decision);
+                    return;
+                }
+                Toast.show('Provisional decision removed.', 'success');
                 App.refreshCurrentView();
             },
             setCurrency: (c) => {
@@ -4420,7 +4721,14 @@
                 const txs = State.finances.transactions || [];
                 const budgets = State.finances.budgets || [];
                 const budgetItems = State.finances.budgetItems || [];
+                const budgetDecisions = State.finances.budgetDecisions || [];
                 const amountsHidden = State.finances.amountsHidden === true;
+                const currentMonthKey = FinanceEngine.monthKey();
+                const currentMonthDecisions = budgetDecisions.filter(decision => decision.monthKey === currentMonthKey);
+                const previousMonthDecisions = budgetDecisions.filter(decision => decision.monthKey !== currentMonthKey);
+                const decisionTotals = FinanceEngine.budgetDecisionTotals(currentMonthKey, budgetDecisions);
+                const decisionMonths = [...new Set(previousMonthDecisions.map(decision => decision.monthKey))].sort().reverse();
+                const compactBudgetView = window.matchMedia('(max-width: 768px)').matches;
                 const monthlyIncome = Number(State.finances.monthlyIncome) || 0;
                 const savingsRate = Number(State.finances.targetSavingsRate) || 0;
                 const categoryPlan = budgets.reduce((total, budget) => {
@@ -4437,6 +4745,26 @@
                 const targetSpendProgress = targetSpend > 0
                     ? Math.min(100, Math.max(0, monthSpent / targetSpend * 100))
                     : (monthSpent > 0 ? 100 : 0);
+                const renderDecision = (decision, decisionIndex, actions = true) => {
+                    const isDone = decision.status === 'done';
+                    const difference = isDone ? decision.projectedAmount - decision.actualAmount : 0;
+                    return `
+                        <div class="finance-decision-row">
+                            <div class="finance-decision-copy">
+                                <strong>${esc(decision.title)}</strong>
+                                <span class="text-muted">${esc(decision.category)} · Projected ${FinanceEngine.displayAmount(decision.projectedAmount)}</span>
+                                ${isDone ? `<span class="text-muted">Locked actual ${FinanceEngine.displayAmount(decision.actualAmount)} · ${difference >= 0 ? `Saved ${FinanceEngine.displayAmount(difference)}` : `Over by ${FinanceEngine.displayAmount(Math.abs(difference))}`}</span>` : '<span class="finance-decision-status">Provisional</span>'}
+                            </div>
+                            ${actions ? `
+                                <div class="flex gap-1 finance-decision-actions">
+                                    ${isDone
+                                        ? `<button class="sm" data-action="finance-decision-reopen" data-decision-index="${decisionIndex}">Reopen</button>`
+                                        : `<button class="sm primary" data-action="finance-decision-done" data-decision-index="${decisionIndex}">Mark done</button><button class="sm danger" data-action="finance-decision-delete" data-decision-index="${decisionIndex}">Remove</button>`}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                };
                 return `
                     <div class="flex justify-between items-center" style="margin-bottom: 24px; gap:12px; flex-wrap:wrap;">
                         <div>
@@ -4447,26 +4775,79 @@
                             <button class="sm" data-action="finance-toggle-amounts" aria-pressed="${amountsHidden}">${amountsHidden ? 'Show amounts' : 'Hide amounts'}</button>
                             <button class="sm tonal" onclick="FinanceEngine.openCategory()"><span class="material-symbols-outlined">add</span> Add Category</button>
                             <button class="sm tonal" onclick="FinanceEngine.openExpense()"><span class="material-symbols-outlined">add</span> Add Budget Item</button>
+                            <button class="sm tonal" onclick="FinanceEngine.openBudgetDecision()"><span class="material-symbols-outlined">add</span> Add projection</button>
                             <button class="primary sm" onclick="FinanceEngine.openTransaction()"><span class="material-symbols-outlined">add</span> Record Outflow</button>
                         </div>
                     </div>
                     <div class="card" style="margin-bottom:20px;">
-                        <div class="card-header" style="align-items:flex-start;">
-                            <div>
-                                <h3 style="font-size:1rem; font-weight:600;">Monthly baseline</h3>
-                                <p class="text-muted" style="font-size:0.78rem; margin-top:4px;">Set take-home monthly income and the share you want to save. These assumptions drive the plan below.</p>
+                        <details class="finance-expander" ${compactBudgetView ? '' : 'open'}>
+                            <summary class="finance-expander-summary">
+                                <span>
+                                    <strong>Monthly baseline</strong>
+                                    <small class="text-muted">${txs.length} logged transaction${txs.length === 1 ? '' : 's'} · income and savings assumptions</small>
+                                </span>
+                            </summary>
+                            <div class="finance-expander-content">
+                                <div class="card-header" style="align-items:flex-start;">
+                                    <div>
+                                        <p class="text-muted" style="font-size:0.78rem;">Set take-home monthly income and the share you want to save. These assumptions drive the plan below.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-end gap-2" style="flex-wrap:wrap;">
+                                    <label class="text-muted" style="flex:1; min-width:180px; font-size:0.78rem;">Base monthly income
+                                        <input id="finance-monthly-income" type="number" min="0" step="0.01" value="${amountsHidden ? '' : monthlyIncome}" placeholder="${amountsHidden ? 'Hidden' : ''}" ${amountsHidden ? 'disabled' : ''} style="margin-top:5px;">
+                                    </label>
+                                    <label class="text-muted" style="width:150px; font-size:0.78rem;">Savings target (%)
+                                        <input id="finance-savings-rate" type="number" min="0" max="100" step="1" value="${savingsRate}" ${amountsHidden ? 'disabled' : ''} style="margin-top:5px;">
+                                    </label>
+                                    <button class="sm primary" data-action="finance-save-assumptions" ${amountsHidden ? 'disabled' : ''}>Save baseline</button>
+                                </div>
                             </div>
-                            <span class="text-muted" style="font-size:0.78rem;">${txs.length} logged transaction${txs.length === 1 ? '' : 's'}</span>
-                        </div>
-                        <div class="flex items-end gap-2" style="flex-wrap:wrap;">
-                            <label class="text-muted" style="flex:1; min-width:180px; font-size:0.78rem;">Base monthly income
-                                <input id="finance-monthly-income" type="number" min="0" step="0.01" value="${amountsHidden ? '' : monthlyIncome}" placeholder="${amountsHidden ? 'Hidden' : ''}" ${amountsHidden ? 'disabled' : ''} style="margin-top:5px;">
-                            </label>
-                            <label class="text-muted" style="width:150px; font-size:0.78rem;">Savings target (%)
-                                <input id="finance-savings-rate" type="number" min="0" max="100" step="1" value="${savingsRate}" ${amountsHidden ? 'disabled' : ''} style="margin-top:5px;">
-                            </label>
-                            <button class="sm primary" data-action="finance-save-assumptions" ${amountsHidden ? 'disabled' : ''}>Save baseline</button>
-                        </div>
+                        </details>
+                    </div>
+                    <div class="card finance-decision-card" style="margin-bottom:20px;">
+                        <details class="finance-expander" ${compactBudgetView ? '' : 'open'}>
+                            <summary class="finance-expander-summary">
+                                <span>
+                                    <strong>Monthly projections · ${new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(new Date(`${currentMonthKey}-01T12:00:00`))}</strong>
+                                    <small class="text-muted">${currentMonthDecisions.length} decision${currentMonthDecisions.length === 1 ? '' : 's'} · projected ${FinanceEngine.displayAmount(decisionTotals.projected)} · locked actual ${FinanceEngine.displayAmount(decisionTotals.actual)}</small>
+                                </span>
+                            </summary>
+                            <div class="finance-expander-content">
+                                <p class="text-muted" style="font-size:0.78rem; margin-bottom:12px;">Record an idea as provisional, then mark it done with the real amount to see what you saved (or went over). New months start a fresh view; prior months stay archived.</p>
+                                <div class="stat-grid finance-decision-summary">
+                                    <div class="stat-card"><span class="text-muted">Projected</span><h3 style="margin-top:6px;">${FinanceEngine.displayAmount(decisionTotals.projected)}</h3></div>
+                                    <div class="stat-card"><span class="text-muted">Locked actual</span><h3 style="margin-top:6px;">${FinanceEngine.displayAmount(decisionTotals.actual)}</h3></div>
+                                    <div class="stat-card"><span class="text-muted">${decisionTotals.saved >= 0 ? 'Net saved' : 'Net over projection'}</span><h3 style="margin-top:6px; color:${decisionTotals.saved >= 0 ? 'var(--md-sys-color-success)' : 'var(--md-sys-color-error)'};">${FinanceEngine.displayAmount(Math.abs(decisionTotals.saved))}</h3></div>
+                                </div>
+                                <div class="flex-col gap-2" style="margin-top:12px;">
+                                    ${currentMonthDecisions.map(decision => renderDecision(decision, budgetDecisions.indexOf(decision))).join('') ||
+                                        '<p class="text-muted" style="font-size:0.78rem;">No projections this month yet.</p>'}
+                                </div>
+                                ${decisionMonths.length ? `
+                                    <details class="finance-history-expander">
+                                        <summary>Previous months (${decisionMonths.length})</summary>
+                                        <div class="flex-col gap-2" style="margin-top:10px;">
+                                            ${decisionMonths.map(monthKey => {
+                                                const monthDecisions = previousMonthDecisions.filter(decision => decision.monthKey === monthKey);
+                                                const totals = FinanceEngine.budgetDecisionTotals(monthKey, budgetDecisions);
+                                                const monthLabel = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' })
+                                                    .format(new Date(`${monthKey}-01T12:00:00`));
+                                                return `
+                                                    <details class="finance-history-month">
+                                                        <summary>${monthLabel} · projected ${FinanceEngine.displayAmount(totals.projected)} · locked actual ${FinanceEngine.displayAmount(totals.actual)}</summary>
+                                                        <div class="flex-col gap-2" style="margin-top:8px;">
+                                                            ${monthDecisions.map(decision =>
+                                                                renderDecision(decision, budgetDecisions.indexOf(decision))).join('')}
+                                                        </div>
+                                                    </details>
+                                                `;
+                                            }).join('')}
+                                        </div>
+                                    </details>
+                                ` : ''}
+                            </div>
+                        </details>
                     </div>
                     <section class="card" aria-labelledby="finance-savings-plan-title" style="margin-bottom:20px;">
                         <div class="card-header" style="align-items:flex-start;">
@@ -4497,10 +4878,10 @@
                         <div class="card-header" style="align-items:flex-start;">
                             <div>
                                 <h3 style="font-size:1rem; font-weight:600;">Budget Categories</h3>
-                                <p class="text-muted" style="font-size:0.78rem; margin-top:4px;">Monthly remaining is your category budget minus this month's logged outflows. Recurring paid items reset by their selected interval.</p>
+                                <p class="text-muted" style="font-size:0.78rem; margin-top:4px;">Expand a category to edit its limit and recurring items. Monthly remaining uses this month's logged outflows.</p>
                             </div>
                         </div>
-                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px;">
+                        <div class="finance-category-list">
                             ${budgets.map((budget, budgetIndex) => {
                                 const spent = FinanceEngine.categorySpent(budget.category);
                                 const budgetLimit = Number(budget.limit);
@@ -4509,61 +4890,75 @@
                                     .filter(({ item }) => item.category === budget.category);
                                 return `
                                     <section class="stat-card" aria-label="Budget category">
-                                        <div class="flex justify-between items-center" style="gap:8px;">
-                                            <h4 style="font-size:0.94rem; font-weight:600;">${esc(budget.category)}</h4>
-                                            <button class="sm tonal" data-action="finance-add-item" data-budget-index="${budgetIndex}">Add item</button>
-                                        </div>
-                                        <div class="flex gap-1" style="margin-top:8px;">
-                                            <button class="sm" data-action="finance-edit-category" data-budget-index="${budgetIndex}">Rename</button>
-                                            <button class="sm danger" data-action="finance-delete-category" data-budget-index="${budgetIndex}">Delete</button>
-                                        </div>
-                                        <label class="text-muted" style="display:block; margin-top:12px; font-size:0.75rem;">
-                                            Monthly budget
-                                            <input id="finance-budget-${budgetIndex}" type="number" min="0" step="0.01" value="${amountsHidden ? '' : (Number.isFinite(Number(budget.limit)) ? Number(budget.limit) : 0)}" placeholder="${amountsHidden ? 'Hidden' : ''}" ${amountsHidden ? 'disabled' : ''} style="margin-top:5px;">
-                                        </label>
-                                        <button class="sm" data-action="finance-save-budget" data-budget-index="${budgetIndex}" ${amountsHidden ? 'disabled' : ''} style="margin-top:6px;">Save budget</button>
-                                        <div class="flex justify-between text-muted" style="margin-top:12px; font-size:0.78rem;">
-                                            <span>Spent this month</span><strong>${FinanceEngine.displayAmount(spent)}</strong>
-                                        </div>
-                                        <div class="flex justify-between" style="margin-top:5px; font-size:0.84rem;">
-                                            <span>Tentative remaining</span>
-                                            <strong style="color:${remaining < 0 ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-success)'};">${FinanceEngine.displayAmount(remaining)}</strong>
-                                        </div>
-                                        <div class="flex-col gap-2" style="margin-top:12px;">
-                                            ${items.map(({ item, itemIndex }) => {
-                                                const isPaid = FinanceEngine.itemIsPaid(item);
-                                                const recurrenceLabel = Object.prototype.hasOwnProperty.call(FinanceEngine.recurrenceLabels, item.recurrence)
-                                                    ? FinanceEngine.recurrenceLabels[item.recurrence]
-                                                    : 'Monthly';
-                                                return `
-                                                    <div class="flex justify-between items-center" style="gap:8px; padding:9px 10px; border:1px solid var(--md-sys-color-outline-variant); border-radius:var(--radius-sm);">
-                                                        <label class="flex items-center gap-2" style="min-width:0; flex:1; cursor:pointer;">
-                                                            <input type="checkbox" data-action="finance-item-paid" data-budget-item-index="${itemIndex}" ${isPaid ? 'checked' : ''} aria-label="Mark budget item paid">
-                                                            <span style="min-width:0; overflow-wrap:anywhere; ${isPaid ? 'text-decoration:line-through; opacity:0.65;' : ''}">${esc(item.title)}<small class="text-muted" style="display:block; text-decoration:none;">${recurrenceLabel} · ${FinanceEngine.displayAmount(item.amount)}</small></span>
-                                                        </label>
-                                                        <div class="flex gap-1" style="flex-shrink:0;">
-                                                            <button class="sm tonal" data-action="finance-edit-item" data-budget-item-index="${itemIndex}" aria-label="Edit budget item">Edit</button>
-                                                            <button class="sm danger icon-btn" data-action="finance-delete-item" data-budget-item-index="${itemIndex}" aria-label="Delete budget item"><span class="material-symbols-outlined">delete</span></button>
-                                                        </div>
-                                                    </div>
-                                                `;
-                                            }).join('') || '<span class="text-muted" style="font-size:0.78rem;">No budget items yet.</span>'}
-                                        </div>
+                                        <details class="finance-category-expander" ${compactBudgetView ? '' : 'open'}>
+                                            <summary class="finance-category-summary">
+                                                <span>
+                                                    <strong>${esc(budget.category)}</strong>
+                                                    <small class="text-muted">Spent ${FinanceEngine.displayAmount(spent)} of ${FinanceEngine.displayAmount(Number.isFinite(budgetLimit) ? budgetLimit : 0)}</small>
+                                                </span>
+                                                <strong style="color:${remaining < 0 ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-success)'};">${FinanceEngine.displayAmount(remaining)} left</strong>
+                                            </summary>
+                                            <div class="finance-category-content">
+                                                <div class="flex gap-1" style="margin-bottom:10px;">
+                                                    <button class="sm tonal" data-action="finance-add-item" data-budget-index="${budgetIndex}">Add item</button>
+                                                    <button class="sm" data-action="finance-edit-category" data-budget-index="${budgetIndex}">Rename</button>
+                                                    <button class="sm danger" data-action="finance-delete-category" data-budget-index="${budgetIndex}">Delete</button>
+                                                </div>
+                                                <label class="text-muted" style="display:block; font-size:0.75rem;">
+                                                    Monthly budget
+                                                    <input id="finance-budget-${budgetIndex}" type="number" min="0" step="0.01" value="${amountsHidden ? '' : (Number.isFinite(Number(budget.limit)) ? Number(budget.limit) : 0)}" placeholder="${amountsHidden ? 'Hidden' : ''}" ${amountsHidden ? 'disabled' : ''} style="margin-top:5px;">
+                                                </label>
+                                                <button class="sm" data-action="finance-save-budget" data-budget-index="${budgetIndex}" ${amountsHidden ? 'disabled' : ''} style="margin-top:6px;">Save budget</button>
+                                                <div class="flex justify-between" style="margin-top:12px; font-size:0.84rem;">
+                                                    <span>Tentative remaining</span>
+                                                    <strong style="color:${remaining < 0 ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-success)'};">${FinanceEngine.displayAmount(remaining)}</strong>
+                                                </div>
+                                                <div class="flex-col gap-2" style="margin-top:12px;">
+                                                    ${items.map(({ item, itemIndex }) => {
+                                                        const isPaid = FinanceEngine.itemIsPaid(item);
+                                                        const recurrenceLabel = Object.prototype.hasOwnProperty.call(FinanceEngine.recurrenceLabels, item.recurrence)
+                                                            ? FinanceEngine.recurrenceLabels[item.recurrence]
+                                                            : 'Monthly';
+                                                        return `
+                                                            <div class="flex justify-between items-center finance-budget-item">
+                                                                <label class="flex items-center gap-2" style="min-width:0; flex:1; cursor:pointer;">
+                                                                    <input type="checkbox" data-action="finance-item-paid" data-budget-item-index="${itemIndex}" ${isPaid ? 'checked' : ''} aria-label="Mark budget item paid">
+                                                                    <span style="min-width:0; overflow-wrap:anywhere; ${isPaid ? 'text-decoration:line-through; opacity:0.65;' : ''}">${esc(item.title)}<small class="text-muted" style="display:block; text-decoration:none;">${recurrenceLabel} · ${FinanceEngine.displayAmount(item.amount)}</small></span>
+                                                                </label>
+                                                                <div class="flex gap-1" style="flex-shrink:0;">
+                                                                    <button class="sm tonal" data-action="finance-edit-item" data-budget-item-index="${itemIndex}" aria-label="Edit budget item">Edit</button>
+                                                                    <button class="sm danger icon-btn" data-action="finance-delete-item" data-budget-item-index="${itemIndex}" aria-label="Delete budget item"><span class="material-symbols-outlined">delete</span></button>
+                                                                </div>
+                                                            </div>
+                                                        `;
+                                                    }).join('') || '<span class="text-muted" style="font-size:0.78rem;">No budget items yet.</span>'}
+                                                </div>
+                                            </div>
+                                        </details>
                                     </section>
                                 `;
                             }).join('') || '<p class="text-muted">Add a budget category to start tracking expenses.</p>'}
                         </div>
                     </div>
-                    <div class="card">
-                        <div class="card-header"><h3 style="font-size:1rem; font-weight:600;">Financial Transactions</h3></div>
-                        <div class="flex-col gap-2" style="max-height: 280px; overflow-y: auto;">
-                            ${txs.map(t => `
-                                <div class="flex justify-between items-center" style="background:var(--md-sys-color-surface-container); padding:10px 14px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
-                                    <div><div style="font-weight:600; font-size:0.84rem;">${esc(t.desc)}</div><span class="text-muted">${esc(t.date)} • ${esc(t.category)}</span></div>
-                                    <strong style="${t.category === 'Income' ? 'color:var(--md-sys-color-success);' : 'color:var(--md-sys-color-error);'}">${FinanceEngine.displayAmount(t.amount)}</strong>
+                    <div class="card finance-transaction-card">
+                        <details class="finance-expander" ${compactBudgetView ? '' : 'open'}>
+                            <summary class="finance-expander-summary">
+                                <span>
+                                    <strong>Financial Transactions</strong>
+                                    <small class="text-muted">${txs.length} record${txs.length === 1 ? '' : 's'} · logged outflows and income</small>
+                                </span>
+                            </summary>
+                            <div class="finance-expander-content">
+                                <div class="flex-col gap-2" style="max-height: 280px; overflow-y: auto;">
+                                    ${txs.map(t => `
+                                        <div class="flex justify-between items-center" style="background:var(--md-sys-color-surface-container); padding:10px 14px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
+                                            <div><div style="font-weight:600; font-size:0.84rem;">${esc(t.desc)}</div><span class="text-muted">${esc(t.date)} • ${esc(t.category)}</span></div>
+                                            <strong style="${t.category === 'Income' ? 'color:var(--md-sys-color-success);' : 'color:var(--md-sys-color-error);'}">${FinanceEngine.displayAmount(t.amount)}</strong>
+                                        </div>
+                                    `).join('') || '<div class="text-muted">No transactions logged yet.</div>'}
                                 </div>
-                            `).join('') || '<div class="text-muted">No transactions logged yet.</div>'}
-                        </div>
+                            </div>
+                        </details>
                     </div>
                 `;
             },
@@ -5082,6 +5477,27 @@
                         case 'finance-save-assumptions':
                             FinanceEngine.savePlanningAssumptions();
                             return;
+                        case 'finance-decision-done': {
+                            const decisionIndex = getIndex(actionElement.dataset.decisionIndex, State.finances.budgetDecisions || []);
+                            if (decisionIndex >= 0) {
+                                FinanceEngine.openBudgetDecisionCompletion(State.finances.budgetDecisions[decisionIndex].id);
+                            }
+                            return;
+                        }
+                        case 'finance-decision-reopen': {
+                            const decisionIndex = getIndex(actionElement.dataset.decisionIndex, State.finances.budgetDecisions || []);
+                            if (decisionIndex >= 0) {
+                                FinanceEngine.reopenBudgetDecision(State.finances.budgetDecisions[decisionIndex].id);
+                            }
+                            return;
+                        }
+                        case 'finance-decision-delete': {
+                            const decisionIndex = getIndex(actionElement.dataset.decisionIndex, State.finances.budgetDecisions || []);
+                            if (decisionIndex >= 0) {
+                                FinanceEngine.deleteBudgetDecision(State.finances.budgetDecisions[decisionIndex].id);
+                            }
+                            return;
+                        }
                         case 'calendar-prev':
                             CalendarView.shiftMonth(-1);
                             return;

@@ -22,7 +22,7 @@ Plan your days, move work forward, track your habits, and understand your money 
 | --- | --- | --- |
 | Organize work with guided pathways, an Eisenhower matrix, and a calendar. | Track projects on a Kanban board, focus with a timer, and log workouts. | Manage budgets and transactions, and explore loan, savings, and expense estimates. |
 
-Your calendar brings together task due dates, workout sessions, finance transactions, and scheduled budget items. Notes live in your encrypted workspace alongside the rest of your data.
+Your calendar brings together task due dates, workout sessions, finance transactions, and scheduled budget items. In the budget, add a monthly projection as a provisional decision, then mark it done and enter the actual amount to compare the locked cost with the projection. Monthly totals roll over automatically while earlier decisions remain available in the archive. Notes live in your encrypted workspace alongside the rest of your data.
 
 ## Get started
 

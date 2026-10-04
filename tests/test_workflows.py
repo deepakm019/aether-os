@@ -363,7 +363,7 @@ def test_edit_note_category_and_create_editable_task_from_note(app_page: Page) -
     expect(note_card).to_contain_text("Architecture")
 
     note_card.click()
-    app_page.get_by_role("button", name="Create Task").click()
+    app_page.get_by_role("button", name="Create Task", exact=True).click()
     expect(app_page.locator("#task-title")).to_have_value("Refined note")
     expect(app_page.locator("#task-desc")).to_have_value("Implementation details from the note")
     app_page.locator("#task-title").fill("Task refined from note")
@@ -436,6 +436,59 @@ def test_finance_categories_recurring_paid_items_and_amount_visibility(app_page:
         "(content) => content.scrollWidth <= content.clientWidth"
     )
     assert layout
+
+
+def test_monthly_budget_projections_lock_actuals_and_roll_forward(app_page: Page) -> None:
+    app_page.locator('.nav-item[data-view="finance"]').click()
+    app_page.get_by_role("button", name="Add projection").click()
+    app_page.locator("#finance-decision-title").fill("Weekend trip")
+    app_page.locator("#finance-decision-category").select_option("Discretionary")
+    app_page.locator("#finance-decision-projected").fill("1000")
+    app_page.get_by_role("button", name="Save projection").click()
+
+    expect(app_page.locator(".finance-decision-row").filter(has_text="Weekend trip")).to_contain_text("Provisional")
+    expect(app_page.locator(".finance-decision-summary")).to_contain_text("₹1,000")
+    app_page.get_by_role("button", name="Mark done").click()
+    expect(app_page.locator("#finance-decision-projected-label")).to_contain_text("₹1,000")
+    app_page.locator("#finance-decision-actual").fill("850")
+    app_page.get_by_role("button", name="Lock actual").click()
+
+    decision_row = app_page.locator(".finance-decision-row").filter(has_text="Weekend trip")
+    expect(decision_row).to_contain_text("Locked actual ₹850")
+    expect(decision_row).to_contain_text("Saved ₹150")
+    expect(app_page.locator(".finance-decision-summary")).to_contain_text("₹850")
+    expect(app_page.locator(".finance-decision-summary")).to_contain_text("₹150")
+    app_page.get_by_role("button", name="Hide amounts").click()
+    expect(decision_row).to_contain_text("••••••")
+    expect(decision_row).not_to_contain_text("850")
+    app_page.get_by_role("button", name="Show amounts").click()
+    assert app_page.evaluate(
+        "() => State.finances.transactions.filter(tx => tx.budgetDecisionId).map(tx => tx.amount)"
+    ) == [850]
+    assert app_page.evaluate("FinanceEngine.categorySpent('Discretionary')") == 850
+
+    app_page.evaluate(
+        """async () => {
+            const previousMonth = new Date();
+            previousMonth.setDate(1);
+            previousMonth.setMonth(previousMonth.getMonth() - 1);
+            State.finances.budgetDecisions[0].monthKey = FinanceEngine.monthKey(previousMonth);
+            await Data.save();
+            App.refreshCurrentView();
+        }"""
+    )
+    expect(app_page.locator(".finance-decision-summary")).to_contain_text("₹0")
+    app_page.get_by_text("Previous months (1)").click()
+    expect(app_page.locator(".finance-history-month")).to_contain_text("Weekend trip")
+    expect(app_page.locator(".finance-history-month")).to_contain_text("Locked actual ₹850")
+
+    app_page.set_viewport_size({"width": 393, "height": 852})
+    app_page.evaluate("App.refreshCurrentView()")
+    housing = app_page.locator("#content section.stat-card").filter(has_text="Housing").first
+    assert not housing.locator("details.finance-category-expander").evaluate("(details) => details.open")
+    housing.locator("summary.finance-category-summary").click()
+    expect(housing.locator("#finance-budget-0")).to_be_visible()
+    assert app_page.locator("#content").evaluate("(content) => content.scrollWidth <= content.clientWidth")
 
 
 def test_timer_and_theme_controls_work(app_page: Page) -> None:
