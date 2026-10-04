@@ -246,6 +246,14 @@
             background: var(--md-sys-color-surface); padding: 36px 32px; border: 1px solid var(--md-sys-color-outline);
             border-radius: 24px; width: 100%; max-width: 440px; box-shadow: var(--elevation-2); text-align: center;
         }
+        .personal-use-overlay {
+            position: absolute; inset: 0; z-index: 6000; display: flex; align-items: center; justify-content: center;
+            padding: 16px; background: rgba(10, 8, 14, 0.72); backdrop-filter: blur(8px);
+        }
+        .personal-use-card {
+            width: 100%; max-width: 440px; padding: 28px; border: 1px solid var(--md-sys-color-outline);
+            border-radius: var(--radius-lg); background: var(--md-sys-color-surface); box-shadow: var(--elevation-3);
+        }
 
         #app { display: none; width: 100vw; height: 100vh; position: relative; overflow: hidden; }
 
@@ -278,6 +286,8 @@
             color: var(--md-sys-color-text-secondary); font-size: 0.84rem; font-weight: 500;
             transition: all 0.15s ease; display: flex; align-items: center; gap: 14px; margin-bottom: 3px;
         }
+        .nav-icon { width: 20px; height: 20px; flex: 0 0 20px; display: inline-flex; align-items: center; justify-content: center; }
+        .nav-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
         .nav-item:hover { background: var(--md-sys-color-surface-container); color: var(--md-sys-color-text-main); }
         .nav-item.active {
             background: var(--md-sys-color-primary-container);
@@ -783,7 +793,7 @@
 
     <!-- Auth Master Screen -->
     <div id="auth-screen">
-        <div class="auth-card">
+        <div class="auth-card" inert>
             <div style="display:flex; justify-content:center; margin-bottom:12px;">
                 <span class="material-symbols-outlined" style="font-size:36px; color:var(--md-sys-color-primary);">shield_lock</span>
             </div>
@@ -821,7 +831,7 @@
             <p id="auth-error" style="color: var(--md-sys-color-error); margin-top: 12px; font-size: 0.78rem; display: none;"></p>
         </div>
 
-        <div style="margin-top: 16px; text-align: center;">
+        <div id="auth-notices" inert style="margin-top: 16px; text-align: center;">
             <p id="github-pages-origin-warning" class="legal-block" role="status" hidden style="max-width: 560px; margin: 0 auto 12px; text-align: left; color: var(--md-sys-color-warning);">
                 GitHub Pages origin warning: repository sites for the same account share browser storage across URL paths. A less-trusted project on that account may access this app's encrypted vault. For sensitive data, use a dedicated custom domain/origin and do not host untrusted Pages projects on it. Never enter your passphrase on a page you do not trust.
             </p>
@@ -832,6 +842,17 @@
                 </a>.
             </p>
         </div>
+        <div id="personal-use-overlay" class="personal-use-overlay" role="dialog" aria-modal="true" aria-labelledby="personal-use-title">
+            <div class="personal-use-card">
+                <div class="flex items-center gap-2" style="margin-bottom:12px; color:var(--md-sys-color-primary);">
+                    <span class="material-symbols-outlined" aria-hidden="true">account_circle</span>
+                    <span class="text-muted" style="font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Before you continue</span>
+                </div>
+                <h2 id="personal-use-title" style="font-size:1.25rem; font-weight:600; margin-bottom:10px;">Personal use</h2>
+                <p class="text-secondary" style="line-height:1.6; margin-bottom:20px;">AstralSurge OS is designed for personal use. Your acceptance lets you continue to the workspace login.</p>
+                <button class="primary" style="width:100%;" autofocus onclick="App.acceptPersonalUse()">I accept — continue</button>
+            </div>
+        </div>
     </div>
 
     <!-- Main OS Shell -->
@@ -841,67 +862,84 @@
         <aside id="sidebar">
             <div class="logo-wrap">
                 <div class="logo-title">
-                    <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">apps</span>
+                    <span class="nav-icon" aria-hidden="true" style="color:var(--md-sys-color-primary);"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg></span>
                     <span>AstralSurge OS</span>
                     <span class="logo-badge">Beta</span>
                 </div>
                 <button class="sm icon-btn mobile-only" onclick="UI.toggleSidebar(false)">
-                    <span class="material-symbols-outlined">close</span>
+                    <span aria-hidden="true">×</span>
                 </button>
             </div>
             
             <div class="nav-label">Core Engine</div>
             <div class="nav-item active" data-view="pathways">
-                <span>🗺️ Quests & Pathways</span>
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M7 18h3a3 3 0 0 0 3-3V9a3 3 0 0 1 3-3h1"/></svg></span>
+                <span>Quests & Pathways</span>
             </div>
             <div class="nav-item" data-view="dashboard">
-                <span>✨ Command Center</span>
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg></span>
+                <span>Command Center</span>
             </div>
 
             <div class="nav-label">Kinetic & Focus</div>
             <div class="nav-item" data-view="workout">
-                <span>👟 Kinetic Lab</span>
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>
+                <span>Kinetic Lab</span>
             </div>
             <div class="nav-item" data-view="timeview">
-                <span>⏱️ Focus Flow</span>
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6M12 2v3"/></svg></span>
+                <span>Focus Flow</span>
             </div>
 
             <div class="nav-label">Agile & Operations</div>
             <div class="nav-item" data-view="stories">
-                <span>📚 Stories & Epics</span>
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 5.5v13A2.5 2.5 0 0 1 6.5 16H20M8 7h8M8 11h6"/></svg></span>
+                <span>Stories & Epics</span>
             </div>
             <div class="nav-item" data-view="projects">
-                <span>🎯 Action Board</span>
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg></span>
+                <span>Action Board</span>
             </div>
             <div class="nav-item" data-view="eisenhower">
-                <span>🧭 Eisenhower Matrix</span>
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></span>
+                <span>Eisenhower Matrix</span>
             </div>
             <div class="nav-item" data-view="calendar">
-                <span>📅 Life Calendar</span>
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span>
+                <span>Life Calendar</span>
             </div>
             <div class="nav-item" data-view="audit">
-                <span>🧾 Audit Stream</span>
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span>
+                <span>Audit Stream</span>
             </div>
 
             <div class="nav-label">Capital & Intellect</div>
             <div class="nav-item" data-view="finance">
-                <span>💰 Wallet & Piggy</span>
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M16 14h2M7 5V3h10v2"/></svg></span>
+                <span>Wallet & Budget</span>
+            </div>
+            <div class="nav-item" data-view="finance-tools">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h2M14 11h2M8 15h2M14 15h2M8 18h2M14 18h2"/></svg></span>
+                <span>Finance Calculators</span>
             </div>
             <div class="nav-item" data-view="brain">
-                <span>🧠 Idea Vault</span>
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M8 14c-1.5-1-2.5-2.7-2.5-4.7a6.5 6.5 0 1 1 13 0c0 2-1 3.7-2.5 4.7-.6.4-1 1.1-1 1.8h-6c0-.7-.4-1.4-1-1.8z"/><path d="M12 3v2"/></svg></span>
+                <span>Idea Vault</span>
             </div>
             <div class="nav-item" data-view="snapshots">
-                <span>🪄 Checkpoints</span>
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></svg></span>
+                <span>Checkpoints</span>
             </div>
 
             <div class="nav-label">Governance</div>
             <div class="nav-item" data-view="legal">
-                <span>🛡️ Legal & Privacy</span>
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/><path d="m9 12 2 2 4-4"/></svg></span>
+                <span>Privacy & Security</span>
             </div>
 
             <div class="rpg-card">
                 <div class="flex justify-between items-center">
-                    <span style="font-weight: 600; font-size: 0.825rem;">✨ Level <span id="ui-level">1</span></span>
+                    <span style="font-weight: 600; font-size: 0.825rem;">Level <span id="ui-level">1</span></span>
                     <span class="text-muted" style="font-size: 0.72rem;"><span id="ui-xp">0</span> / <span id="ui-next-xp">1000</span> XP</span>
                 </div>
                 <div class="xp-track"><div class="xp-progress" id="ui-xp-fill"></div></div>
@@ -1220,12 +1258,12 @@
 
     <div class="modal-overlay" id="finance-category-modal" onclick="if(event.target===this) UI.closeModals()">
         <div class="modal-card">
-            <h3 style="margin-bottom: 16px; font-weight: 600;">Add Budget Category</h3>
+            <h3 id="finance-category-modal-title" style="margin-bottom: 16px; font-weight: 600;">Add Budget Category</h3>
             <div class="flex-col gap-3">
                 <input type="text" id="finance-category-name" placeholder="Category name">
                 <input type="number" id="finance-category-budget" min="0" step="0.01" placeholder="Monthly budget">
                 <div class="flex gap-2 btn-group-responsive">
-                    <button class="primary" style="flex:1;" onclick="FinanceEngine.addCategory()">Add Category</button>
+                    <button id="finance-category-submit" class="primary" style="flex:1;" onclick="FinanceEngine.saveCategory()">Add Category</button>
                     <button style="flex:1;" onclick="UI.closeModals()">Cancel</button>
                 </div>
             </div>
@@ -2638,6 +2676,7 @@
 
         const FinanceEngine = {
             expenseEditingId: null,
+            categoryEditingIndex: null,
             recurrenceLabels: {
                 weekly: 'Weekly',
                 monthly: 'Monthly',
@@ -2705,30 +2744,104 @@
                 FinanceEngine.populateCategorySelect(document.getElementById('tx-category'), '', true);
                 UI.openModal('tx-modal');
             },
-            openCategory: () => {
-                document.getElementById('finance-category-name').value = '';
-                document.getElementById('finance-category-budget').value = '';
+            openCategory: (categoryIndex = null) => {
+                const budget = Number.isInteger(categoryIndex) ? State.finances.budgets[categoryIndex] : null;
+                if (Number.isInteger(categoryIndex) && !budget) {
+                    Toast.show('This budget category is no longer available.', 'error');
+                    return;
+                }
+                FinanceEngine.categoryEditingIndex = budget ? categoryIndex : null;
+                document.getElementById('finance-category-modal-title').textContent = budget ? 'Rename Budget Category' : 'Add Budget Category';
+                document.getElementById('finance-category-submit').textContent = budget ? 'Save Changes' : 'Add Category';
+                document.getElementById('finance-category-name').value = budget?.category || '';
+                document.getElementById('finance-category-budget').value = budget?.limit ?? '';
                 UI.openModal('finance-category-modal');
             },
-            addCategory: async () => {
+            saveCategory: async () => {
                 const category = document.getElementById('finance-category-name').value.trim();
                 const limit = Number(document.getElementById('finance-category-budget').value);
                 if (!category || !Number.isFinite(limit) || limit < 0) {
                     Toast.show('Enter a category name and a valid monthly budget.', 'error');
                     return;
                 }
-                if (State.finances.budgets.some(budget => budget.category.toLowerCase() === category.toLowerCase())) {
+                const editingIndex = FinanceEngine.categoryEditingIndex;
+                const existingBudget = Number.isInteger(editingIndex) ? State.finances.budgets[editingIndex] : null;
+                if (Number.isInteger(editingIndex) && !existingBudget) {
+                    Toast.show('This budget category is no longer available.', 'error');
+                    UI.closeModals();
+                    return;
+                }
+                if (State.finances.budgets.some((budget, index) =>
+                    index !== editingIndex && budget.category.toLowerCase() === category.toLowerCase())) {
                     Toast.show('That budget category already exists.', 'error');
                     return;
                 }
-                State.finances.budgets.push({ category, limit });
+                const previousBudget = existingBudget ? { ...existingBudget } : null;
+                const previousItemCategories = existingBudget
+                    ? State.finances.budgetItems.map(item => item.category)
+                    : null;
+                const previousTransactionCategories = existingBudget
+                    ? State.finances.transactions.map(transaction => transaction.category)
+                    : null;
+                if (existingBudget) {
+                    const previousCategory = existingBudget.category;
+                    Object.assign(existingBudget, { category, limit });
+                    State.finances.budgetItems.forEach(item => {
+                        if (item.category === previousCategory) item.category = category;
+                    });
+                    State.finances.transactions.forEach(transaction => {
+                        if (transaction.category === previousCategory) transaction.category = category;
+                    });
+                } else {
+                    State.finances.budgets.push({ category, limit });
+                }
                 if (!await Data.save()) {
-                    State.finances.budgets.pop();
+                    if (existingBudget) {
+                        Object.assign(existingBudget, previousBudget);
+                        State.finances.budgetItems.forEach((item, index) => {
+                            item.category = previousItemCategories[index];
+                        });
+                        State.finances.transactions.forEach((transaction, index) => {
+                            transaction.category = previousTransactionCategories[index];
+                        });
+                    } else {
+                        State.finances.budgets.pop();
+                    }
                     return;
                 }
                 UI.closeModals();
-                Toast.show('Budget category added.', 'success');
+                FinanceEngine.categoryEditingIndex = null;
+                Toast.show(existingBudget ? 'Budget category updated.' : 'Budget category added.', 'success');
                 App.refreshCurrentView();
+            },
+            deleteCategory: async (budgetIndex) => {
+                if (!Number.isInteger(budgetIndex) || budgetIndex < 0 || budgetIndex >= State.finances.budgets.length) return;
+                const budget = State.finances.budgets[budgetIndex];
+                const linkedItems = State.finances.budgetItems.filter(item => item.category === budget.category);
+                const fallbackName = budget.category.toLowerCase() === 'uncategorized' ? 'Other' : 'Uncategorized';
+                const existingFallback = State.finances.budgets.find((entry, index) =>
+                    index !== budgetIndex && entry.category.toLowerCase() === fallbackName.toLowerCase());
+                const fallbackCategory = existingFallback?.category || fallbackName;
+                const needsFallback = linkedItems.length > 0 &&
+                    !existingFallback;
+                const message = linkedItems.length
+                    ? `Delete "${budget.category}"? Its ${linkedItems.length} budget item${linkedItems.length === 1 ? '' : 's'} will move to ${fallbackCategory}${needsFallback ? ', which will be added as a budget category' : ''}. Historical transactions will remain unchanged.`
+                    : `Delete "${budget.category}"? Historical transactions will remain unchanged.`;
+                UI.confirm('Delete Budget Category', message, async () => {
+                    const originalItems = linkedItems.map(item => ({ item, category: item.category }));
+                    const fallbackBudget = needsFallback ? { category: fallbackCategory, limit: 0 } : null;
+                    if (fallbackBudget) State.finances.budgets.push(fallbackBudget);
+                    linkedItems.forEach(item => { item.category = fallbackCategory; });
+                    State.finances.budgets.splice(budgetIndex, 1);
+                    if (!await Data.save()) {
+                        State.finances.budgets.splice(budgetIndex, 0, budget);
+                        if (fallbackBudget) State.finances.budgets.splice(State.finances.budgets.indexOf(fallbackBudget), 1);
+                        originalItems.forEach(({ item, category }) => { item.category = category; });
+                        return;
+                    }
+                    Toast.show('Budget category deleted.', 'success');
+                    App.refreshCurrentView();
+                });
             },
             saveBudget: async (budgetIndex) => {
                 const budget = State.finances.budgets[budgetIndex];
@@ -3765,84 +3878,6 @@
                         <div class="stat-card"><span class="text-muted">Base Monthly Income</span><h3 style="color:var(--md-sys-color-success); margin-top:6px; font-weight:600;">${FinanceEngine.displayAmount(State.finances.monthlyIncome)}</h3></div>
                         <div class="stat-card"><span class="text-muted">Logged Transactions</span><h3 style="margin-top:6px; font-weight:600;">${txs.length} entries</h3></div>
                     </div>
-                    <section class="card" style="margin-bottom:20px;" aria-labelledby="finance-tools-title">
-                        <div class="card-header" style="align-items:flex-start;">
-                            <div>
-                                <h3 id="finance-tools-title" style="font-size:1rem; font-weight:600;">Money Lab · Plan before you commit</h3>
-                                <p class="text-muted" style="font-size:0.78rem; margin-top:4px;">Interactive loan, fixed-deposit, savings-growth, and expense outlook tools. Estimates only; rates and tax are not verified.</p>
-                            </div>
-                        </div>
-                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap:14px;">
-                            <section class="stat-card" aria-label="Loan payment calculator">
-                                <h4 style="font-size:0.92rem; font-weight:600;">🏠 Loan payment</h4>
-                                <label class="text-muted" style="display:block; margin-top:10px;">Loan amount
-                                    <input id="finance-loan-principal" type="number" min="0" step="1000" value="500000" data-finance-tool-input style="margin-top:4px;">
-                                </label>
-                                <div class="flex gap-2" style="margin-top:8px;">
-                                    <label class="text-muted" style="flex:1;">Annual rate (%)
-                                        <input id="finance-loan-rate" type="number" min="0" step="0.1" value="8.5" data-finance-tool-input style="margin-top:4px;">
-                                    </label>
-                                    <label class="text-muted" style="flex:1;">Term (months)
-                                        <input id="finance-loan-months" type="number" min="1" step="1" value="60" data-finance-tool-input style="margin-top:4px;">
-                                    </label>
-                                </div>
-                                <div class="flex-col gap-1" style="margin-top:12px; font-size:0.8rem;">
-                                    <div class="flex justify-between"><span>Monthly payment</span><strong id="finance-loan-emi" aria-live="polite"></strong></div>
-                                    <div class="flex justify-between text-muted"><span>Total interest</span><strong id="finance-loan-interest"></strong></div>
-                                    <div class="flex justify-between text-muted"><span>Total repayment</span><strong id="finance-loan-total"></strong></div>
-                                </div>
-                            </section>
-                            <section class="stat-card" aria-label="Fixed deposit growth calculator">
-                                <h4 style="font-size:0.92rem; font-weight:600;">🌅 Fixed deposit</h4>
-                                <label class="text-muted" style="display:block; margin-top:10px;">Starting deposit
-                                    <input id="finance-fd-principal" type="number" min="0" step="1000" value="100000" data-finance-tool-input style="margin-top:4px;">
-                                </label>
-                                <div class="flex gap-2" style="margin-top:8px;">
-                                    <label class="text-muted" style="flex:1;">Annual rate (%)
-                                        <input id="finance-fd-rate" type="number" min="0" step="0.1" value="7" data-finance-tool-input style="margin-top:4px;">
-                                    </label>
-                                    <label class="text-muted" style="flex:1;">Years
-                                        <input id="finance-fd-years" type="number" min="0" step="0.5" value="5" data-finance-tool-input style="margin-top:4px;">
-                                    </label>
-                                </div>
-                                <p class="text-muted" style="margin-top:8px;">Quarterly compounding assumption</p>
-                                <div class="flex-col gap-1" style="margin-top:8px; font-size:0.8rem;">
-                                    <div class="flex justify-between"><span>Maturity value</span><strong id="finance-fd-maturity" aria-live="polite"></strong></div>
-                                    <div class="flex justify-between text-muted"><span>Estimated interest</span><strong id="finance-fd-interest"></strong></div>
-                                </div>
-                            </section>
-                            <section class="stat-card" aria-label="Monthly savings growth calculator">
-                                <h4 style="font-size:0.92rem; font-weight:600;">🌱 Monthly investing</h4>
-                                <label class="text-muted" style="display:block; margin-top:10px;">Monthly contribution
-                                    <input id="finance-sip-monthly" type="number" min="0" step="500" value="10000" data-finance-tool-input style="margin-top:4px;">
-                                </label>
-                                <div class="flex gap-2" style="margin-top:8px;">
-                                    <label class="text-muted" style="flex:1;">Annual return (%)
-                                        <input id="finance-sip-rate" type="number" min="0" step="0.1" value="10" data-finance-tool-input style="margin-top:4px;">
-                                    </label>
-                                    <label class="text-muted" style="flex:1;">Years
-                                        <input id="finance-sip-years" type="number" min="0" step="1" value="10" data-finance-tool-input style="margin-top:4px;">
-                                    </label>
-                                </div>
-                                <p class="text-muted" style="margin-top:8px;">Assumes month-end deposits and monthly compounding; returns are not guaranteed.</p>
-                                <div class="flex-col gap-1" style="margin-top:8px; font-size:0.8rem;">
-                                    <div class="flex justify-between"><span>Projected value</span><strong id="finance-sip-value" aria-live="polite"></strong></div>
-                                    <div class="flex justify-between text-muted"><span>Total contributed</span><strong id="finance-sip-contributed"></strong></div>
-                                </div>
-                            </section>
-                            <section class="stat-card" aria-label="Expense projection">
-                                <h4 style="font-size:0.92rem; font-weight:600;">🔮 Expense outlook</h4>
-                                <p class="text-muted" style="margin-top:8px;">Extrapolates this month's logged outflows against saved monthly income; assumes that pace and income continue, with no inflation or irregular costs.</p>
-                                <div class="flex-col gap-1" style="margin-top:12px; font-size:0.8rem;">
-                                    <div class="flex justify-between"><span>Logged this month</span><strong id="finance-projection-spent"></strong></div>
-                                    <div class="flex justify-between"><span>Projected month spend</span><strong id="finance-projection-month-end"></strong></div>
-                                    <div class="flex justify-between"><span>Projected monthly surplus</span><strong id="finance-projection-net"></strong></div>
-                                    <div class="flex justify-between text-muted"><span>Cumulative surplus · 3 / 6 / 12 mo</span><strong><span id="finance-projection-3m"></span> · <span id="finance-projection-6m"></span> · <span id="finance-projection-12m"></span></strong></div>
-                                </div>
-                                <p id="finance-projection-note" class="text-muted" style="margin-top:8px; font-size:0.7rem;" aria-live="polite"></p>
-                            </section>
-                        </div>
-                    </section>
                     <div class="card" style="margin-bottom:20px;">
                         <div class="card-header" style="align-items:flex-start;">
                             <div>
@@ -3862,6 +3897,10 @@
                                         <div class="flex justify-between items-center" style="gap:8px;">
                                             <h4 style="font-size:0.94rem; font-weight:600;">${esc(budget.category)}</h4>
                                             <button class="sm tonal" data-action="finance-add-item" data-budget-index="${budgetIndex}">Add item</button>
+                                        </div>
+                                        <div class="flex gap-1" style="margin-top:8px;">
+                                            <button class="sm" data-action="finance-edit-category" data-budget-index="${budgetIndex}">Rename</button>
+                                            <button class="sm danger" data-action="finance-delete-category" data-budget-index="${budgetIndex}">Delete</button>
                                         </div>
                                         <label class="text-muted" style="display:block; margin-top:12px; font-size:0.75rem;">
                                             Monthly budget
@@ -3913,6 +3952,90 @@
                     </div>
                 `;
             },
+            'finance-tools': () => `
+                <div style="margin-bottom:24px;">
+                    <h2>Finance Calculators</h2>
+                    <p class="text-muted">Explore estimates separately from your budget and transaction records.</p>
+                </div>
+                <section class="card" style="margin-bottom:20px;" aria-labelledby="finance-tools-title">
+                    <div class="card-header" style="align-items:flex-start;">
+                        <div>
+                            <h3 id="finance-tools-title" style="font-size:1rem; font-weight:600;">Money Lab · Planning estimates</h3>
+                            <p class="text-muted" style="font-size:0.78rem; margin-top:4px;">Loan, fixed-deposit, savings-growth, and expense outlook calculators. Estimates only; rates and tax are not verified.</p>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap:14px;">
+                        <section class="stat-card" aria-label="Loan payment calculator">
+                            <h4 style="font-size:0.92rem; font-weight:600;">Loan payment</h4>
+                            <label class="text-muted" style="display:block; margin-top:10px;">Loan amount
+                                <input id="finance-loan-principal" type="number" min="0" step="1000" value="500000" data-finance-tool-input style="margin-top:4px;">
+                            </label>
+                            <div class="flex gap-2" style="margin-top:8px;">
+                                <label class="text-muted" style="flex:1;">Annual rate (%)
+                                    <input id="finance-loan-rate" type="number" min="0" step="0.1" value="8.5" data-finance-tool-input style="margin-top:4px;">
+                                </label>
+                                <label class="text-muted" style="flex:1;">Term (months)
+                                    <input id="finance-loan-months" type="number" min="1" step="1" value="60" data-finance-tool-input style="margin-top:4px;">
+                                </label>
+                            </div>
+                            <div class="flex-col gap-1" style="margin-top:12px; font-size:0.8rem;">
+                                <div class="flex justify-between"><span>Monthly payment</span><strong id="finance-loan-emi" aria-live="polite"></strong></div>
+                                <div class="flex justify-between text-muted"><span>Total interest</span><strong id="finance-loan-interest"></strong></div>
+                                <div class="flex justify-between text-muted"><span>Total repayment</span><strong id="finance-loan-total"></strong></div>
+                            </div>
+                        </section>
+                        <section class="stat-card" aria-label="Fixed deposit growth calculator">
+                            <h4 style="font-size:0.92rem; font-weight:600;">Fixed deposit</h4>
+                            <label class="text-muted" style="display:block; margin-top:10px;">Starting deposit
+                                <input id="finance-fd-principal" type="number" min="0" step="1000" value="100000" data-finance-tool-input style="margin-top:4px;">
+                            </label>
+                            <div class="flex gap-2" style="margin-top:8px;">
+                                <label class="text-muted" style="flex:1;">Annual rate (%)
+                                    <input id="finance-fd-rate" type="number" min="0" step="0.1" value="7" data-finance-tool-input style="margin-top:4px;">
+                                </label>
+                                <label class="text-muted" style="flex:1;">Years
+                                    <input id="finance-fd-years" type="number" min="0" step="0.5" value="5" data-finance-tool-input style="margin-top:4px;">
+                                </label>
+                            </div>
+                            <p class="text-muted" style="margin-top:8px;">Quarterly compounding assumption</p>
+                            <div class="flex-col gap-1" style="margin-top:8px; font-size:0.8rem;">
+                                <div class="flex justify-between"><span>Maturity value</span><strong id="finance-fd-maturity" aria-live="polite"></strong></div>
+                                <div class="flex justify-between text-muted"><span>Estimated interest</span><strong id="finance-fd-interest"></strong></div>
+                            </div>
+                        </section>
+                        <section class="stat-card" aria-label="Monthly savings growth calculator">
+                            <h4 style="font-size:0.92rem; font-weight:600;">Monthly investing</h4>
+                            <label class="text-muted" style="display:block; margin-top:10px;">Monthly contribution
+                                <input id="finance-sip-monthly" type="number" min="0" step="500" value="10000" data-finance-tool-input style="margin-top:4px;">
+                            </label>
+                            <div class="flex gap-2" style="margin-top:8px;">
+                                <label class="text-muted" style="flex:1;">Annual return (%)
+                                    <input id="finance-sip-rate" type="number" min="0" step="0.1" value="10" data-finance-tool-input style="margin-top:4px;">
+                                </label>
+                                <label class="text-muted" style="flex:1;">Years
+                                    <input id="finance-sip-years" type="number" min="0" step="1" value="10" data-finance-tool-input style="margin-top:4px;">
+                                </label>
+                            </div>
+                            <p class="text-muted" style="margin-top:8px;">Assumes month-end deposits and monthly compounding; returns are not guaranteed.</p>
+                            <div class="flex-col gap-1" style="margin-top:8px; font-size:0.8rem;">
+                                <div class="flex justify-between"><span>Projected value</span><strong id="finance-sip-value" aria-live="polite"></strong></div>
+                                <div class="flex justify-between text-muted"><span>Total contributed</span><strong id="finance-sip-contributed"></strong></div>
+                            </div>
+                        </section>
+                        <section class="stat-card" aria-label="Expense projection">
+                            <h4 style="font-size:0.92rem; font-weight:600;">Expense outlook</h4>
+                            <p class="text-muted" style="margin-top:8px;">Extrapolates this month's logged outflows against saved monthly income; assumes that pace and income continue, with no inflation or irregular costs.</p>
+                            <div class="flex-col gap-1" style="margin-top:12px; font-size:0.8rem;">
+                                <div class="flex justify-between"><span>Logged this month</span><strong id="finance-projection-spent"></strong></div>
+                                <div class="flex justify-between"><span>Projected month spend</span><strong id="finance-projection-month-end"></strong></div>
+                                <div class="flex justify-between"><span>Projected monthly surplus</span><strong id="finance-projection-net"></strong></div>
+                                <div class="flex justify-between text-muted"><span>Cumulative surplus · 3 / 6 / 12 mo</span><strong><span id="finance-projection-3m"></span> · <span id="finance-projection-6m"></span> · <span id="finance-projection-12m"></span></strong></div>
+                            </div>
+                            <p id="finance-projection-note" class="text-muted" style="margin-top:8px; font-size:0.7rem;" aria-live="polite"></p>
+                        </section>
+                    </div>
+                </section>
+            `,
             audit: () => `
                 <div class="flex justify-between items-center" style="margin-bottom: 24px;">
                     <div><h2>Universal Audit Stream</h2><p class="text-muted">Immutable client-side chronological feed.</p></div>
@@ -4101,6 +4224,22 @@
 
         const App = {
             instances: { workoutChart: null },
+            personalUseAccepted: false,
+
+            acceptPersonalUse: () => {
+                App.personalUseAccepted = true;
+                document.querySelector('.auth-card').inert = false;
+                document.getElementById('auth-notices').inert = false;
+                const overlay = document.getElementById('personal-use-overlay');
+                if (overlay) overlay.remove();
+                document.getElementById('fetch-key').focus();
+            },
+
+            requirePersonalUseAcceptance: () => {
+                if (App.personalUseAccepted) return true;
+                Toast.show('Accept the personal-use notice before continuing.', 'error');
+                return false;
+            },
 
             initPWA: () => {
                 if (!StorageEngine.localOnly && 'serviceWorker' in navigator && location.protocol.startsWith('http')) {
@@ -4118,6 +4257,7 @@
             },
 
             fetchByKey: async (inputKey) => {
+                if (!App.requirePersonalUseAcceptance()) return;
                 const k = inputKey || document.getElementById('fetch-key').value.trim();
                 const err = document.getElementById('auth-error');
                 if (!k) return;
@@ -4156,6 +4296,7 @@
             },
 
             loginAsNew: async () => {
+                if (!App.requirePersonalUseAcceptance()) return;
                 const k = document.getElementById('new-key').value.trim();
                 if (!k) return;
                 if (k.length < 16) {
@@ -4175,6 +4316,7 @@
             fetchFromNewInput: () => App.fetchByKey(document.getElementById('new-key').value.trim()),
 
             loadDemoData: async () => {
+                if (!App.requirePersonalUseAcceptance()) return;
                 masterPassphrase = "demo_ephemeral_key";
                 State.tasks = [
                     { id: '1', title: 'Audit VPC ingress traffic', desc: 'Verify cloud endpoints', status: 'inbox', priority: 'high', dueDate: '', important: true, urgent: false, timeSpent: 30, subtasks: [] },
@@ -4210,6 +4352,7 @@
             },
 
             importVaultFile: (file) => {
+                if (!App.requirePersonalUseAcceptance()) return;
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = async (e) => {
@@ -4265,6 +4408,16 @@
                         case 'finance-save-budget': {
                             const budgetIndex = getIndex(actionElement.dataset.budgetIndex, State.finances.budgets);
                             if (budgetIndex >= 0) FinanceEngine.saveBudget(budgetIndex);
+                            return;
+                        }
+                        case 'finance-edit-category': {
+                            const budgetIndex = getIndex(actionElement.dataset.budgetIndex, State.finances.budgets);
+                            if (budgetIndex >= 0) FinanceEngine.openCategory(budgetIndex);
+                            return;
+                        }
+                        case 'finance-delete-category': {
+                            const budgetIndex = getIndex(actionElement.dataset.budgetIndex, State.finances.budgets);
+                            if (budgetIndex >= 0) FinanceEngine.deleteCategory(budgetIndex);
                             return;
                         }
                         case 'finance-edit-item': {
@@ -4543,7 +4696,7 @@
                 const content = document.getElementById('content');
                 if (Views[view]) {
                     content.innerHTML = Views[view]();
-                    if (view === 'finance') FinanceEngine.updateTools();
+                    if (view === 'finance-tools') FinanceEngine.updateTools();
                     App.postRender(view);
                 }
             },

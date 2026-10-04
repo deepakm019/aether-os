@@ -45,6 +45,7 @@ def app_page(browser: Browser, app_url: str) -> Iterator[Page]:
     context = browser.new_context(viewport={"width": 1365, "height": 900})
     page = context.new_page()
     page.goto(app_url, wait_until="domcontentloaded")
+    page.get_by_role("button", name="I accept — continue").click()
     page.get_by_role("button", name="Load Demo").click()
     page.locator("#content h2").wait_for(state="visible")
     yield page

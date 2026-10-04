@@ -17,6 +17,7 @@ SCREENS = [
     ("projects", "Project Kanban Pipeline"),
     ("audit", "Universal Audit Stream"),
     ("finance", "Wealth & Capital Ledger"),
+    ("finance-tools", "Finance Calculators"),
     ("brain", "Second Brain Knowledge Base"),
     ("snapshots", "Checkpoints & Vault Backups"),
     ("legal", "Privacy, Security & Use Notices"),
@@ -31,10 +32,11 @@ def test_every_screen_renders_from_navigation(app_page: Page, view: str, heading
 
 def test_sidebar_navigation_uses_one_icon_per_item(app_page: Page) -> None:
     nav_items = app_page.locator("#sidebar .nav-item")
-    assert nav_items.count() == 13
+    assert nav_items.count() == 14
     expect(app_page.locator("#sidebar .nav-item .material-symbols-outlined")).to_have_count(0)
     for index in range(nav_items.count()):
-        expect(nav_items.nth(index).locator(":scope > span")).to_have_count(1)
+        expect(nav_items.nth(index).locator(":scope > span")).to_have_count(2)
+        expect(nav_items.nth(index).locator(":scope > .nav-icon svg")).to_have_count(1)
 
 
 def test_pathway_steps_fit_iphone_touch_targets(app_page: Page) -> None:
@@ -87,11 +89,28 @@ def test_pathway_steps_fit_iphone_touch_targets(app_page: Page) -> None:
 def test_new_vault_rejects_short_passphrases(app_url: str, browser) -> None:
     page = browser.new_page()
     page.goto(app_url, wait_until="domcontentloaded")
+    page.get_by_role("button", name="I accept — continue").click()
     page.get_by_role("button", name="Login as New").click()
     page.locator("#new-key").fill("123456789012345")
     page.get_by_role("button", name="Initialize New Vault").click()
     expect(page.locator("#auth-error")).to_contain_text("at least 16 characters")
     expect(page.locator("#app")).not_to_be_visible()
+    page.close()
+
+
+def test_personal_use_acceptance_precedes_vault_login(app_url: str, browser) -> None:
+    page = browser.new_page()
+    page.goto(app_url, wait_until="domcontentloaded")
+
+    expect(page.get_by_role("dialog", name="Personal use")).to_be_visible()
+    expect(page.locator("#auth-screen")).to_be_visible()
+    expect(page.locator("#auth-panel-fetch button").first).to_be_visible()
+    page.evaluate("App.loadDemoData()")
+    expect(page.locator("#app")).not_to_be_visible()
+    page.get_by_role("button", name="I accept — continue").click()
+    expect(page.get_by_role("dialog", name="Personal use")).to_have_count(0)
+    page.get_by_role("button", name="Load Demo").click()
+    expect(page.locator("#app")).to_be_visible()
     page.close()
 
 

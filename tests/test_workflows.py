@@ -39,6 +39,9 @@ def test_drag_task_between_kanban_columns(app_page: Page) -> None:
 
 def test_finance_calculators_and_projection_are_live(app_page: Page) -> None:
     app_page.locator('.nav-item[data-view="finance"]').click()
+    expect(app_page.locator("#finance-loan-principal")).to_have_count(0)
+
+    app_page.locator('.nav-item[data-view="finance-tools"]').click()
 
     app_page.locator("#finance-loan-principal").fill("120000")
     app_page.locator("#finance-loan-rate").fill("0")
@@ -68,6 +71,65 @@ def test_finance_calculators_and_projection_are_live(app_page: Page) -> None:
         }"""
     )
     expect(app_page.locator("#finance-projection-spent")).to_have_text("₹1,000")
+
+
+def test_budget_categories_can_be_renamed_added_and_deleted_safely(app_page: Page) -> None:
+    app_page.locator('.nav-item[data-view="finance"]').click()
+    app_page.evaluate(
+        """async () => {
+            State.finances.budgetItems.push({
+                id: "category-linked-item",
+                title: "Monthly groceries",
+                amount: 250,
+                category: "Food",
+                recurrence: "monthly",
+                dueDate: "",
+                paidPeriod: null
+            });
+            State.finances.transactions.push({
+                id: "category-history",
+                desc: "Previous grocery purchase",
+                amount: 75,
+                category: "Food",
+                date: new Date().toLocaleDateString([], { month: "short", day: "numeric" }),
+                isoDate: new Date().toISOString()
+            });
+            await Data.save();
+            App.refreshCurrentView();
+        }"""
+    )
+
+    food_card = app_page.locator('section[aria-label="Budget category"]').filter(has_text="Food")
+    food_card.get_by_role("button", name="Rename").click()
+    app_page.locator("#finance-category-name").fill("Groceries")
+    app_page.get_by_role("button", name="Save Changes").click()
+    groceries_card = app_page.locator('section[aria-label="Budget category"]').filter(has_text="Groceries")
+    expect(groceries_card).to_contain_text("Monthly groceries")
+    expect(app_page.locator("#content")).to_contain_text("Previous grocery purchase")
+    assert app_page.evaluate(
+        "() => State.finances.transactions.find(item => item.id === 'category-history').category"
+    ) == "Groceries"
+
+    groceries_card.locator('[data-action="finance-delete-category"]').click()
+    app_page.get_by_role("button", name="Proceed").click()
+    uncategorized_card = app_page.locator('section[aria-label="Budget category"]').filter(has_text="Uncategorized")
+    expect(uncategorized_card).to_contain_text("Monthly groceries")
+    assert app_page.evaluate(
+        """() => ({
+            itemCategory: State.finances.budgetItems.find(item => item.id === "category-linked-item").category,
+            historicalCategory: State.finances.transactions.find(item => item.id === "category-history").category
+        })"""
+    ) == {"itemCategory": "Uncategorized", "historicalCategory": "Groceries"}
+
+    app_page.get_by_role("button", name="Add Category").click()
+    app_page.locator("#finance-category-name").fill("Travel")
+    app_page.locator("#finance-category-budget").fill("500")
+    app_page.locator("#finance-category-submit").click()
+    travel_card = app_page.locator('section[aria-label="Budget category"]').filter(has_text="Travel")
+    expect(travel_card).to_be_visible()
+    travel_card.locator('[data-action="finance-delete-category"]').click()
+    app_page.get_by_role("button", name="Proceed").click()
+    expect(app_page.locator('section[aria-label="Budget category"]').filter(has_text="Travel")).to_have_count(0)
 
 
 def test_eisenhower_matrix_and_calendar_aggregate_workspace_events(app_page: Page) -> None:
