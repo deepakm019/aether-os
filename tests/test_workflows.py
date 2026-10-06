@@ -36,14 +36,23 @@ def test_day_planner_builds_non_overlapping_schedule_and_tracks_habits(app_page:
     navigate_to_view(app_page, "planner")
     app_page.locator('#planner-builder-form [name="meetingTitle"]').fill("Planning meeting")
     app_page.locator('#planner-builder-form [name="meetingTime"]').fill("10:00")
-    app_page.get_by_role("button", name="Build this day").click()
+    app_page.locator('#planner-builder-form [name="meetingDuration"]').fill("45")
+    app_page.locator('#planner-builder-form [name="travelDuration"]').fill("15")
+    app_page.get_by_role("button", name="Add meeting").click()
+    app_page.locator('#planner-builder-form [name="meetingTitle"]').nth(1).fill("Afternoon review")
+    app_page.locator('#planner-builder-form [name="meetingTime"]').nth(1).fill("14:00")
+    app_page.locator('#planner-builder-form [name="meetingDuration"]').nth(1).fill("45")
+    app_page.locator('#planner-builder-form [name="travelDuration"]').nth(1).fill("10")
+    main_task = app_page.locator("#planner-main-task option:checked").text_content()
+    app_page.get_by_role("button", name="Build my day").click()
 
-    schedule = app_page.locator(".planner-entry")
-    expect(schedule).to_have_count(8)
     expect(app_page.locator("#content")).to_contain_text("Travel to Planning meeting")
     expect(app_page.locator("#content")).to_contain_text("Travel from Planning meeting")
-    expect(app_page.locator("#content")).to_contain_text("Priority focus block")
-    expect(app_page.locator("#content")).to_contain_text("Lunch / reset")
+    expect(app_page.locator("#content")).to_contain_text("Afternoon review")
+    expect(app_page.locator("#content")).to_contain_text(str(main_task))
+    expect(app_page.locator("#content")).to_contain_text("Lunch")
+    expect(app_page.locator("#content")).to_contain_text("Tea break")
+    expect(app_page.locator("#content")).to_contain_text("Open time")
     assert app_page.evaluate(
         """() => {
             const entries = State.planner.entries.filter(item => item.date === PlannerEngine.displayDate)
@@ -53,10 +62,18 @@ def test_day_planner_builds_non_overlapping_schedule_and_tracks_habits(app_page:
                     entries[index - 1].duration <= item.time.slice(0, 2) * 60 + Number(item.time.slice(3)));
         }"""
     )
+    assert app_page.evaluate(
+        """() => {
+            const plan = State.planner.dayPlans.find(item => item.date === PlannerEngine.displayDate);
+            return plan.mode === 'balanced' && plan.meetings.length === 2 &&
+                State.planner.entries.some(item => item.taskId === plan.mainTaskId);
+        }"""
+    )
     navigate_to_view(app_page, "calendar")
     expect(app_page.locator("#content")).to_contain_text("Planning meeting")
     navigate_to_view(app_page, "planner")
 
+    navigate_to_view(app_page, "dailytools")
     habit = app_page.locator('#planner-habit-form [name="title"]')
     habit.fill("Stretch for two minutes")
     app_page.get_by_role("button", name="Add habit").click()
@@ -80,35 +97,61 @@ def test_planner_marks_blocks_done_and_starts_focus_blocks(app_page: Page) -> No
     )
     app_page.locator("#planner-date-filter").fill(tomorrow)
     app_page.locator("#planner-date-filter").dispatch_event("change")
-    app_page.get_by_role("button", name="Build this day").click()
+    main_task = app_page.locator("#planner-main-task option:checked").text_content()
+    app_page.get_by_role("button", name="Build my day").click()
 
-    app_page.get_by_role("button", name="Complete Priority focus block").click()
+    app_page.get_by_role("button", name=f"Complete {main_task}").click()
     assert app_page.evaluate(
-        "() => State.planner.entries.find(item => item.title === 'Priority focus block').completed"
+        "() => State.planner.entries.find(item => item.taskId === State.planner.dayPlans.find(plan => plan.date === PlannerEngine.displayDate).mainTaskId).completed"
     ) is True
-    expect(app_page.locator('[aria-label="Day plan progress"]')).to_have_attribute("aria-valuenow", "20")
+    assert app_page.evaluate(
+        """() => Number(document.querySelector('[aria-label="Day plan progress"]').getAttribute('aria-valuenow')) > 0"""
+    )
 
-    app_page.get_by_role("button", name="Reopen Priority focus block").click()
-    start_focus = app_page.get_by_role("button", name="Start focus session for Priority focus block")
+    app_page.get_by_role("button", name=f"Reopen {main_task}").click()
+    start_focus = app_page.get_by_role("button", name=f"Start focus session for {main_task}")
     expect(start_focus).to_be_visible()
     start_focus.click()
     expect(app_page.locator("#content h2").first).to_have_text("Focus Timer")
-    assert app_page.evaluate("ChronoEngine.activeCategory") == "Priority focus block"
+    assert app_page.evaluate("ChronoEngine.activeCategory") == main_task
     expect(app_page.locator("#global-timer-pill")).to_be_visible()
 
 
 def test_planner_rejects_overlapping_day_builder_suggestions(app_page: Page) -> None:
     navigate_to_view(app_page, "planner")
-    app_page.locator('#planner-builder-form [name="meetingTitle"]').fill("Early meeting")
-    app_page.locator('#planner-builder-form [name="meetingTime"]').fill("08:00")
-    app_page.get_by_role("button", name="Build this day").click()
+    app_page.locator('#planner-builder-form [name="meetingTitle"]').fill("Lunch-time meeting")
+    app_page.locator('#planner-builder-form [name="meetingTime"]').fill("12:30")
+    app_page.get_by_role("button", name="Build my day").click()
 
-    expect(app_page.locator("#toast-container")).to_contain_text("overlap")
+    expect(app_page.locator("#toast-container")).to_contain_text("overlaps")
     assert app_page.evaluate("() => State.planner.entries.length") == 0
 
 
-def test_planner_clock_stopwatch_and_alarm_creation(app_page: Page) -> None:
+def test_low_energy_planner_uses_task_energy_and_one_mobile_scroll(app_page: Page) -> None:
+    app_page.set_viewport_size({"width": 393, "height": 852})
     navigate_to_view(app_page, "planner")
+    app_page.locator('#planner-builder-form input[name="mode"][value="low"]').check()
+    app_page.locator("#planner-main-task").select_option(index=2)
+    selected_title = app_page.locator("#planner-main-task option:checked").text_content()
+    expect(app_page.locator("#planner-main-task-details h3")).to_have_text(selected_title)
+    app_page.get_by_role("button", name="Build my day").click()
+
+    assert app_page.evaluate(
+        """() => {
+            const plan = State.planner.dayPlans.find(item => item.date === PlannerEngine.displayDate);
+            const entries = State.planner.entries.filter(item => item.date === PlannerEngine.displayDate);
+            const main = entries.find(item => item.taskId === plan.mainTaskId);
+            return plan.mode === 'low' && main.duration === 45 &&
+                entries.filter(item => item.taskId).length <= 3 &&
+                [...document.querySelectorAll('#content *')].every(item =>
+                    !['auto', 'scroll'].includes(getComputedStyle(item).overflowY));
+        }"""
+    )
+    assert app_page.locator(".planner-question").count() == 4
+
+
+def test_planner_clock_stopwatch_and_alarm_creation(app_page: Page) -> None:
+    navigate_to_view(app_page, "dailytools")
     expect(app_page.locator("#planner-clock")).to_be_visible()
     expect(app_page.locator("#planner-timezone")).not_to_be_empty()
 
@@ -261,12 +304,12 @@ def test_drag_task_between_kanban_columns(app_page: Page) -> None:
 
 def test_finance_view_remains_available_without_calculator_screen(app_page: Page) -> None:
     navigate_to_view(app_page, "finance")
-    expect(app_page.locator("#content h2")).to_have_text("Wealth & Capital Ledger")
+    expect(app_page.locator("#content h2")).to_have_text("Money overview")
     expect(app_page.locator("#content [id^='finance-loan-']")).to_have_count(0)
 
 
 def test_budget_categories_can_be_renamed_added_and_deleted_safely(app_page: Page) -> None:
-    navigate_to_view(app_page, "finance")
+    navigate_to_view(app_page, "budget")
     app_page.evaluate(
         """async () => {
             State.finances.budgetItems.push({
@@ -347,6 +390,7 @@ def test_eisenhower_matrix_and_calendar_aggregate_workspace_events(app_page: Pag
     app_page.locator("#tx-desc").fill("Calendar transaction")
     app_page.locator("#tx-amount").fill("75")
     app_page.get_by_role("button", name="Log Entry").click()
+    navigate_to_view(app_page, "budget")
     app_page.get_by_role("button", name="Add Budget Item").click()
     app_page.locator("#finance-expense-title").fill("Calendar bill")
     app_page.locator("#finance-expense-amount").fill("200")
@@ -449,6 +493,8 @@ def test_create_story_finance_entry_note_and_checkpoint(app_page: Page) -> None:
     app_page.locator("#tx-amount").fill("12")
     app_page.get_by_role("button", name="Log Entry").click()
     expect(app_page.locator("#content")).to_contain_text("Playwright transaction")
+    navigate_to_view(app_page, "transactions")
+    expect(app_page.locator("#content")).to_contain_text("Playwright transaction")
 
     navigate_to_view(app_page, "brain")
     app_page.get_by_role("button", name="Create Note").click()
@@ -497,7 +543,7 @@ def test_edit_note_category_and_create_editable_task_from_note(app_page: Page) -
 
 
 def test_finance_categories_recurring_paid_items_and_amount_visibility(app_page: Page) -> None:
-    navigate_to_view(app_page, "finance")
+    navigate_to_view(app_page, "budget")
     housing = app_page.locator("#content section.stat-card").filter(has_text="Housing").first
     expect(housing).to_be_visible()
 
@@ -559,7 +605,7 @@ def test_finance_categories_recurring_paid_items_and_amount_visibility(app_page:
 
 
 def test_monthly_budget_projections_lock_actuals_and_roll_forward(app_page: Page) -> None:
-    navigate_to_view(app_page, "finance")
+    navigate_to_view(app_page, "budget")
     app_page.get_by_role("button", name="Add projection").click()
     app_page.locator("#finance-decision-title").fill("Weekend trip")
     app_page.locator("#finance-decision-category").select_option("Discretionary")

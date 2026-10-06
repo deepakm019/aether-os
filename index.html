@@ -47,6 +47,13 @@
             --elevation-2: 0 4px 8px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
             --elevation-3: 0 8px 24px rgba(0, 0, 0, 0.5);
             --glass-header: rgba(29, 25, 39, 0.9);
+            .planner-meeting-row button { min-height:42px; }
+            .planner-mode-options { grid-template-columns:minmax(0,1fr); }
+            .planner-timeline { gap:2px; }
+            .planner-timeline::before { left:47px; }
+            .planner-timeline-item { grid-template-columns:38px minmax(0,1fr); gap:14px; }
+            .planner-timeline-time { font-size:.66rem; }
+            .planner-generate-row > button { width:100%; min-height:46px; }
         }
 
         :root[data-theme="light"] {
@@ -519,6 +526,9 @@
         .finance-decision-status { color: var(--md-sys-color-primary); font-weight: 600; }
         .finance-decision-summary { margin-bottom: 0; }
         .finance-history-expander { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--md-sys-color-outline-variant); }
+        .finance-page-nav { display:flex; gap:8px; flex-wrap:wrap; margin:-8px 0 16px; }
+        .finance-page-nav button[aria-current="page"] { border-color:var(--md-sys-color-primary); background:var(--md-sys-color-primary-container); color:var(--md-sys-color-on-primary-container); }
+        .finance-empty-state { padding:28px 16px; text-align:center; color:var(--md-sys-color-text-muted); }
         .finance-history-expander > summary,
         .finance-history-month > summary { justify-content: flex-start; font-size: 0.78rem; font-weight: 600; }
         .finance-history-month { padding: 9px 10px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--radius-sm); }
@@ -973,6 +983,30 @@
         .energy-reactive { background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.3); }
         .planner-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap:16px; }
         .planner-form-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap:10px; }
+        .planner-question-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap:12px; margin:16px 0; }
+        .planner-question { min-width:0; display:grid; align-content:start; gap:10px; padding:16px; border:1px solid var(--md-sys-color-outline-variant); border-radius:var(--radius-md); background:var(--md-sys-color-surface); }
+        .planner-question legend { padding:0 6px; color:var(--md-sys-color-text-main); font-size:.94rem; font-weight:650; }
+        .planner-question label { display:grid; gap:5px; min-width:0; color:var(--md-sys-color-text-muted); font-size:.75rem; }
+        .planner-meeting-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(90px,.8fr); align-items:end; gap:7px; padding:9px; border:1px solid var(--md-sys-color-outline-variant); border-radius:var(--radius-sm); background:var(--md-sys-color-surface-container); }
+        .planner-meeting-row label { font-size:.68rem; }
+        .planner-meeting-row button { min-width:36px; padding:6px; }
+        .planner-mode-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+        .planner-mode-option { min-width:0; display:flex !important; align-items:flex-start; gap:7px !important; padding:9px; border:1px solid var(--md-sys-color-outline-variant); border-radius:var(--radius-sm); background:var(--md-sys-color-surface-container); color:var(--md-sys-color-text-secondary) !important; }
+        .planner-mode-option input { margin-top:3px; accent-color:var(--md-sys-color-primary); }
+        .planner-task-details { display:grid; gap:5px; padding:12px; border-radius:var(--radius-sm); background:var(--md-sys-color-surface-container); color:var(--md-sys-color-text-secondary); font-size:.8rem; }
+        .planner-task-details h3 { color:var(--md-sys-color-text-main); font-size:.95rem; font-weight:650; }
+        .planner-generate-row { display:flex; justify-content:flex-end; align-items:center; gap:12px; flex-wrap:wrap; }
+        .planner-main-task { display:grid; gap:8px; margin:16px 0; padding:18px; border:1px solid color-mix(in srgb, var(--md-sys-color-primary) 42%, var(--md-sys-color-outline-variant)); border-radius:var(--radius-md); background:color-mix(in srgb, var(--md-sys-color-primary-container) 20%, var(--md-sys-color-surface)); }
+        .planner-main-task p { color:var(--md-sys-color-text-secondary); line-height:1.5; overflow-wrap:anywhere; }
+        .planner-timeline { position:relative; display:grid; gap:0; margin-top:12px; }
+        .planner-timeline::before { content:""; position:absolute; top:10px; bottom:10px; left:57px; width:1px; background:var(--md-sys-color-outline-variant); }
+        .planner-timeline-item { position:relative; display:grid; grid-template-columns:48px minmax(0,1fr); gap:18px; padding:7px 0; }
+        .planner-timeline-time { padding-top:10px; color:var(--md-sys-color-primary); font:600 .72rem var(--font-mono); text-align:right; }
+        .planner-timeline-card { min-width:0; padding:11px 12px; border:1px solid var(--md-sys-color-outline-variant); border-radius:var(--radius-sm); background:var(--md-sys-color-surface-container); }
+        .planner-timeline-card.is-main { border-color:color-mix(in srgb, var(--md-sys-color-primary) 42%, var(--md-sys-color-outline-variant)); background:color-mix(in srgb, var(--md-sys-color-primary-container) 17%, var(--md-sys-color-surface)); }
+        .planner-timeline-card.is-open { border-style:dashed; background:transparent; color:var(--md-sys-color-text-muted); }
+        .planner-timeline-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-top:4px; color:var(--md-sys-color-text-muted); font-size:.7rem; }
+        .planner-timeline-actions { display:flex; gap:5px; }
         .planner-day-overview { display:grid; grid-template-columns:minmax(0, 1.15fr) minmax(220px, .85fr); gap:20px; align-items:center; margin-bottom:16px; }
         .planner-day-next { display:grid; justify-items:start; gap:6px; min-width:0; }
         .planner-day-next h3 { font-size:1.08rem; font-weight:650; overflow-wrap:anywhere; }
@@ -1127,6 +1161,10 @@
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h3M8 17h6"/></svg></span>
                 <span>Time & Day Planner</span>
             </div>
+            <div class="nav-item" data-view="dailytools">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2M8 2h8"/></svg></span>
+                <span>Habits & Reminders</span>
+            </div>
                 </div>
             </details>
 
@@ -1161,7 +1199,15 @@
                 <div class="nav-dimension-items">
             <div class="nav-item" data-view="finance">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M16 14h2M7 5V3h10v2"/></svg></span>
-                <span>Wallet & Budget</span>
+                <span>Money Overview</span>
+            </div>
+            <div class="nav-item" data-view="budget">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v15H4zM8 9h8M8 13h5M8 17h3"/></svg></span>
+                <span>Budget & Bills</span>
+            </div>
+            <div class="nav-item" data-view="transactions">
+                <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16M7 4v4M17 10v4M10 16v4"/></svg></span>
+                <span>Transactions</span>
             </div>
             <div class="nav-item" data-view="brain">
                 <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M8 14c-1.5-1-2.5-2.7-2.5-4.7a6.5 6.5 0 1 1 13 0c0 2-1 3.7-2.5 4.7-.6.4-1 1.1-1 1.8h-6c0-.7-.4-1.4-1-1.8z"/><path d="M12 3v2"/></svg></span>
@@ -2163,7 +2209,7 @@
             },
             pathways: [],
             notes: [],
-            planner: { entries: [], habits: [], alarms: [] }
+            planner: { entries: [], habits: [], alarms: [], dayPlans: [] }
         };
 
         const DEFAULT_INITIAL_STATE = JSON.parse(JSON.stringify(State));
@@ -2225,7 +2271,7 @@
             };
             const plannerTimeIsValid = value => typeof value === 'string' &&
                 /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
-            for (const field of ['entries', 'habits', 'alarms']) {
+            for (const field of ['entries', 'habits', 'alarms', 'dayPlans']) {
                 if (!Array.isArray(normalized.planner[field]) || normalized.planner[field].length > 1000 ||
                     normalized.planner[field].some(item => !item || typeof item !== 'object' || Array.isArray(item))) {
                     throw new Error(`The decrypted vault has invalid planner ${field}.`);
@@ -2240,7 +2286,8 @@
                     !plannerDateIsValid(entry.date) || !plannerTimeIsValid(entry.time) ||
                     !Number.isInteger(entry.duration) || entry.duration < 1 || entry.duration > 1440 ||
                     !['meeting', 'travel', 'personal', 'exercise', 'focus', 'habit', 'other'].includes(entry.category) ||
-                    !Number.isInteger(entry.remindBefore) || ![0, 5, 10, 15, 30, 60].includes(entry.remindBefore)) {
+                    !Number.isInteger(entry.remindBefore) || ![0, 5, 10, 15, 30, 60].includes(entry.remindBefore) ||
+                    (entry.taskId !== undefined && (typeof entry.taskId !== 'string' || entry.taskId.length > 100))) {
                     throw new Error('The decrypted vault has an invalid scheduled item.');
                 }
                 entry.completed = entry.completed === true;
@@ -2259,6 +2306,24 @@
                     !plannerDateIsValid(alarm.date) || !plannerTimeIsValid(alarm.time) ||
                     typeof alarm.enabled !== 'boolean') {
                     throw new Error('The decrypted vault has an invalid alarm.');
+                }
+            });
+            normalized.planner.dayPlans.forEach(plan => {
+                if (!plannerDateIsValid(plan.date) || !plannerTimeIsValid(plan.start) ||
+                    !plannerTimeIsValid(plan.end) || typeof plan.mainTaskId !== 'string' ||
+                    !['deep', 'balanced', 'low'].includes(plan.mode) || !Array.isArray(plan.meetings) ||
+                    plan.meetings.length > 8 ||
+                    !plannerTimeIsValid(plan.lunchTime) || !Number.isInteger(plan.lunchDuration) ||
+                    !plannerTimeIsValid(plan.teaTime) || !Number.isInteger(plan.teaDuration) ||
+                    plan.meetings.some(meeting => !meeting || typeof meeting.title !== 'string' ||
+                        !meeting.title || meeting.title.length > 120 || !plannerTimeIsValid(meeting.time) ||
+                        !Number.isInteger(meeting.duration) || meeting.duration < 5 || meeting.duration > 720 ||
+                        !Number.isInteger(meeting.travelDuration) || meeting.travelDuration < 0 ||
+                        meeting.travelDuration > 360) ||
+                    Number(plan.start.replace(':', '')) >= Number(plan.end.replace(':', '')) ||
+                    plan.lunchDuration < 15 || plan.lunchDuration > 180 ||
+                    plan.teaDuration < 5 || plan.teaDuration > 90) {
+                    throw new Error('The decrypted vault has an invalid day plan.');
                 }
             });
             if (!Array.isArray(normalized.user.badges) ||
@@ -4685,6 +4750,25 @@
                             App.refreshCurrentView();
                         }
                         break;
+                    case 'meeting-add': {
+                        const form = document.getElementById('planner-builder-form');
+                        const template = document.getElementById('planner-meeting-template');
+                        const list = document.getElementById('planner-meetings');
+                        if (form && template && list && list.children.length < 8) {
+                            list.append(template.content.cloneNode(true));
+                        }
+                        break;
+                    }
+                    case 'meeting-remove':
+                        target.closest('.planner-meeting-row')?.remove();
+                        break;
+                    case 'open-main-task': {
+                        const taskId = target.dataset.taskId;
+                        if (typeof taskId === 'string' && State.tasks.some(task => task.id === taskId)) {
+                            TaskDrawer.open(taskId);
+                        }
+                        break;
+                    }
                 }
             },
             handleChange: event => {
@@ -4694,6 +4778,8 @@
                     if (!CalendarView.isDateKey(target.value)) return;
                     PlannerEngine.displayDate = target.value;
                     App.refreshCurrentView();
+                } else if (target.id === 'planner-main-task') {
+                    PlannerEngine.renderMainTaskDetails(target.value);
                 } else if (target.matches('[data-planner-action="habit-toggle"]') &&
                     target instanceof HTMLInputElement) {
                     const index = Number(target.dataset.index);
@@ -4741,84 +4827,154 @@
                 ChronoEngine.start(entry.title);
                 App.router('timeview');
             },
+            minuteOf: time => Number(time.slice(0, 2)) * 60 + Number(time.slice(3)),
+            timeAt: minute => `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`,
+            renderMainTaskDetails: taskId => {
+                const target = document.getElementById('planner-main-task-details');
+                if (!target) return;
+                const task = State.tasks.find(item => item.id === taskId && item.status !== 'done');
+                target.innerHTML = task
+                    ? `<h3>${esc(task.title)}</h3><p>${esc(task.desc || 'No extra task details yet.')}</p><div class="flex items-center gap-2" style="flex-wrap:wrap;">${energyPill(task)}<span class="pill ${['low', 'med', 'high'].includes(task.priority) ? task.priority : 'low'}">${esc(task.priority || 'low')} priority</span>${task.dueDate ? `<span class="text-muted">Due ${esc(task.dueDate)}</span>` : ''}</div>`
+                    : '<p class="text-muted">Add an unfinished task to your Task Board, then choose it as the main work for this day.</p>';
+            },
             buildDay: async form => {
                 const values = new FormData(form);
                 const date = String(values.get('date') || '');
-                const wake = String(values.get('wake') || '');
-                const focusTitle = String(values.get('focusTitle') || '').trim();
-                const focusTime = String(values.get('focusTime') || '');
-                const focusDuration = Number(values.get('focusDuration'));
-                const breakTime = String(values.get('breakTime') || '');
-                const breakDuration = Number(values.get('breakDuration'));
-                const meetingTitle = String(values.get('meetingTitle') || '').trim();
-                const meetingTime = String(values.get('meetingTime') || '');
-                const meetingDuration = Number(values.get('meetingDuration'));
-                const travelDuration = Number(values.get('travelDuration'));
-                const personalTime = String(values.get('personalTime') || '');
-                const personalDuration = Number(values.get('personalDuration'));
-                const exerciseTime = String(values.get('exerciseTime') || '');
-                const exerciseDuration = Number(values.get('exerciseDuration'));
-                const habitTitle = String(values.get('habitTitle') || '').trim();
-                const habitTime = String(values.get('habitTime') || '');
-                const minute = time => {
-                    const [hour, minutes] = time.split(':').map(Number);
-                    return hour * 60 + minutes;
-                };
-                if (!CalendarView.isDateKey(date) || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(wake) ||
-                    !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(focusTime) ||
-                    !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(breakTime) ||
-                    !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(personalTime) ||
-                    !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(exerciseTime) ||
-                    !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(habitTime) ||
-                    !focusTitle || focusTitle.length > 120 ||
-                    !Number.isInteger(focusDuration) || focusDuration < 1 || focusDuration > 1440 ||
-                    !Number.isInteger(breakDuration) || breakDuration < 1 || breakDuration > 1440 ||
-                    !Number.isInteger(personalDuration) || personalDuration < 1 || personalDuration > 1440 ||
-                    !Number.isInteger(exerciseDuration) || exerciseDuration < 1 || exerciseDuration > 1440 ||
-                    (meetingTitle && (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(meetingTime) ||
-                        !Number.isInteger(meetingDuration) || meetingDuration < 1 || meetingDuration > 1440 ||
-                        !Number.isInteger(travelDuration) || travelDuration < 0 || travelDuration > 720)) ||
-                    !habitTitle || habitTitle.length > 120) {
-                    Toast.show('Check the day plan times and durations, then try again.', 'error');
+                const start = String(values.get('start') || '');
+                const end = String(values.get('end') || '');
+                const lunchTime = String(values.get('lunchTime') || '');
+                const lunchDuration = Number(values.get('lunchDuration'));
+                const teaTime = String(values.get('teaTime') || '');
+                const teaDuration = Number(values.get('teaDuration'));
+                const mode = String(values.get('mode') || '');
+                const mainTaskId = String(values.get('mainTaskId') || '');
+                const mainTask = State.tasks.find(task => task.id === mainTaskId && task.status !== 'done');
+                const validTime = value => /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
+                const startMinute = validTime(start) ? PlannerEngine.minuteOf(start) : -1;
+                const endMinute = validTime(end) ? PlannerEngine.minuteOf(end) : -1;
+                if (!CalendarView.isDateKey(date) || startMinute < 0 || endMinute <= startMinute ||
+                    !validTime(lunchTime) || !validTime(teaTime) ||
+                    !Number.isInteger(lunchDuration) || lunchDuration < 15 || lunchDuration > 180 ||
+                    !Number.isInteger(teaDuration) || teaDuration < 5 || teaDuration > 90 ||
+                    !['deep', 'balanced', 'low'].includes(mode) || !mainTask) {
+                    Toast.show('Answer the four day-planning questions and choose an unfinished main task.', 'error');
                     return;
                 }
-                const makeEntry = (title, time, duration, category) => ({
-                    id: `plan_${crypto.randomUUID()}`, title, date, time, duration, category, remindBefore: 0, completed: false
-                });
-                const entries = [
-                    makeEntry(focusTitle, focusTime, focusDuration, 'focus'),
-                    makeEntry('Lunch / reset', breakTime, breakDuration, 'personal'),
-                    makeEntry('Exercise', exerciseTime, exerciseDuration, 'exercise'),
-                    makeEntry('Personal time', personalTime, personalDuration, 'personal'),
-                    makeEntry(habitTitle, habitTime, 5, 'habit')
-                ];
-                if (meetingTitle) {
-                    const meetingStart = minute(meetingTime);
-                    if (meetingStart < travelDuration || meetingStart + meetingDuration + travelDuration > 1440) {
-                        Toast.show('Travel blocks would cross midnight. Shorten the meeting or travel time.', 'error');
+
+                const meetingRows = [...form.querySelectorAll('.planner-meeting-row')];
+                const meetings = [];
+                for (const row of meetingRows) {
+                    const title = String(row.querySelector('[name="meetingTitle"]').value || '').trim();
+                    const time = String(row.querySelector('[name="meetingTime"]').value || '');
+                    const duration = Number(row.querySelector('[name="meetingDuration"]').value);
+                    const travelDuration = Number(row.querySelector('[name="travelDuration"]').value);
+                    if (!title && !time) continue;
+                    if (!title || title.length > 120 || !validTime(time) ||
+                        !Number.isInteger(duration) || duration < 5 || duration > 720 ||
+                        !Number.isInteger(travelDuration) || travelDuration < 0 || travelDuration > 360) {
+                        Toast.show('Complete each meeting row or remove it before building the day.', 'error');
                         return;
                     }
-                    if (travelDuration > 0) {
-                        entries.push(
-                            makeEntry(`Travel to ${meetingTitle}`, `${String(Math.floor((meetingStart - travelDuration) / 60)).padStart(2, '0')}:${String((meetingStart - travelDuration) % 60).padStart(2, '0')}`, travelDuration, 'travel'),
-                            makeEntry(`Travel from ${meetingTitle}`, `${String(Math.floor((meetingStart + meetingDuration) / 60)).padStart(2, '0')}:${String((meetingStart + meetingDuration) % 60).padStart(2, '0')}`, travelDuration, 'travel')
-                        );
-                    }
-                    entries.push(makeEntry(meetingTitle, meetingTime, meetingDuration, 'meeting'));
+                    meetings.push({ title, time, duration, travelDuration });
                 }
-                const sorted = [...entries].sort((a, b) => a.time.localeCompare(b.time));
-                const existing = PlannerEngine.sortedEntries(date);
-                const allEntries = [...existing, ...sorted].sort((a, b) => a.time.localeCompare(b.time));
-                if (sorted.some(item => minute(item.time) < minute(wake)) ||
-                    allEntries.some((item, index) => item.duration > 1440 - minute(item.time) ||
-                        (index > 0 && minute(allEntries[index - 1].time) + allEntries[index - 1].duration > minute(item.time)))) {
-                    Toast.show('A block starts before wake-up or overlaps another item. Adjust your times.', 'error');
+
+                const makeEntry = (title, time, duration, category, taskId = '') => ({
+                    id: `plan_${crypto.randomUUID()}`, title, date, time, duration, category,
+                    remindBefore: 0, completed: false, ...(taskId ? { taskId } : {})
+                });
+                const entries = [];
+                const lunchStart = PlannerEngine.minuteOf(lunchTime);
+                const teaStart = PlannerEngine.minuteOf(teaTime);
+                entries.push(makeEntry('Lunch', lunchTime, lunchDuration, 'personal'));
+                entries.push(makeEntry('Tea break', teaTime, teaDuration, 'personal'));
+                for (const meeting of meetings) {
+                    const meetingStart = PlannerEngine.minuteOf(meeting.time);
+                    if (meetingStart - meeting.travelDuration < startMinute ||
+                        meetingStart + meeting.duration + meeting.travelDuration > endMinute) {
+                        Toast.show('Meeting travel time falls outside your day. Adjust the meeting or travel duration.', 'error');
+                        return;
+                    }
+                    if (meeting.travelDuration) {
+                        entries.push(makeEntry(`Travel to ${meeting.title}`,
+                            PlannerEngine.timeAt(meetingStart - meeting.travelDuration), meeting.travelDuration, 'travel'));
+                        entries.push(makeEntry(`Travel from ${meeting.title}`,
+                            PlannerEngine.timeAt(meetingStart + meeting.duration), meeting.travelDuration, 'travel'));
+                    }
+                    entries.push(makeEntry(meeting.title, meeting.time, meeting.duration, 'meeting'));
+                }
+                const fixed = entries.map(entry => ({
+                    entry, start: PlannerEngine.minuteOf(entry.time), end: PlannerEngine.minuteOf(entry.time) + entry.duration
+                })).sort((a, b) => a.start - b.start);
+                if (fixed.some(item => item.start < startMinute || item.end > endMinute) ||
+                    fixed.some((item, index) => index > 0 && fixed[index - 1].end > item.start)) {
+                    Toast.show('A meeting, travel block, or break overlaps or falls outside your day. Adjust its time.', 'error');
                     return;
                 }
-                if (await PlannerEngine.saveEntries(entries)) {
-                    Toast.show(`${entries.length} blocks added to your day.`, 'success');
-                    form.reset();
+
+                const freeWindows = [];
+                let cursor = startMinute;
+                for (const item of fixed) {
+                    if (item.start > cursor) freeWindows.push({ start: cursor, end: item.start });
+                    cursor = item.end;
                 }
+                if (cursor < endMinute) freeWindows.push({ start: cursor, end: endMinute });
+                const targetMainMinutes = { deep: 120, balanced: 90, low: 45 }[mode];
+                const minimumMainMinutes = { deep: 45, balanced: 30, low: 20 }[mode];
+                const mainWindow = freeWindows.find(window => window.end - window.start >= minimumMainMinutes);
+                if (!mainWindow) {
+                    Toast.show('There is no uninterrupted space for the main task. Adjust your day or fixed commitments.', 'error');
+                    return;
+                }
+                const mainDuration = Math.min(targetMainMinutes, mainWindow.end - mainWindow.start);
+                const allocated = [{
+                    task: mainTask, start: mainWindow.start, duration: mainDuration, category: 'focus', main: true
+                }];
+                mainWindow.start += mainDuration;
+
+                const priorityRank = { high: 3, med: 2, low: 1 };
+                const modeEnergyRank = mode === 'deep'
+                    ? { deep: 3, shallow: 2, reactive: 1 }
+                    : mode === 'low'
+                        ? { reactive: 3, shallow: 2, deep: 1 }
+                        : { shallow: 3, deep: 2, reactive: 1 };
+                const supportingLimit = { deep: 2, balanced: 4, low: 2 }[mode];
+                const remainingTasks = State.tasks.filter(task => task.status !== 'done' && task.id !== mainTaskId)
+                    .sort((a, b) => (modeEnergyRank[b.energy] || 0) - (modeEnergyRank[a.energy] || 0) ||
+                        (priorityRank[b.priority] || 0) - (priorityRank[a.priority] || 0) ||
+                        String(a.dueDate || '9999-12-31').localeCompare(String(b.dueDate || '9999-12-31')));
+                let supportingCount = 0;
+                for (const task of remainingTasks) {
+                    if (supportingCount >= supportingLimit) break;
+                    const window = freeWindows.find(item => item.end - item.start >= 20);
+                    if (!window) break;
+                    const base = task.energy === 'deep' ? 45 : task.energy === 'shallow' ? 30 : 20;
+                    const duration = Math.min(mode === 'low' ? Math.min(base, 25) : base, window.end - window.start);
+                    if (duration < 20) continue;
+                    allocated.push({ task, start: window.start, duration, category: task.energy === 'deep' ? 'focus' : 'other' });
+                    window.start += duration;
+                    supportingCount++;
+                }
+                for (const block of allocated) {
+                    entries.push(makeEntry(block.task.title, PlannerEngine.timeAt(block.start),
+                        block.duration, block.category, block.task.id));
+                }
+                entries.sort((a, b) => a.time.localeCompare(b.time));
+
+                const existing = State.planner.entries;
+                const sameDayEntries = existing.filter(entry => entry.date === date);
+                if (sameDayEntries.length && !window.confirm(`Replace the ${sameDayEntries.length} existing scheduled block(s) on ${date}?`)) return;
+                const oldPlans = State.planner.dayPlans;
+                const plan = { date, start, end, lunchTime, lunchDuration, teaTime, teaDuration, mode, mainTaskId, meetings };
+                State.planner.entries = [...existing.filter(entry => entry.date !== date), ...entries]
+                    .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+                State.planner.dayPlans = [...oldPlans.filter(item => item.date !== date), plan];
+                if (!await Data.save()) {
+                    State.planner.entries = existing;
+                    State.planner.dayPlans = oldPlans;
+                    return;
+                }
+                App.refreshCurrentView();
+                Toast.show(`Your ${mode} day is ready with ${entries.length} scheduled blocks.`, 'success');
             },
             addEntry: async form => {
                 const values = new FormData(form);
@@ -5138,17 +5294,11 @@
             planner: () => {
                 const date = PlannerEngine.displayDate || PlannerEngine.dateKey(new Date());
                 const entries = PlannerEngine.sortedEntries(date);
-                const notificationState = typeof Notification === 'undefined'
-                    ? 'System notifications are not supported by this browser.'
-                    : Notification.permission === 'granted'
-                        ? 'System notifications enabled; keep this app open for alarms and reminders.'
-                        : 'In-app alerts work while open. Enable system notifications for desktop alerts.';
+                const plan = State.planner.dayPlans.find(item => item.date === date);
                 const today = PlannerEngine.dateKey(new Date());
-                const habits = State.planner.habits || [];
-                const alarms = State.planner.alarms || [];
                 const now = new Date();
                 const currentMinute = now.getHours() * 60 + now.getMinutes();
-                const toMinute = entry => Number(entry.time.slice(0, 2)) * 60 + Number(entry.time.slice(3));
+                const toMinute = PlannerEngine.minuteOf;
                 const inProgressEntry = date === today
                     ? entries.find(entry => !entry.completed && toMinute(entry) <= currentMinute &&
                         toMinute(entry) + entry.duration > currentMinute)
@@ -5157,33 +5307,171 @@
                     (date !== today || toMinute(entry) >= currentMinute));
                 const nextEntryIndex = nextEntry ? State.planner.entries.indexOf(nextEntry) : -1;
                 const completedEntries = entries.filter(entry => entry.completed).length;
-                const focusMinutes = entries.filter(entry => entry.category === 'focus')
-                    .reduce((total, entry) => total + entry.duration, 0);
-                const exerciseMinutes = entries.filter(entry => entry.category === 'exercise')
-                    .reduce((total, entry) => total + entry.duration, 0);
                 const progressPercent = entries.length ? Math.round(completedEntries / entries.length * 100) : 0;
+                const tasks = State.tasks.filter(task => task.status !== 'done')
+                    .sort((a, b) => ({ high: 3, med: 2, low: 1 }[b.priority] || 0) -
+                        ({ high: 3, med: 2, low: 1 }[a.priority] || 0));
+                const selectedTaskId = plan?.mainTaskId || tasks[0]?.id || '';
+                const selectedTask = State.tasks.find(task => task.id === selectedTaskId && task.status !== 'done');
+                const axisStart = plan ? toMinute(plan.start) : entries.length
+                    ? Math.min(...entries.map(entry => toMinute(entry))) : 8 * 60;
+                const axisEnd = plan ? toMinute(plan.end) : entries.length
+                    ? Math.max(...entries.map(entry => toMinute(entry) + entry.duration)) : 18 * 60;
+                const timeline = [];
+                let timelineCursor = axisStart;
+                for (const entry of entries) {
+                    const entryStart = toMinute(entry);
+                    if (entryStart > timelineCursor) {
+                        timeline.push({ type: 'open', start: timelineCursor, duration: entryStart - timelineCursor });
+                    }
+                    timeline.push({ type: 'entry', entry, start: entryStart, duration: entry.duration });
+                    timelineCursor = Math.max(timelineCursor, entryStart + entry.duration);
+                }
+                if (timelineCursor < axisEnd) {
+                    timeline.push({ type: 'open', start: timelineCursor, duration: axisEnd - timelineCursor });
+                }
+                const meetingRows = plan?.meetings?.length ? plan.meetings : [{}];
+                const mode = ['deep', 'balanced', 'low'].includes(plan?.mode) ? plan.mode : 'balanced';
                 return `
                     <div class="flex justify-between items-center" style="gap:12px; flex-wrap:wrap; margin-bottom:16px;">
                         <div>
-                            <h2>Time & Day Planner</h2>
-                            <p class="text-muted">Your device's local clock and time zone. Keep device time synchronized for accurate alarms.</p>
+                            <h2>Plan your day</h2>
+                            <p class="text-muted">Set the day’s constraints. The planner will fit your main work and the right supporting tasks around them.</p>
                         </div>
                         <label class="text-muted">Plan date
                             <input id="planner-date-filter" type="date" value="${esc(date)}" aria-label="Choose a day to plan">
                         </label>
                     </div>
+                    <section class="card" style="margin-bottom:16px;">
+                        <h3 style="font-size:1rem; font-weight:650;">Four questions for a realistic day</h3>
+                        <form id="planner-builder-form">
+                            <input name="date" type="hidden" value="${esc(date)}">
+                            <div class="planner-question-grid">
+                                <fieldset class="planner-question">
+                                    <legend>1. What are your day’s hours?</legend>
+                                    <label>Start of day<input name="start" type="time" value="${esc(plan?.start || '08:00')}" required></label>
+                                    <label>End of day<input name="end" type="time" value="${esc(plan?.end || '18:00')}" required></label>
+                                </fieldset>
+                                <fieldset class="planner-question">
+                                    <legend>2. Which meetings are fixed?</legend>
+                                    <div id="planner-meetings">
+                                        ${meetingRows.map(meeting => `
+                                            <div class="planner-meeting-row">
+                                                <label>Meeting<input name="meetingTitle" type="text" maxlength="120" value="${esc(meeting.title || '')}" placeholder="Meeting name"></label>
+                                                <label>Starts<input name="meetingTime" type="time" value="${esc(meeting.time || '')}"></label>
+                                                <label>Minutes<input name="meetingDuration" type="number" min="5" max="720" value="${meeting.duration || 60}"></label>
+                                                <label>Travel each way<input name="travelDuration" type="number" min="0" max="360" value="${meeting.travelDuration ?? 20}"></label>
+                                                <button class="sm danger" type="button" data-planner-action="meeting-remove" aria-label="Remove meeting">×</button>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <button class="sm" type="button" data-planner-action="meeting-add">+ Add meeting</button>
+                                    <p class="text-muted">Travel time is added before and after each meeting.</p>
+                                </fieldset>
+                                <fieldset class="planner-question">
+                                    <legend>3. When do you want to reset?</legend>
+                                    <label>Lunch time<input name="lunchTime" type="time" value="${esc(plan?.lunchTime || '12:30')}" required></label>
+                                    <label>Lunch length (minutes)<input name="lunchDuration" type="number" min="15" max="180" value="${plan?.lunchDuration || 45}" required></label>
+                                    <label>Tea break time<input name="teaTime" type="time" value="${esc(plan?.teaTime || '15:30')}" required></label>
+                                    <label>Tea break length (minutes)<input name="teaDuration" type="number" min="5" max="90" value="${plan?.teaDuration || 15}" required></label>
+                                </fieldset>
+                                <fieldset class="planner-question">
+                                    <legend>4. What kind of day and main work?</legend>
+                                    <div class="planner-mode-options">
+                                        <label class="planner-mode-option"><input type="radio" name="mode" value="deep" ${mode === 'deep' ? 'checked' : ''}><span><strong>Deep</strong><small class="text-muted" style="display:block;">Long focus, fewer tasks</small></span></label>
+                                        <label class="planner-mode-option"><input type="radio" name="mode" value="balanced" ${mode === 'balanced' ? 'checked' : ''}><span><strong>Balanced</strong><small class="text-muted" style="display:block;">Focus plus lighter work</small></span></label>
+                                        <label class="planner-mode-option"><input type="radio" name="mode" value="low" ${mode === 'low' ? 'checked' : ''}><span><strong>Low-energy</strong><small class="text-muted" style="display:block;">Shorter work, more space</small></span></label>
+                                    </div>
+                                    <label>Main work from your unfinished tasks
+                                        <select id="planner-main-task" name="mainTaskId" required>
+                                            <option value="">Choose a task</option>
+                                            ${tasks.map(task => `<option value="${esc(task.id)}" ${task.id === selectedTaskId ? 'selected' : ''}>${esc(task.title)}</option>`).join('')}
+                                        </select>
+                                    </label>
+                                    <div class="planner-task-details" id="planner-main-task-details" aria-live="polite">
+                                        ${selectedTask ? `<h3>${esc(selectedTask.title)}</h3><p>${esc(selectedTask.desc || 'No extra task details yet.')}</p><div class="flex items-center gap-2" style="flex-wrap:wrap;">${energyPill(selectedTask)}<span class="pill ${['low', 'med', 'high'].includes(selectedTask.priority) ? selectedTask.priority : 'low'}">${esc(selectedTask.priority || 'low')} priority</span>${selectedTask.dueDate ? `<span class="text-muted">Due ${esc(selectedTask.dueDate)}</span>` : ''}</div>` : '<p class="text-muted">Add an unfinished task to your Task Board, then choose it as the main work for this day.</p>'}
+                                    </div>
+                                </fieldset>
+                            </div>
+                            <div class="planner-generate-row">
+                                <span class="text-muted">Supporting tasks are chosen from your unfinished Task Board based on mode, energy, and priority.</span>
+                                <button class="primary" type="submit">Build my day</button>
+                            </div>
+                            <template id="planner-meeting-template">
+                                <div class="planner-meeting-row">
+                                    <label>Meeting<input name="meetingTitle" type="text" maxlength="120" placeholder="Meeting name"></label>
+                                    <label>Starts<input name="meetingTime" type="time"></label>
+                                    <label>Minutes<input name="meetingDuration" type="number" min="5" max="720" value="60"></label>
+                                    <label>Travel each way<input name="travelDuration" type="number" min="0" max="360" value="20"></label>
+                                    <button class="sm danger" type="button" data-planner-action="meeting-remove" aria-label="Remove meeting">×</button>
+                                </div>
+                            </template>
+                        </form>
+                    </section>
+                    ${selectedTask && plan ? `
+                        <section class="planner-main-task" aria-label="Main work for the day">
+                            <span class="text-muted" style="text-transform:uppercase; font-size:.68rem; letter-spacing:.06em; font-weight:700;">Main work · ${esc(plan.mode)} mode</span>
+                            <h3>${esc(selectedTask.title)}</h3>
+                            <p>${esc(selectedTask.desc || 'Add execution details from the Task Board to make this block more actionable.')}</p>
+                            <div class="flex items-center gap-2" style="flex-wrap:wrap;">
+                                ${energyPill(selectedTask)}
+                                <span class="pill ${['low', 'med', 'high'].includes(selectedTask.priority) ? selectedTask.priority : 'low'}">${esc(selectedTask.priority || 'low')} priority</span>
+                                ${selectedTask.dueDate ? `<span class="text-muted">Due ${esc(selectedTask.dueDate)}</span>` : ''}
+                                <button class="sm" type="button" data-planner-action="open-main-task" data-task-id="${esc(selectedTask.id)}">Open task details</button>
+                            </div>
+                        </section>
+                    ` : ''}
+                    <section class="card" aria-label="Day calendar">
+                        <div class="flex justify-between items-center" style="gap:12px; flex-wrap:wrap;">
+                            <div>
+                                <h3 style="font-size:1rem; font-weight:650;">${date === today ? "Today's calendar" : `Calendar · ${esc(date)}`}</h3>
+                                <p class="text-muted">${entries.length ? `${entries.length} blocks · ${completedEntries} complete · ${plan ? `${esc(plan.mode)} mode` : 'existing schedule'}` : 'Your generated day will appear here.'}</p>
+                            </div>
+                            ${entries.length ? `<span class="pill info">${nextEntry ? `${inProgressEntry ? 'Now' : 'Next'}: ${esc(nextEntry.time)} · ${esc(nextEntry.title)}` : 'Day complete'}</span>` : ''}
+                        </div>
+                        ${entries.length ? `
+                            <div class="energy-track" role="progressbar" aria-label="Day plan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progressPercent}" style="margin-top:12px;">
+                                <span style="width:${progressPercent}%; background:var(--md-sys-color-primary);"></span>
+                            </div>
+                            <div class="planner-timeline">
+                                ${timeline.map(item => {
+                                    const startTime = PlannerEngine.timeAt(item.start);
+                                    const endTime = PlannerEngine.timeAt(item.start + item.duration);
+                                    if (item.type === 'open') return `<div class="planner-timeline-item"><time class="planner-timeline-time">${esc(startTime)}</time><div class="planner-timeline-card is-open"><strong>Open time</strong><div class="planner-timeline-meta"><span>${esc(startTime)}–${esc(endTime)} · ${item.duration} min to use or rest</span></div></div></div>`;
+                                    const entry = item.entry;
+                                    const index = State.planner.entries.indexOf(entry);
+                                    const isMain = entry.taskId === plan?.mainTaskId;
+                                    return `<div class="planner-timeline-item"><time class="planner-timeline-time">${esc(startTime)}</time><div class="planner-timeline-card ${isMain ? 'is-main' : ''} ${entry.completed ? 'planner-entry-complete' : ''}"><strong>${esc(entry.title)}</strong>${entry.completed ? '<span class="pill low" style="margin-left:6px;">Done</span>' : ''}<div class="planner-timeline-meta"><span>${esc(startTime)}–${esc(endTime)} · ${item.duration} min · ${esc(entry.category)}</span><span class="planner-timeline-actions">${entry.category === 'focus' && !entry.completed ? `<button class="sm primary" type="button" data-planner-action="focus-entry" data-index="${index}" aria-label="Start focus session for ${esc(entry.title)}">Focus</button>` : ''}<button class="sm ${entry.completed ? '' : 'tonal'}" type="button" data-planner-action="entry-toggle-done" data-index="${index}" aria-label="${entry.completed ? 'Reopen' : 'Complete'} ${esc(entry.title)}">${entry.completed ? 'Undo' : 'Done'}</button><button class="sm danger" type="button" data-planner-action="entry-delete" data-index="${index}" aria-label="Delete ${esc(entry.title)} schedule block">×</button></span></div></div></div>`;
+                                }).join('')}
+                            </div>
+                        ` : '<p class="text-muted" style="margin-top:14px;">Answer the four questions above to build your calendar day around meetings, travel, breaks, and work.</p>'}
+                    </section>
+                `;
+            },
+            dailytools: () => {
+                const date = PlannerEngine.displayDate || PlannerEngine.dateKey(new Date());
+                const today = PlannerEngine.dateKey(new Date());
+                const habits = State.planner.habits || [];
+                const alarms = State.planner.alarms || [];
+                const notificationState = typeof Notification === 'undefined'
+                    ? 'System notifications are not supported by this browser.'
+                    : Notification.permission === 'granted'
+                        ? 'System notifications enabled; keep this app open for alarms and reminders.'
+                        : 'In-app alerts work while open. Enable system notifications for desktop alerts.';
+                return `
+                    <div style="margin-bottom:16px;">
+                        <h2>Habits & Reminders</h2>
+                        <p class="text-muted">A dedicated home for recurring habits, one-time alarms, and simple time tools.</p>
+                    </div>
                     <div class="planner-grid" style="margin-bottom:16px;">
-                        <section class="card" aria-label="Local time" style="display:flex; flex-direction:column; justify-content:center; min-height:180px;">
+                        <section class="card" aria-label="Local time">
                             <span class="text-muted">LOCAL TIME</span>
                             <time class="planner-clock text-mono" id="planner-clock" aria-live="off">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time>
                             <div class="text-secondary" id="planner-date">${new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
                             <div class="text-muted" id="planner-timezone">${esc(Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local time')}</div>
                         </section>
                         <section class="card" aria-label="Countdown timer">
-                            <div class="flex justify-between items-center" style="margin-bottom:12px;">
-                                <h3 style="font-size:1rem; font-weight:600;">Countdown timer</h3>
-                                <span class="pill info">While app is open</span>
-                            </div>
+                            <h3 style="font-size:1rem; font-weight:600; margin-bottom:12px;">Countdown timer</h3>
                             <output class="planner-countdown" id="planner-countdown" aria-live="off">00:00:00</output>
                             <div class="flex gap-2 items-center" style="margin-top:12px; flex-wrap:wrap;">
                                 <label class="text-muted" for="planner-timer-minutes">Minutes</label>
@@ -5193,10 +5481,7 @@
                             </div>
                         </section>
                         <section class="card" aria-label="Stopwatch">
-                            <div class="flex justify-between items-center" style="margin-bottom:12px;">
-                                <h3 style="font-size:1rem; font-weight:600;">Stopwatch</h3>
-                                <button class="sm" type="button" onclick="App.router('timeview')">Focus timer →</button>
-                            </div>
+                            <h3 style="font-size:1rem; font-weight:600; margin-bottom:12px;">Stopwatch</h3>
                             <output class="planner-countdown" id="planner-stopwatch" aria-live="off">00:00:00</output>
                             <div class="flex gap-2" style="flex-wrap:wrap; margin-top:12px;">
                                 <button class="primary sm" type="button" data-planner-action="stopwatch-toggle">Start / Pause</button>
@@ -5206,72 +5491,7 @@
                             <div class="text-muted" id="planner-laps" style="margin-top:8px;"></div>
                         </section>
                     </div>
-                    <section class="card planner-day-overview" aria-label="Day overview">
-                        <div class="planner-day-next">
-                            <span class="text-muted" style="text-transform:uppercase; font-size:0.68rem; letter-spacing:0.06em; font-weight:700;">
-                                ${inProgressEntry ? 'Happening now' : date === today ? 'Up next' : 'Next on this day'}
-                            </span>
-                            ${nextEntry
-                                ? `<h3>${esc(nextEntry.title)}</h3><p class="text-muted">${esc(nextEntry.time)} · ${nextEntry.duration} min · ${esc(nextEntry.category)}</p>
-                                    ${nextEntry.category === 'focus' ? `<button class="primary sm" type="button" data-planner-action="focus-entry" data-index="${nextEntryIndex}">Start this focus block</button>` : ''}`
-                                : `<h3>${entries.length ? 'Your plan is complete' : 'Nothing scheduled yet'}</h3><p class="text-muted">${entries.length ? 'You have no remaining blocks on this day.' : 'Build a balanced day or add one block to get started.'}</p>`}
-                        </div>
-                        <div class="planner-day-progress">
-                            <div class="planner-day-stats">
-                                <div><strong>${completedEntries}/${entries.length}</strong><span>blocks done</span></div>
-                                <div><strong>${focusMinutes}m</strong><span>focus planned</span></div>
-                                <div><strong>${exerciseMinutes}m</strong><span>movement planned</span></div>
-                            </div>
-                            <div class="energy-track" role="progressbar" aria-label="Day plan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progressPercent}">
-                                <span style="width:${progressPercent}%; background:var(--md-sys-color-primary);"></span>
-                            </div>
-                        </div>
-                    </section>
-                    <section class="card" style="margin-bottom:16px;">
-                        <div class="flex justify-between items-center" style="gap:10px; flex-wrap:wrap; margin-bottom:10px;">
-                            <div>
-                                <h3 style="font-size:1rem; font-weight:600;">Build a balanced day</h3>
-                                <p class="text-muted">Create a realistic day with a priority focus block, recovery break, movement, and personal time. Add a meeting and commute if needed.</p>
-                            </div>
-                        </div>
-                        <form id="planner-builder-form" class="planner-form-grid">
-                            <input name="date" type="hidden" value="${esc(date)}">
-                            <label class="text-muted">Wake-up time<input name="wake" type="time" value="07:00" required></label>
-                            <label class="text-muted">Priority focus block<input name="focusTitle" type="text" maxlength="120" value="Priority focus block" required></label>
-                            <label class="text-muted">Focus starts<input name="focusTime" type="time" value="08:30" required></label>
-                            <label class="text-muted">Focus minutes<input name="focusDuration" type="number" min="1" max="1440" value="60" required></label>
-                            <label class="text-muted">Lunch / reset starts<input name="breakTime" type="time" value="12:30" required></label>
-                            <label class="text-muted">Break minutes<input name="breakDuration" type="number" min="1" max="1440" value="45" required></label>
-                            <label class="text-muted">Meeting (optional)<input name="meetingTitle" type="text" maxlength="160" placeholder="e.g. Project check-in"></label>
-                            <label class="text-muted">Meeting start<input name="meetingTime" type="time"></label>
-                            <label class="text-muted">Meeting minutes<input name="meetingDuration" type="number" min="1" max="1440" value="60"></label>
-                            <label class="text-muted">Travel each way (min)<input name="travelDuration" type="number" min="0" max="720" value="30"></label>
-                            <label class="text-muted">Exercise start<input name="exerciseTime" type="time" value="07:30" required></label>
-                            <label class="text-muted">Exercise minutes<input name="exerciseDuration" type="number" min="1" max="1440" value="30" required></label>
-                            <label class="text-muted">Personal time start<input name="personalTime" type="time" value="17:30" required></label>
-                            <label class="text-muted">Personal time minutes<input name="personalDuration" type="number" min="1" max="1440" value="60" required></label>
-                            <label class="text-muted">Small habit to start<input name="habitTitle" type="text" maxlength="120" value="Drink a glass of water" required></label>
-                            <label class="text-muted">Habit time<input name="habitTime" type="time" value="07:05" required></label>
-                            <button class="primary" type="submit">Build this day</button>
-                        </form>
-                        <p class="text-muted" style="margin-top:8px;">Travel blocks are placed around the meeting. The plan checks wake-up time, overlaps, and midnight boundaries before saving; edit suggested times to fit your day.</p>
-                    </section>
-                    <div class="planner-grid" style="margin-bottom:16px;">
-                        <section class="card">
-                            <div style="margin-bottom:12px;">
-                                <h3 style="font-size:1rem; font-weight:600;">Schedule a block</h3>
-                                <p class="text-muted">Add a custom event or a reminder to your selected day.</p>
-                            </div>
-                            <form id="planner-entry-form" class="planner-form-grid">
-                                <input name="date" type="hidden" value="${esc(date)}">
-                                <label class="text-muted">What is it?<input name="title" type="text" maxlength="160" placeholder="e.g. Deep work" required></label>
-                                <label class="text-muted">Type<select name="category">${PlannerEngine.categories.map(category => `<option value="${category}">${category[0].toUpperCase()}${category.slice(1)}</option>`).join('')}</select></label>
-                                <label class="text-muted">Start time<input name="time" type="time" value="09:00" required></label>
-                                <label class="text-muted">Minutes<input name="duration" type="number" min="1" max="1440" value="30" required></label>
-                                <label class="text-muted">Notify before<select name="remindBefore"><option value="0">No reminder</option><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option></select></label>
-                                <button class="tonal" type="submit">Add to schedule</button>
-                            </form>
-                        </section>
+                    <div class="planner-grid">
                         <section class="card">
                             <div class="flex justify-between items-center" style="gap:8px; margin-bottom:12px;">
                                 <div><h3 style="font-size:1rem; font-weight:600;">One-time alarms</h3><p class="text-muted">Alarms notify only while this app is open.</p></div>
@@ -5285,55 +5505,16 @@
                                 <button class="tonal" type="submit">Set alarm</button>
                             </form>
                             <div class="flex-col gap-2" style="margin-top:12px;">
-                                ${alarms.map((alarm, index) => `
-                                    <div class="planner-entry">
-                                        <div><strong>${esc(alarm.title)}</strong><div class="text-muted">${esc(alarm.date)} · ${esc(alarm.time)} · ${alarm.enabled ? 'Armed' : 'Done'}</div></div>
-                                        <button class="sm danger" type="button" data-planner-action="alarm-delete" data-index="${index}" aria-label="Delete ${esc(alarm.title)} alarm">Delete</button>
-                                    </div>
-                                `).join('') || '<p class="text-muted">No alarms set.</p>'}
+                                ${alarms.map((alarm, index) => `<div class="planner-entry"><div><strong>${esc(alarm.title)}</strong><div class="text-muted">${esc(alarm.date)} · ${esc(alarm.time)} · ${alarm.enabled ? 'Armed' : 'Done'}</div></div><button class="sm danger" type="button" data-planner-action="alarm-delete" data-index="${index}" aria-label="Delete ${esc(alarm.title)} alarm">Delete</button></div>`).join('') || '<p class="text-muted">No alarms set.</p>'}
                             </div>
                         </section>
-                    </div>
-                    <div class="planner-grid">
                         <section class="card">
-                            <div class="flex justify-between items-center" style="gap:8px; margin-bottom:8px;">
-                                <div><h3 style="font-size:1rem; font-weight:600;">Small habits</h3><p class="text-muted">Start tiny; track one repeatable action at a time.</p></div>
-                            </div>
+                            <div style="margin-bottom:12px;"><h3 style="font-size:1rem; font-weight:600;">Small habits</h3><p class="text-muted">Track one repeatable action at a time.</p></div>
                             <form id="planner-habit-form" class="flex gap-2" style="flex-wrap:wrap; margin-bottom:10px;">
                                 <label class="text-muted" style="flex:1; min-width:160px;">A habit to build<input name="title" type="text" maxlength="120" placeholder="e.g. Stretch for two minutes" required></label>
                                 <button class="tonal" type="submit">Add habit</button>
                             </form>
-                            ${habits.map((habit, index) => `
-                                <div class="planner-habit">
-                                    <label class="flex items-center gap-2" style="flex:1; white-space:normal;">
-                                        <input type="checkbox" data-planner-action="habit-toggle" data-index="${index}" ${habit.completedDates.includes(today) ? 'checked' : ''} aria-label="Mark ${esc(habit.title)} complete today">
-                                        <span>${esc(habit.title)}<small class="text-muted" style="display:block;">${habit.completedDates.length} day${habit.completedDates.length === 1 ? '' : 's'} practiced</small></span>
-                                    </label>
-                                    <button class="sm danger" type="button" data-planner-action="habit-delete" data-index="${index}" aria-label="Delete ${esc(habit.title)} habit">×</button>
-                                </div>
-                            `).join('') || '<p class="text-muted">Add one small action you can repeat each day.</p>'}
-                        </section>
-                        <section class="card">
-                            <div style="margin-bottom:12px;">
-                                <h3 style="font-size:1rem; font-weight:600;">${date === today ? "Today's schedule" : `Schedule for ${esc(date)}`}</h3>
-                                <p class="text-muted">${entries.length} planned block${entries.length === 1 ? '' : 's'} · ${PlannerEngine.formatDuration(entries.reduce((total, item) => total + item.duration * 60000, 0))} scheduled</p>
-                            </div>
-                            <div class="flex-col gap-2">
-                                ${entries.map(entry => {
-                                    const index = State.planner.entries.indexOf(entry);
-                                    return `<div class="planner-entry ${entry.completed ? 'planner-entry-complete' : ''}">
-                                        <div class="flex items-center gap-2">
-                                            <span class="planner-entry-time">${esc(entry.time)}</span>
-                                            <span><strong>${esc(entry.title)}</strong>${entry.completed ? '<span class="pill low" style="margin-left:6px;">Done</span>' : ''}<small class="text-muted" style="display:block;">${esc(entry.category)} · ${entry.duration} min${entry.remindBefore ? ` · reminder ${entry.remindBefore}m before` : ''}</small></span>
-                                        </div>
-                                        <div class="planner-entry-actions">
-                                            ${entry.category === 'focus' && !entry.completed ? `<button class="sm primary" style="min-height:44px;" type="button" data-planner-action="focus-entry" data-index="${index}" aria-label="Start focus session for ${esc(entry.title)}">Focus</button>` : ''}
-                                            <button class="sm ${entry.completed ? '' : 'tonal'}" style="min-height:44px;" type="button" data-planner-action="entry-toggle-done" data-index="${index}" aria-label="${entry.completed ? 'Reopen' : 'Complete'} ${esc(entry.title)}">${entry.completed ? 'Undo' : 'Done'}</button>
-                                            <button class="sm danger" style="min-height:44px;" type="button" data-planner-action="entry-delete" data-index="${index}" aria-label="Delete ${esc(entry.title)} schedule item">×</button>
-                                        </div>
-                                    </div>`;
-                                }).join('') || '<p class="text-muted">No blocks planned for this day yet.</p>'}
-                            </div>
+                            ${habits.map((habit, index) => `<div class="planner-habit"><label class="flex items-center gap-2" style="flex:1; white-space:normal;"><input type="checkbox" data-planner-action="habit-toggle" data-index="${index}" ${habit.completedDates.includes(today) ? 'checked' : ''} aria-label="Mark ${esc(habit.title)} complete today"><span>${esc(habit.title)}<small class="text-muted" style="display:block;">${habit.completedDates.length} day${habit.completedDates.length === 1 ? '' : 's'} practiced</small></span></label><button class="sm danger" type="button" data-planner-action="habit-delete" data-index="${index}" aria-label="Delete ${esc(habit.title)} habit">×</button></div>`).join('') || '<p class="text-muted">Add one small action you can repeat each day.</p>'}
                         </section>
                     </div>
                 `;
@@ -5502,12 +5683,18 @@
                     </div>
                 `;
             },
-            finance: () => {
+            finance: () => Views.financePage('overview'),
+            budget: () => Views.financePage('budget'),
+            transactions: () => Views.financePage('transactions'),
+            financePage: page => {
                 const txs = State.finances.transactions || [];
                 const budgets = State.finances.budgets || [];
                 const budgetItems = State.finances.budgetItems || [];
                 const budgetDecisions = State.finances.budgetDecisions || [];
                 const amountsHidden = State.finances.amountsHidden === true;
+                const isOverview = page === 'overview';
+                const isBudget = page === 'budget';
+                const isTransactions = page === 'transactions';
                 const currentMonthKey = FinanceEngine.monthKey();
                 const currentMonthDecisions = budgetDecisions.filter(decision => decision.monthKey === currentMonthKey);
                 const previousMonthDecisions = budgetDecisions.filter(decision => decision.monthKey !== currentMonthKey);
@@ -5553,17 +5740,23 @@
                 return `
                     <div class="flex justify-between items-center" style="margin-bottom: 24px; gap:12px; flex-wrap:wrap;">
                         <div>
-                            <h2>Wealth & Capital Ledger</h2>
-                            <p class="text-muted">Category budgets, recurring payments, and transaction history.</p>
+                            <h2>${isOverview ? 'Money overview' : isBudget ? 'Budget & bills' : 'Transactions'}</h2>
+                            <p class="text-muted">${isOverview ? 'See your monthly position and the next money action.' : isBudget ? 'Set spending limits and manage planned or recurring costs.' : 'Review recorded income and outflows.'}</p>
                         </div>
                         <div class="flex gap-2" style="flex-wrap:wrap;">
                             <button class="sm" data-action="finance-toggle-amounts" aria-pressed="${amountsHidden}">${amountsHidden ? 'Show amounts' : 'Hide amounts'}</button>
-                            <button class="sm tonal" onclick="FinanceEngine.openCategory()"><span class="material-symbols-outlined">add</span> Add Category</button>
+                            ${isBudget ? `<button class="sm tonal" onclick="FinanceEngine.openCategory()"><span class="material-symbols-outlined">add</span> Add Category</button>
                             <button class="sm tonal" onclick="FinanceEngine.openExpense()"><span class="material-symbols-outlined">add</span> Add Budget Item</button>
-                            <button class="sm tonal" onclick="FinanceEngine.openBudgetDecision()"><span class="material-symbols-outlined">add</span> Add projection</button>
-                            <button class="primary sm" onclick="FinanceEngine.openTransaction()"><span class="material-symbols-outlined">add</span> Record Outflow</button>
+                            <button class="sm tonal" onclick="FinanceEngine.openBudgetDecision()"><span class="material-symbols-outlined">add</span> Add projection</button>` : ''}
+                            ${isTransactions || isOverview ? `<button class="primary sm" onclick="FinanceEngine.openTransaction()"><span class="material-symbols-outlined">add</span> Record Outflow</button>` : ''}
                         </div>
                     </div>
+                    <nav class="finance-page-nav" aria-label="Money pages">
+                        <button type="button" aria-current="${isOverview ? 'page' : 'false'}" onclick="App.router('finance')">Overview</button>
+                        <button type="button" aria-current="${isBudget ? 'page' : 'false'}" onclick="App.router('budget')">Budget & bills</button>
+                        <button type="button" aria-current="${isTransactions ? 'page' : 'false'}" onclick="App.router('transactions')">Transactions</button>
+                    </nav>
+                    ${isBudget ? `
                     <div class="card" style="margin-bottom:20px;">
                         <details class="finance-expander" ${compactBudgetView ? '' : 'open'}>
                             <summary class="finance-expander-summary">
@@ -5634,6 +5827,8 @@
                             </div>
                         </details>
                     </div>
+                    ` : ''}
+                    ${isOverview ? `
                     <section class="card" aria-labelledby="finance-savings-plan-title" style="margin-bottom:20px;">
                         <div class="card-header" style="align-items:flex-start;">
                             <div>
@@ -5659,6 +5854,25 @@
                             <p class="text-muted" style="font-size:0.72rem; margin-top:7px;">Target spend limit: ${FinanceEngine.displayAmount(targetSpend)}. The bar shows logged outflows against that limit; category plans and future recurring items are not counted as paid until logged.</p>
                         </div>
                     </div>
+                    <section class="card" style="margin-bottom:20px;">
+                        <div class="card-header" style="align-items:flex-start;">
+                            <div>
+                                <h3 style="font-size:1rem; font-weight:600;">Recent transactions</h3>
+                                <p class="text-muted" style="font-size:0.78rem;">${txs.length} recorded transaction${txs.length === 1 ? '' : 's'} · this is a short summary.</p>
+                            </div>
+                            <button class="sm" type="button" onclick="App.router('transactions')">View all</button>
+                        </div>
+                        <div class="flex-col gap-2">
+                            ${txs.slice(0, 3).map(t => `
+                                <div class="flex justify-between items-center" style="background:var(--md-sys-color-surface-container); padding:10px 14px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
+                                    <div><div style="font-weight:600; font-size:0.84rem;">${esc(t.desc)}</div><span class="text-muted">${esc(t.date)} · ${esc(t.category)}</span></div>
+                                    <strong style="${t.category === 'Income' ? 'color:var(--md-sys-color-success);' : 'color:var(--md-sys-color-error);'}">${FinanceEngine.displayAmount(t.amount)}</strong>
+                                </div>
+                            `).join('') || '<p class="finance-empty-state">No transactions recorded yet.</p>'}
+                        </div>
+                    </section>
+                    ` : ''}
+                    ${isBudget ? `
                     <div class="card" style="margin-bottom:20px;">
                         <div class="card-header" style="align-items:flex-start;">
                             <div>
@@ -5725,26 +5939,21 @@
                             }).join('') || '<p class="text-muted">Add a budget category to start tracking expenses.</p>'}
                         </div>
                     </div>
+                    ` : ''}
+                    ${isTransactions ? `
                     <div class="card finance-transaction-card">
-                        <details class="finance-expander" ${compactBudgetView ? '' : 'open'}>
-                            <summary class="finance-expander-summary">
-                                <span>
-                                    <strong>Financial Transactions</strong>
-                                    <small class="text-muted">${txs.length} record${txs.length === 1 ? '' : 's'} · logged outflows and income</small>
-                                </span>
-                            </summary>
-                            <div class="finance-expander-content">
-                                <div class="flex-col gap-2" style="max-height: 280px; overflow-y: auto;">
+                        <h3 style="font-size:1rem; font-weight:600; margin-bottom:12px;">Financial transactions</h3>
+                        <p class="text-muted" style="margin-bottom:12px;">${txs.length} record${txs.length === 1 ? '' : 's'} · logged outflows and income</p>
+                        <div class="flex-col gap-2">
                                     ${txs.map(t => `
                                         <div class="flex justify-between items-center" style="background:var(--md-sys-color-surface-container); padding:10px 14px; border-radius:var(--radius-sm); border:1px solid var(--md-sys-color-outline-variant);">
                                             <div><div style="font-weight:600; font-size:0.84rem;">${esc(t.desc)}</div><span class="text-muted">${esc(t.date)} • ${esc(t.category)}</span></div>
                                             <strong style="${t.category === 'Income' ? 'color:var(--md-sys-color-success);' : 'color:var(--md-sys-color-error);'}">${FinanceEngine.displayAmount(t.amount)}</strong>
                                         </div>
                                     `).join('') || '<div class="text-muted">No transactions logged yet.</div>'}
-                                </div>
-                            </div>
-                        </details>
+                        </div>
                     </div>
+                    ` : ''}
                 `;
             },
             audit: () => `
@@ -6578,7 +6787,7 @@
             },
 
             postRender: (view) => {
-                if (view === 'planner') PlannerEngine.tick();
+                if (view === 'planner' || view === 'dailytools') PlannerEngine.tick();
 
                 if (view === 'dashboard') {
                     HeatmapEngine.render('dashboard-heatmap');
