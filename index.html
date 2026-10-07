@@ -287,7 +287,57 @@ html[data-theme="light"] .grid > *{min-width:0}
 .appearance-control{min-width:0;max-width:100%;width:min(100%,560px)}.ambient-controls{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px 12px;align-items:center;min-width:0;max-width:100%;width:100%}.ambient-select{min-width:0;width:100%}.ambient-control{display:grid;grid-template-columns:auto minmax(0,1fr) 42px;gap:8px;align-items:center;min-width:0;width:100%}.ambient-control input[type=range]{width:100%;min-width:0;max-width:100%;accent-color:var(--accent)}.ambient-output{min-width:42px;text-align:right;font-size:11px;color:var(--muted2);font-variant-numeric:tabular-nums}.focus-sound-controls{display:grid;grid-template-columns:minmax(130px,160px) minmax(0,110px) auto minmax(0,1fr);gap:7px;align-items:center;min-width:0;max-width:100%;width:min(100%,560px)}.focus-sound-controls select,.focus-sound-controls input{min-width:0;max-width:100%;width:100%}.focus-sound-state{font-size:11px;color:var(--muted2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:860px){.appearance-control{width:100%}.ambient-controls{grid-template-columns:1fr}.focus-sound-controls{grid-template-columns:minmax(0,1fr) minmax(0,100px);}.focus-sound-controls button{justify-self:start}.focus-sound-state{grid-column:1 / -1}}
 @media (max-width:620px){.ambient-control{grid-template-columns:auto minmax(0,1fr) 42px}.focus-sound-controls{grid-template-columns:1fr 90px}.focus-sound-controls button{width:100%}}
-@media (prefers-reduced-motion:reduce){#ambient-canvas{display:none}}\n</style>
+@media (prefers-reduced-motion:reduce){#ambient-canvas{display:none}}\n/* Unified dropdown polish: consistent compact controls everywhere without changing native option behavior. */
+select{
+  -webkit-appearance:none !important;
+  appearance:none !important;
+  min-width:0;
+  max-width:100%;
+  min-height:40px;
+  padding:9px 36px 9px 12px !important;
+  border:1px solid #2b3038 !important;
+  border-radius:10px !important;
+  background-color:#111419 !important;
+  background-image:
+    linear-gradient(45deg,transparent 50%,#8f97a4 50%),
+    linear-gradient(135deg,#8f97a4 50%,transparent 50%) !important;
+  background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50% !important;
+  background-size:5px 5px !important;
+  background-repeat:no-repeat !important;
+  color:#f0eee8 !important;
+  line-height:1.2;
+  box-shadow:0 1px 0 rgba(255,255,255,.02) inset;
+  transition:border-color .18s,box-shadow .18s,background-color .18s;
+}
+select:hover{border-color:#3d4551 !important;background-color:#15191f !important}
+select:focus-visible{border-color:var(--accent) !important;box-shadow:0 0 0 3px var(--accent-glow),0 1px 0 rgba(255,255,255,.02) inset !important;outline:none !important}
+select:disabled{opacity:.5;cursor:not-allowed}
+select option{background:#111419;color:#f0eee8}
+.row > select,.row-actions select{flex:0 1 auto;width:min(220px,100%)}
+.ambient-select{width:100% !important}
+.appearance-control,.focus-sound-controls,.ambient-controls{min-width:0;max-width:100%}
+.row > .row-actions,.row > .appearance-control,.row > .focus-sound-controls{min-width:0;max-width:100%}
+@media(max-width:860px){
+  .row-actions{min-width:0;max-width:100%;flex-wrap:wrap}
+  .row > select,.row-actions select{width:min(220px,100%)}
+}
+@media(max-width:620px){
+  .row > select,.row-actions select{width:100%;max-width:100%}
+  .appearance-control{width:100%}
+  .ambient-controls{width:100%;grid-template-columns:1fr}
+  .focus-sound-controls{width:100%;grid-template-columns:minmax(0,1fr) 90px}
+}
+html[data-theme="light"] select{
+  background-color:#fff !important;
+  color:#20242a !important;
+  border-color:#cfd5dd !important;
+  background-image:
+    linear-gradient(45deg,transparent 50%,#66707d 50%),
+    linear-gradient(135deg,#66707d 50%,transparent 50%) !important;
+}
+html[data-theme="light"] select:hover{background-color:#f7f8fa !important;border-color:#bcc4ce !important}
+html[data-theme="light"] select option{background:#fff;color:#20242a}
+</style>
 </head>
 <body>
 <canvas id="ambient-canvas" aria-hidden="true"></canvas>
