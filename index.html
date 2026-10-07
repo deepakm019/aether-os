@@ -51,6 +51,10 @@ body{min-height:100vh}.app{min-height:100vh;display:grid;grid-template-columns:2
 .app-footer{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;padding:0 0 8px;color:var(--muted2);font-size:11px}.app-footer a{text-decoration:underline;text-underline-offset:2px}.app-footer a:hover{color:var(--accent-text)}
 @media (max-width:980px){.app{grid-template-columns:1fr}.sidebar{display:none}.topbar{padding:0 16px}.search{width:min(320px,42vw)}.page{padding:22px 16px 100px}.grid-2,.grid-3{grid-template-columns:1fr}.mobile-nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:8px;right:8px;bottom:8px;background:rgba(16,18,22,.96);border:1px solid #2a2f36;border-radius:16px;padding:5px;z-index:30;backdrop-filter:blur(18px);box-shadow:0 14px 40px rgba(0,0,0,.4)}.mobile-nav button{height:52px;padding:0;display:grid;gap:2px;place-items:center;font-size:10px}.mobile-nav .icon{font-size:15px}.mobile-nav button.active{background:#1b1d22;color:#fff}.topbar .btn span{display:none}.focus-title{font-size:23px}.timeline:before{left:62px}.time-row{grid-template-columns:50px 1fr;gap:28px}.time-row:after{left:58px}.time-row .time{text-align:left}.modal{max-height:82vh}.drawer{width:100%}}
 @media (max-width:620px){.topbar{height:62px}.crumb{display:none}.top-actions .search{display:none}.h1{font-size:34px}.lead{font-size:13px}.panel-header{padding:15px}.row{padding:13px 14px}.row-actions{flex-wrap:wrap;justify-content:flex-end}.row{flex-wrap:wrap}.focus-row{flex-direction:column}.focus-row .actions{width:100%}.focus-row .actions .btn{flex:1}.section{margin-top:22px}.page{padding-top:18px}.metric .value{font-size:24px}}
+/* iOS Home Screen / standalone PWA safe-area fix. viewport-fit=cover lets the app render edge-to-edge, so the interactive top bar must reserve the system status-bar inset. */
+.topbar{padding-top:env(safe-area-inset-top);height:calc(70px + env(safe-area-inset-top))}
+@media (max-width:620px){.topbar{height:calc(62px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top)}.topbar .topbar-left,.topbar .top-actions{min-height:calc(62px - env(safe-area-inset-top));align-items:center}}
+
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 :root{color-scheme:dark}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .dens-min .lead,.dens-min .panel-header small{display:none}
@@ -233,6 +237,51 @@ html[data-theme="light"] .grid > *{min-width:0}
 .list{min-width:0;overflow:hidden}
 @media(max-width:620px){.grid > *{min-width:0}}
 .start-checkin-btn{white-space:nowrap;flex:0 0 auto;}
+
+/* iPhone safe-area protection: viewport-fit=cover means the app must explicitly reserve the status-bar/notch region. */
+@supports (padding-top: env(safe-area-inset-top)) {
+  @media (max-width: 620px) {
+    .topbar {
+      height: calc(62px + env(safe-area-inset-top));
+      min-height: calc(62px + env(safe-area-inset-top));
+      padding-top: env(safe-area-inset-top);
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+      align-items: center;
+    }
+    .top-actions {
+      padding-top: 0;
+      min-width: 0;
+    }
+    .top-actions .btn,
+    .topbar-left .btn {
+      touch-action: manipulation;
+    }
+    .mobile-nav {
+      padding-bottom: max(5px, env(safe-area-inset-bottom));
+    }
+  }
+}
+
+@media (max-width: 620px) {
+  .topbar {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .topbar-left {
+    min-width: 0;
+    gap: 7px;
+  }
+  .topbar-left .icon-btn {
+    flex: 0 0 42px;
+  }
+  .top-actions {
+    flex: 0 0 auto;
+  }
+  .top-actions .icon-btn {
+    flex: 0 0 42px;
+  }
+}
 </style>
 </head>
 <body>
