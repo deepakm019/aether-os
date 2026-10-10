@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 TESTS_DIR = Path(__file__).resolve().parent
-SUITES = ["persistence_tests.py", "sweep_tests.py"]
+SUITES = ["persistence_tests.py", "sweep_tests.py", "test_converter.py"]
 
 
 @pytest.mark.parametrize("suite", SUITES)
