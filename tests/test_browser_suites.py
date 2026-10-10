@@ -1,4 +1,9 @@
-"""Run the Playwright browser suites against the app served by conftest.app_server."""
+"""Run every browser suite in tests/ against the app served by conftest.app_server.
+
+Suites are discovered automatically: any tests/*_tests.py or tests/test_*.py
+file (except this runner and conftest.py). Adding a suite never requires
+editing this file.
+"""
 import os
 import subprocess
 import sys
@@ -7,7 +12,12 @@ from pathlib import Path
 import pytest
 
 TESTS_DIR = Path(__file__).resolve().parent
-SUITES = ["persistence_tests.py", "sweep_tests.py", "test_responsive.py"]
+EXCLUDE = {"conftest.py", "test_browser_suites.py"}
+SUITES = sorted(
+    p.name
+    for p in TESTS_DIR.glob("*.py")
+    if p.name not in EXCLUDE and (p.name.endswith("_tests.py") or p.name.startswith("test_"))
+)
 
 
 @pytest.mark.parametrize("suite", SUITES)
