@@ -5,7 +5,7 @@ Maintainer-only. These items are not shown in the app.
 ## Before any public release
 
 - [ ] **Contact channel.** Publish a real support and privacy contact (email, form or issue tracker). Add it to the Legal page as a short "Contact" section. Do not ship a placeholder address.
-- [ ] **Licence files.** Add a `LICENSE` file (and `NOTICE` if needed) and set the matching `license` field in `package.json`. Currently `package.json` says `UNLICENSED`, and no licence file exists.
+- [x] **Licence files.** Proprietary `LICENSE` added (all rights reserved); `package.json` license field set to match. Have counsel review before any public launch.
 - [ ] **Legal review.** Have a qualified lawyer review the Legal page for your jurisdiction. Check consumer-law wording, the liability cap and currency (the cap is currently in INR), and the indemnity clause. The page is not legal advice.
 - [ ] **Hosting notices.** If the app is hosted (for example on GitHub Pages), confirm section 06 names the actual host and any notification or OS services it uses.
 - [ ] **Run `npm run verify`** (static gate and browser suites) and confirm the CI run on the release commit is green.
