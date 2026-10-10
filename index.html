@@ -485,7 +485,8 @@ a.row{color:inherit;text-decoration:none}
 .split-person{display:flex;gap:11px;align-items:center;min-width:0}
 .split-people{display:grid;gap:4px}
 .split-line{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,130px);gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
-.split-line .check{min-height:44px}
+.split-line .check{min-height:44px;min-width:0}
+.split-name{min-width:0;overflow-wrap:anywhere;word-break:break-word}
 .split-line input[data-pid]{width:100%;min-height:44px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:11px;padding:10px 12px;font:inherit}
 .split-line input[data-pid]:disabled{opacity:.4}
 .split-preview{display:grid;gap:4px;margin-top:6px}
@@ -1626,7 +1627,7 @@ function splitExpenseModal(gid,eid){
  <div class="field"><label>Title</label><input name="title" required maxlength="120" value="${esc(e?e.title:'')}"></div>
  <div class="grid grid-2"><div class="field"><label>Amount (₹)</label><input name="amount" inputmode="decimal" required placeholder="0.00" value="${esc(e?fmtInput(e.amountP):'')}"></div><div class="field"><label>Date</label><input name="date" type="date" required value="${esc(e?e.date:today)}"></div></div>
  <div class="grid grid-2"><div class="field"><label>Paid by</label><select name="payer">${g.people.map(p=>`<option value="${esc(p.id)}" ${(e?e.payerId:g.people[0].id)===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div><div class="field"><label>Split</label><select name="splitType">${SPLIT_TYPES.map(t=>`<option value="${t}" ${type===t?'selected':''}>${SPLIT_LABEL[t]}</option>`).join('')}</select></div></div>
- <div class="field"><label>Between · <span id="split-col">included</span></label><div class="split-people">${g.people.map(p=>`<div class="split-line"><label class="check"><input type="checkbox" data-inc ${inc.has(p.id)?'checked':''}> ${esc(p.name)}</label><input data-pid="${esc(p.id)}" inputmode="decimal" placeholder="value" value="${esc(valOf(p.id))}" aria-label="Value for ${esc(p.name)}"></div>`).join('')}</div></div>
+ <div class="field"><label>Between · <span id="split-col">included</span></label><div class="split-people">${g.people.map(p=>`<div class="split-line"><label class="check"><input type="checkbox" data-inc ${inc.has(p.id)?'checked':''}> <span class="split-name">${esc(p.name)}</span></label><input data-pid="${esc(p.id)}" inputmode="decimal" placeholder="value" value="${esc(valOf(p.id))}" aria-label="Value for ${esc(p.name)}"></div>`).join('')}</div></div>
  <div class="field"><label>Each share</label><div id="split-preview" class="split-preview" aria-live="polite"></div></div>
  <div class="form-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">${e?'Save changes':'Save expense'}</button></div>
  </form></div>`);
