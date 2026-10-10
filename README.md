@@ -107,3 +107,7 @@ Total: **64 checks**. Both suites are collected by `tests/test_browser_suites.py
 - Added backup nudges and a changes-since-backup counter.
 - Fixed: the encrypted storage restore button never worked; restoring a plain backup into an encrypted vault could drop encryption; unreadable saved data could be overwritten at startup; the checkpoint restore path was not covered by tests.
 - Accessibility: labelled the theme, suggestions and density dropdowns.
+
+## License
+
+Proprietary. All rights reserved. See [LICENSE](LICENSE). The source is visible but not licensed for reuse, redistribution, or deployment.
