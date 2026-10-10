@@ -472,6 +472,69 @@ html[data-font="mono"] body{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"L
 .quick-capture input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);background:var(--panel)}
 .quick-capture-btn{height:46px;padding:0 20px;border-radius:14px;flex:0 0 auto;white-space:nowrap}
 @media(max-width:420px){.quick-capture{gap:8px}.quick-capture input{padding:0 13px;font-size:16px}.quick-capture-btn{padding:0 16px}}
+
+/* Split feature: align with existing Money panels and keep touch targets usable. */
+/* Split: uses the Money section's panels, rows, bars and chips */
+a.row{color:inherit;text-decoration:none}
+.split-page .btn,.split-page .mini,.split-touch,.split-modal .btn,.split-modal .mini{min-height:44px}
+.split-page{min-width:0}
+.split-modal{min-width:0}
+.split-modal .grid-2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media(max-width:620px){.split-modal .grid-2{grid-template-columns:minmax(0,1fr)}}
+.split-avatar{width:34px;height:34px;flex:0 0 34px;border-radius:50%;display:inline-grid;place-items:center;font-size:11px;font-weight:700;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent-text)}
+.split-person{display:flex;gap:11px;align-items:center;min-width:0}
+.split-people{display:grid;gap:4px}
+.split-line{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,130px);gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.split-line .check{min-height:44px}
+.split-line input[data-pid]{width:100%;min-height:44px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:11px;padding:10px 12px;font:inherit}
+.split-line input[data-pid]:disabled{opacity:.4}
+.split-preview{display:grid;gap:4px;margin-top:6px}
+.split-add{grid-template-columns:minmax(0,1fr) auto}
+.split-add input{min-height:44px}
+.split-add button{min-height:44px}
+.split-expense .chips{margin-top:8px}
+@media(max-width:620px){.split-line{grid-template-columns:minmax(0,1fr) minmax(0,110px)}.split-add{grid-template-columns:minmax(0,1fr)}}
+/* Minimal mode owns its page background; it must never leak into Normal mode. */
+html.minimal-mode-active,html.minimal-mode-active body{background:#fff!important;color:#171a1f!important;color-scheme:light}
+html.minimal-mode-active[data-minimal-theme="dark"],html.minimal-mode-active[data-minimal-theme="dark"] body{background:#000!important;color:#fff!important;color-scheme:dark}
+html.minimal-mode-active #app{min-height:100vh;background:inherit;color:inherit}
+.minimal-app{--min-bg:#fff;--min-fg:#171a1f;--min-line:#d9dde4;--min-muted:#66707d;box-sizing:border-box;min-height:100vh;width:100%;margin:0;background:var(--min-bg);color:var(--min-fg);font:inherit;padding:18px max(14px,env(safe-area-inset-left)) calc(28px + env(safe-area-inset-bottom));}
+.minimal-app[data-min-theme="dark"]{--min-bg:#000;--min-fg:#fff;--min-line:#414141;--min-muted:#b8b8b8}
+.minimal-app *{box-sizing:border-box}
+.minimal-wrap{width:100%;max-width:760px;margin:0 auto;min-width:0}
+.minimal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:0 0 14px;border-bottom:1px solid var(--min-line);flex-wrap:wrap}
+.minimal-brand{font-size:clamp(20px,5vw,28px);font-weight:750;line-height:1.2;letter-spacing:-.04em}
+.minimal-sub{font-size:12px;color:var(--min-muted);margin-top:5px}
+.minimal-controls{display:flex;gap:7px;flex-wrap:wrap}
+.minimal-app button{max-width:100%}
+.minimal-app .minimal-control{display:block;max-width:100%;min-height:44px;color:#f0eee8;background:#0f1216;border:1px solid #2b3038;border-radius:11px;padding:11px 13px;font:inherit;font-size:14px;line-height:1.35}
+.minimal-app .minimal-control:focus-visible,.minimal-app button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+html[data-theme="light"] .minimal-app .minimal-control{background:#fff;color:#171a1f;border-color:#cfd5dd}
+.minimal-app button:disabled{opacity:.45;cursor:not-allowed}
+.minimal-mode-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;margin:0 0 18px;border-bottom:1px dashed var(--min-line);flex-wrap:wrap}
+.minimal-mode-label{font-size:12px;color:var(--min-muted)}
+.minimal-compose{padding:18px 0;border-bottom:1px solid var(--min-line)}
+.minimal-label{display:block;font-size:12px;font-weight:650;margin-bottom:7px;color:var(--min-muted)}
+.minimal-app textarea{width:100%;min-height:106px;resize:vertical;margin:0 0 10px;overflow-wrap:anywhere}
+.minimal-compose-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.minimal-compose-row select{flex:1 1 130px;min-width:0}
+.minimal-feed{display:grid;gap:14px;padding:18px 0}
+.minimal-item{min-width:0;border:1px solid var(--min-line);border-radius:14px;padding:14px;background:transparent;overflow-wrap:anywhere;box-shadow:0 3px 12px rgba(0,0,0,.035)}
+.minimal-item.pinned{border-width:2px;border-color:var(--accent)}
+.minimal-item-top,.minimal-item-bottom{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.minimal-stamp{font-size:11px;color:var(--min-muted)}
+.minimal-item-text{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;margin:10px 0;line-height:1.55}
+.minimal-drawing{display:block;width:min(100%,360px);height:auto;border:1px solid var(--min-line);border-radius:10px;margin:10px 0;background:var(--min-bg)}
+.minimal-actions{display:flex;gap:6px;flex-wrap:wrap}
+.minimal-actions button{min-height:36px}
+.minimal-empty{text-align:center;padding:38px 12px;border:1px dashed var(--min-line);border-radius:14px;color:var(--min-muted)}
+.minimal-count{color:var(--min-muted);font-size:12px;padding:4px 0;text-align:right}
+.minimal-draw-shell{margin:16px 0;border:1px solid var(--min-line);border-radius:14px;padding:14px;min-width:0}
+.minimal-canvas{display:block;width:min(100%,420px);aspect-ratio:1/1;height:auto;touch-action:none;border:1px solid var(--min-line);border-radius:10px;background:var(--min-bg);margin:12px auto;cursor:crosshair}
+.minimal-draw-title{font-size:14px;font-weight:650}
+.minimal-footer{border-top:1px solid var(--min-line);padding-top:12px;margin-top:12px;color:var(--min-muted);font-size:11px}
+@media(max-width:420px){.minimal-app{padding-left:12px;padding-right:12px}.minimal-head{gap:10px}.minimal-item{padding:12px}.minimal-item-bottom{align-items:flex-start}.minimal-actions button{flex:1 1 auto}.minimal-compose-row button{flex:0 0 auto}}
+@media(prefers-reduced-motion:reduce){.minimal-app *, .minimal-app *::before,.minimal-app *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
@@ -486,6 +549,9 @@ html[data-font="mono"] body{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"L
 (() => {
 'use strict';
 const KEY='astralsurge.os.v1';
+const MODE_KEY='astralsurge.mode',MIN_DB_NAME='astralsurge.minimal.v1',MIN_RETURN_KEY='astralsurge.minimal.return.pending';
+function appMode(){try{let m=localStorage.getItem(MODE_KEY);if(m!=='minimal'&&m!=='normal'){m='normal';localStorage.setItem(MODE_KEY,m)}return m}catch(e){return 'normal'}}
+const isMinimalMode=()=>appMode()==='minimal';
 const now=new Date();
 const isoDate=d=>{const z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`};const addDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return isoDate(d)};
 let today=isoDate(now);
@@ -500,6 +566,137 @@ const safeColor=(v,fallback)=>isHexColor(v)?String(v):fallback;
 const safeImageData=v=>{const s=String(v||'');return /^data:image\/(?:jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(s)&&s.length<=2500000?s:''};
 const clone=o=>JSON.parse(JSON.stringify(o));
 
+/* ===== Split: exact paise maths ===== */
+const SPLIT_TYPES=['equal','exact','percent','shares'];
+const SPLIT_LABEL={equal:'equally',exact:'exact amounts',percent:'by percentage',shares:'by shares'};
+const SPLIT_MAX_AMOUNT_P=100000000000; // ₹1,000,000,000.00 cap keeps arithmetic under 2^53
+const SPLIT_MAX_SHARES=1000, SPLIT_MAX_PEOPLE=50;
+const ISO_DAY=/^\d{4}-\d{2}-\d{2}$/;
+function splitValidDay(v){if(!ISO_DAY.test(String(v||'')))return false;const [y,m,d]=String(v).split('-').map(Number),dt=new Date(Date.UTC(y,m-1,d));return dt.getUTCFullYear()===y&&dt.getUTCMonth()===m-1&&dt.getUTCDate()===d}
+const isInt=v=>Number.isSafeInteger(v);
+const fmtP=p=>{if(state?.settings?.hideAmounts)return '••••';const a=Math.abs(p);return (p<0?'-':'')+'₹'+Math.floor(a/100).toLocaleString('en-IN')+'.'+String(a%100).padStart(2,'0')};
+const fmtPct=h=>`${Math.floor(h/100)}.${String(h%100).padStart(2,'0')}%`;
+const fmtInput=p=>`${Math.floor(p/100)}.${String(p%100).padStart(2,'0')}`;
+/* "1,234.5" -> integer hundredths, or null. Used for paise, and for percentages (max 10000). */
+function parseFixed2(str,max){
+ const s=String(str??'').trim().replace(/[,\s₹%]/g,'');
+ const m=s.match(/^(\d{1,12})(?:\.(\d{1,2}))?$/);
+ if(!m)return null;
+ const n=Number(m[1])*100+Number((m[2]||'').padEnd(2,'0'));
+ return isInt(n)&&n<=max?n:null;
+}
+/* Largest-remainder allocation: integer weights, shares sum to totalP exactly. */
+function allocateLargestRemainder(totalP,entries){
+ const W=entries.reduce((a,e)=>a+e.w,0);
+ if(!W)return null;
+ const raw=entries.map(e=>totalP*e.w);
+ const base=raw.map(r=>Math.floor(r/W));
+ const rem=raw.map((r,i)=>r-base[i]*W);
+ let left=totalP-base.reduce((a,b)=>a+b,0);
+ const order=entries.map((_,i)=>i).sort((a,b)=>(rem[b]-rem[a])||(a-b));
+ for(let k=0;k<left;k++)base[order[k]]++;
+ const out={};entries.forEach((e,i)=>out[e.id]=base[i]);
+ return out;
+}
+function computeSplit(amountP,splitType,includedIds,values){
+ const ids=[...new Set(includedIds||[])],v=values||{},num=id=>Number(v[id]);
+ if(!ids.length)return {ok:false,error:'Choose at least one person to split between.'};
+ if(!isInt(amountP)||amountP<1)return {ok:false,error:'Enter an amount above ₹0.00.'};
+ if(splitType==='equal')return {ok:true,shares:allocateLargestRemainder(amountP,ids.map(id=>({id,w:1})))};
+ if(splitType==='exact'){
+  if(ids.some(id=>!isInt(num(id))||num(id)<0))return {ok:false,error:'Each amount must be zero or more.'};
+  const sum=ids.reduce((a,id)=>a+num(id),0);
+  if(sum!==amountP)return {ok:false,error:`Amounts add up to ${fmtP(sum)}. They must total ${fmtP(amountP)}.`};
+  return {ok:true,shares:Object.fromEntries(ids.map(id=>[id,num(id)]))};
+ }
+ if(splitType==='percent'){
+  if(ids.some(id=>!isInt(num(id))||num(id)<0||num(id)>10000))return {ok:false,error:'Each percentage must be between 0% and 100%.'};
+  const sum=ids.reduce((a,id)=>a+num(id),0);
+  if(sum!==10000)return {ok:false,error:`Percentages add up to ${fmtPct(sum)}. They must total 100%.`};
+  return {ok:true,shares:allocateLargestRemainder(amountP,ids.map(id=>({id,w:num(id)})))};
+ }
+ if(splitType==='shares'){
+  if(ids.some(id=>!isInt(num(id))||num(id)<1||num(id)>SPLIT_MAX_SHARES))return {ok:false,error:`Shares must be whole numbers from 1 to ${SPLIT_MAX_SHARES}.`};
+  return {ok:true,shares:allocateLargestRemainder(amountP,ids.map(id=>({id,w:num(id)})))};
+ }
+ return {ok:false,error:'Unknown split type.'};
+}
+/* Per-person paid, owed and net. Net = paid - owed + sent - received. */
+function groupTotals(g){
+ const paid={},owed={},net={};
+ g.people.forEach(p=>{paid[p.id]=0;owed[p.id]=0});
+ g.expenses.forEach(e=>{
+  paid[e.payerId]=(paid[e.payerId]||0)+e.amountP;
+  const r=computeSplit(e.amountP,e.splitType,e.includedIds,e.splitValues);
+  if(r.ok)Object.keys(r.shares).forEach(id=>owed[id]=(owed[id]||0)+r.shares[id]);
+ });
+ g.people.forEach(p=>net[p.id]=(paid[p.id]||0)-(owed[p.id]||0));
+ g.payments.forEach(x=>{net[x.fromId]+=x.amountP;net[x.toId]-=x.amountP});
+ return {net,paid,owed};
+}
+/* Greedy: largest debtor pays largest creditor, repeat. Never more than n-1 payments. */
+function settlePlan(net,people){
+ const idx=new Map(people.map((p,i)=>[p.id,i])),n={...net},out=[];
+ const by=(x,y)=>(y.a-x.a)||(idx.get(x.id)-idx.get(y.id));
+ for(;;){
+  const debt=[],cred=[];
+  people.forEach(p=>{const v=n[p.id]||0;if(v<0)debt.push({id:p.id,a:-v});else if(v>0)cred.push({id:p.id,a:v})});
+  if(!debt.length||!cred.length)break;
+  debt.sort(by);cred.sort(by);
+  const pay=Math.min(debt[0].a,cred[0].a);
+  out.push({fromId:debt[0].id,toId:cred[0].id,amountP:pay});
+  n[debt[0].id]+=pay;n[cred[0].id]-=pay;
+ }
+ return out;
+}
+function splitPersonInUse(g,pid){
+ return g.expenses.some(e=>e.payerId===pid||e.includedIds.includes(pid))||g.payments.some(x=>x.fromId===pid||x.toId===pid);
+}
+function normalizeExpense(e,ids){
+ if(!isPlainObj(e))return null;
+ const amountP=Number(e.amountP);
+ if(!isInt(amountP)||amountP<1||amountP>SPLIT_MAX_AMOUNT_P)return null;
+ if(!ids.has(e.payerId)||!splitValidDay(e.date)||!SPLIT_TYPES.includes(e.splitType))return null;
+ const includedIds=[...new Set((Array.isArray(e.includedIds)?e.includedIds:[]).map(String))].filter(id=>ids.has(id));
+ if(!includedIds.length)return null;
+ const raw=isPlainObj(e.splitValues)?e.splitValues:{},splitValues={};
+ const max=e.splitType==='shares'?SPLIT_MAX_SHARES:e.splitType==='percent'?10000:amountP;
+ const min=e.splitType==='shares'?1:0;
+ for(const id of includedIds){
+  if(e.splitType==='equal'){splitValues[id]=0;continue}
+  const v=Number(raw[id]);
+  if(!isInt(v)||v<min||v>max)return null;
+  splitValues[id]=v;
+ }
+ const out={id:String(e.id||uid('exp')).slice(0,64),title:String(e.title??'').trim().slice(0,120)||'Untitled expense',amountP,payerId:String(e.payerId),date:String(e.date),includedIds,splitType:e.splitType,splitValues:e.splitType==='equal'?{}:splitValues};
+ return computeSplit(amountP,out.splitType,includedIds,out.splitValues).ok?out:null;
+}
+function normalizePayment(x,ids){
+ if(!isPlainObj(x))return null;
+ const amountP=Number(x.amountP);
+ if(!isInt(amountP)||amountP<1||amountP>SPLIT_MAX_AMOUNT_P)return null;
+ if(!ids.has(x.fromId)||!ids.has(x.toId)||x.fromId===x.toId||!splitValidDay(x.date))return null;
+ return {id:String(x.id||uid('pay')).slice(0,64),fromId:String(x.fromId),toId:String(x.toId),amountP,date:String(x.date)};
+}
+function normalizeGroup(raw){
+ if(!isPlainObj(raw))return null;
+ const name=String(raw.name??'').trim().slice(0,60);
+ if(!name)return null;
+ const people=[],seenId=new Set(),seenName=new Set();
+ (Array.isArray(raw.people)?raw.people:[]).forEach(p=>{
+  if(!isPlainObj(p)||people.length>=SPLIT_MAX_PEOPLE)return;
+  const pname=String(p.name??'').trim().replace(/\s+/g,' ').slice(0,40);
+  const pid=String(p.id??'').slice(0,64),key=pname.toLowerCase();
+  if(!pname||!pid||seenId.has(pid)||seenName.has(key))return;
+  seenId.add(pid);seenName.add(key);people.push({id:pid,name:pname});
+ });
+ if(people.length<2)return null;
+ const ids=new Set(people.map(p=>p.id)),seenE=new Set(),seenP=new Set();
+ const expenses=(Array.isArray(raw.expenses)?raw.expenses:[]).slice(0,2000).map(x=>normalizeExpense(x,ids)).filter(x=>x&&!seenE.has(x.id)&&seenE.add(x.id));
+ const payments=(Array.isArray(raw.payments)?raw.payments:[]).slice(0,2000).map(x=>normalizePayment(x,ids)).filter(x=>x&&!seenP.has(x.id)&&seenP.add(x.id));
+ return {id:String(raw.id||uid('grp')).slice(0,64),name,people,expenses,payments};
+}
+
 function demoState(){return migrate(demoRaw())}
 function demoRaw(){
  const d=today;
@@ -513,6 +710,7 @@ function demoRaw(){
  ],
  stories:[{id:'story_launch',title:'Portfolio launch',state:'In Progress',points:8,criteria:[{t:'Working demo published',done:true},{t:'README polished',done:true},{t:'Deploy checklist complete',done:false}]}],
  goals:[{id:'goal_launch',title:'Portfolio launch',progress:68,steps:[{id:'step_1',title:'Finalize product story',type:'note',done:true},{id:'step_2',title:'Publish working demo',type:'task',done:false},{id:'step_3',title:'Collect first feedback',type:'story',done:false}]}],
+ groups:[{id:'grp_goa',name:'Goa trip',people:[{id:'p_asha',name:'Asha'},{id:'p_ravi',name:'Ravi'},{id:'p_meera',name:'Meera'}],expenses:[{id:'x_hotel',title:'Hotel, 3 nights',amountP:600000,payerId:'p_asha',date:addDays(-3),includedIds:['p_asha','p_ravi','p_meera'],splitType:'equal',splitValues:{}},{id:'x_cab',title:'Airport cab',amountP:100000,payerId:'p_ravi',date:addDays(-2),includedIds:['p_asha','p_ravi','p_meera'],splitType:'exact',splitValues:{p_asha:40000,p_ravi:35000,p_meera:25000}}],payments:[]}],
  planner:[{id:'p1',title:'Client meeting',time:'09:30',duration:60,type:'meeting',fixed:true},{id:'p2',title:'Lunch',time:'12:30',duration:45,type:'break',fixed:true},{id:'p3',title:'Deep work',time:'14:00',duration:45,type:'focus',taskId:'tsk_oauth',fixed:false}],
  notes:[{id:'n1',title:'Launch notes',content:'Demo feels strongest when Today connects time → task → focus.',tags:['product','launch'],created:addDays(-1)}],
  habits:[{id:'h1',title:'Read 20 pages',done:false,streak:9},{id:'h2',title:'Stretch',done:true,streak:4}],
@@ -643,7 +841,7 @@ function resumeFocus(){if(state.focus.active||!state.focus.taskId)return;state.f
 function scheduleTask(id){const t=taskById(id);if(!t||t.scheduled)return;const at=openSlot(45);if(!at){toast('No open 45-minute window today');return}t.scheduled=true;state.planner.push({id:uid('p'),title:t.title,time:at,duration:45,type:'focus',taskId:id,fixed:false});state.events.push({type:'PLANNER_CREATED',entityId:id,at:Date.now()});closeDrawer();persist();render();toast('Scheduled at '+at)}
 function stopFocus(){if(state.focus.active)syncFocusClock();if(!state.focus.active&&!state.focus.paused)return;const spent=Math.max(0,state.focus.initial-state.focus.seconds);const t=taskById(state.focus.taskId);if(t)t.timeSpent+=(spent/60);state.focus.active=false;state.focus.paused=false;state.focus.seconds=state.focus.initial;state.events.push({type:'FOCUS_COMPLETED',entityId:state.focus.taskId,seconds:spent,at:Date.now()});state.xp+=Math.round(spent/60);persist();render();toast('Focus saved')}
 let timerHandle=null;
-function tick(){if(!state.focus.active)return;syncFocusClock();if(state.focus.seconds===0)stopFocus();else renderFocusTimerOnly()}
+function tick(){if(isMinimalMode()||window.__minimalSwitching||!state.focus.active)return;syncFocusClock();if(state.focus.seconds===0)stopFocus();else renderFocusTimerOnly()}
 function renderFocusTimerOnly(){const el=document.getElementById('focus-timer');if(el)el.textContent=fmtClock(state.focus.seconds);const b=document.getElementById('focus-bar');if(b)b.style.width=((state.focus.initial-state.focus.seconds)/state.focus.initial*100)+'%';if(state.focus.active)document.title=fmtClock(state.focus.seconds)+' · Focus'}
 function openModal(view,data,opts){document.getElementById('backdrop').classList.add('open');const m=document.getElementById('modal');m.style.display='block';m.innerHTML=view(data,opts)||'';requestAnimationFrame(()=>m.classList.add('open'));}
 function closeModal(){pendImgs=[];document.getElementById('backdrop').classList.remove('open');const m=document.getElementById('modal');m.style.display='none';m.classList.remove('open')}
@@ -692,7 +890,7 @@ function vaultDrawer(){return `<div class="eyebrow">Your private vault</div><h2>
 const CPK='astralsurge.os.checkpoint',BETA_KEY='astralsurge.beta.ack';
 const hasCp=()=>{try{return !!localStorage.getItem(CPK)}catch(e){return false}};
 const betaAck=()=>{try{return localStorage.getItem(BETA_KEY)==='1'}catch(e){return true}};
-function acceptBeta(){try{safeStorageSet(BETA_KEY,'1','Beta acknowledgement');localStorage.setItem('astralsurge.legal.ack.v1',JSON.stringify({version:'2026-10-07',at:Date.now(),scope:'privacy-terms-risk-acknowledgement'}))}catch(e){}render()}
+function acceptBeta(){try{safeStorageSet(BETA_KEY,'1','Beta acknowledgement');localStorage.setItem('astralsurge.legal.ack.v1',JSON.stringify({version:'2026-10-07',at:Date.now(),scope:'privacy-terms-risk-acknowledgement'}))}catch(e){}if(isMinimalMode())startMinimalExpiryTimer();render()}
 function showBeta(){try{localStorage.removeItem(BETA_KEY);localStorage.removeItem('astralsurge.legal.ack.v1')}catch(e){}render()}
 /* ===== Ambient atmosphere layer ===== */
 const AMBIENT_TYPES=['Stars','Snow','Cosmic Dust','Night Drift','Off'];
@@ -787,7 +985,7 @@ function setFocusSoundVolume(value){const n=Math.max(1,Math.min(25,Number(value)
 function toggleBetaContinue(checked){['beta-demo','beta-new'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=!checked})}
 function legalSummaryModal(){openModal(()=>`<div class="modal-inner"><div class="eyebrow">Privacy & terms</div><h2 id="modal-title">Before you begin</h2><p class="muted-line" style="margin-top:10px">AstralSurge OS is a local-first static app. The app code is not a cloud workspace, but hosting providers can process technical access data such as IP logs. Workspace data may include highly personal content, so use encrypted vault mode and maintain backups for information you cannot replace.</p><div class="section"><div class="notice-strip"><div><b>Core boundary</b><span>No promise is made that the app is error-free, unhackable, continuously available, or suitable for professional or high-stakes decisions. Mandatory legal rights remain unaffected.</span></div></div></div><div class="actions"><button class="btn" onclick="closeModal()">Close</button></div></div>`)}
 function betaScreen(){const rows=[['Local-first processing','Workspace content is processed in this browser. In this build, the main workspace is stored in browser IndexedDB first; the installed/PWA shell may also use browser cache storage.'],['Hosting & technical logs','This is a static client, not a cloud workspace. The hosting provider may still process technical access information such as IP logs under its own policies.'],['Security & encryption limits','Optional encrypted-vault mode is for stored-data protection. It cannot guarantee protection from a compromised device, browser profile, extension, malware, keylogger, or an unlocked session.'],['Backups & data loss','IndexedDB storage is compressed and designed to handle larger workspaces than localStorage. Browser storage can still be cleared, evicted, corrupted, quota-limited, or affected by software changes. Keep an export for anything you cannot recreate.'],['No professional or emergency use','The app is a personal productivity/tracking utility, not medical, financial, legal, security, records-management, or emergency advice or services.'],['Notifications are best-effort','Browser and operating-system suspension can delay or prevent background notification checks.']];return `<div class="page" style="max-width:900px;padding-top:6vh"><div class="eyebrow">First launch · legal acknowledgement</div><div class="h1" style="margin-top:8px">Before you use AstralSurge OS.</div><div class="lead">Please review the Privacy Notice and Terms before choosing a workspace. AstralSurge OS is a local-first static application: the operator does not provide a cloud workspace for your data, but browser, device, network, and hosting layers remain outside the app's control.</div><section class="section panel pad legal-section"><div class="legal-kicker">Required acknowledgement · 7 October 2026</div><h2 style="font-size:20px">Privacy, terms & risk acknowledgement</h2><p>I have read and understood the <button type="button" class="btn mini ghost" onclick="legalSummaryModal()" style="padding:2px 5px;min-height:26px;vertical-align:middle">Privacy Notice & Terms</button>. I understand that workspace data is stored locally in my browser, that technical data may still be processed by hosting/network/browser providers, that I am responsible for backups and protecting my device, and that the app is not guaranteed to be error-free, secure, continuously available, or suitable for professional or high-stakes decisions.</p><p>I understand and accept the applicable disclaimers and limitations of liability to the maximum extent permitted by law. Nothing in these terms removes rights or liabilities that cannot legally be excluded or limited.</p><label class="check" style="align-items:flex-start;margin-top:2px"><input id="beta-ack" type="checkbox" onchange="toggleBetaContinue(this.checked)" style="margin-top:2px"><span>I confirm that I have read, understood, and agree to the Privacy Notice & Terms for my use of this app.</span></label></section><section class="section grid grid-2"><div class="panel pad"><span class="chip accent">DEMO</span><h2 style="font-size:24px;margin:9px 0">Explore the system</h2><p class="muted-line">Starts with realistic tasks, budgets, habits, workouts, planner blocks and activity history.</p><div class="actions"><button id="beta-demo" class="btn primary" disabled onclick="acceptBeta()">Continue with demo</button></div></div><div class="panel pad"><span class="chip good">NEW</span><h2 style="font-size:24px;margin:9px 0">Start a new workspace</h2><p class="muted-line">Starts empty. Your data stays in this browser until you choose to export or back it up.</p><div class="actions"><button id="beta-new" class="btn" disabled onclick="startFreshWorkspace()">Start new workspace</button></div></div></section><details class="section panel" style="padding:16px"><summary style="cursor:pointer;font-weight:700">What this means in practice</summary><div class="list" style="margin-top:10px">${rows.map(r=>`<div class="row" style="padding:12px 0"><div class="row-main" style="white-space:normal"><div class="row-title" style="white-space:normal">${esc(r[0])}</div><div class="row-meta">${esc(r[1])}</div></div></div>`).join('')}</div></details></div>`}
-function freshWorkspace(){return {mode:'private',vault:{locked:false,encryptionEnabled:false,recoveryAvailable:true,lastBackup:null,lastCheckpoint:null},tasks:[],planner:[],habits:[],workouts:[],budgets:[],transactions:[],notes:[],goals:[],stories:[],decisions:[],activities:[],focus:{active:false,paused:false,taskId:null,seconds:1500,initial:1500,category:'Deep Work',startedAt:null},activity:{},habitLog:{},xp:0,level:1,streak:0,settings:{suggestions:'On',density:'Normal',hideAmounts:false,theme:'Dark',ambientEffect:'Stars',ambientStrength:45,ambientOpacity:18,focusSound:'Off',focusSoundVolume:10},dismissed:{},events:[],morningCheckins:{},dailyPlans:{},badges:[],weeklyReviews:{},reminders:[]}}
+function freshWorkspace(){return {mode:'private',vault:{locked:false,encryptionEnabled:false,recoveryAvailable:true,lastBackup:null,lastCheckpoint:null},tasks:[],planner:[],habits:[],workouts:[],budgets:[],transactions:[],notes:[],goals:[],stories:[],decisions:[],activities:[],groups:[],focus:{active:false,paused:false,taskId:null,seconds:1500,initial:1500,category:'Deep Work',startedAt:null},activity:{},habitLog:{},xp:0,level:1,streak:0,settings:{suggestions:'On',density:'Normal',hideAmounts:false,theme:'Dark',ambientEffect:'Stars',ambientStrength:45,ambientOpacity:18,focusSound:'Off',focusSoundVolume:10},dismissed:{},events:[],morningCheckins:{},dailyPlans:{},badges:[],weeklyReviews:{},reminders:[]}}
 function timeZoneOptions(){const zones=['UTC','Asia/Kolkata','Asia/Dubai','Asia/Singapore','Asia/Bangkok','Asia/Hong_Kong','Asia/Tokyo','Asia/Seoul','Asia/Jakarta','Asia/Kathmandu','Europe/London','Europe/Paris','Europe/Berlin','Europe/Moscow','Africa/Johannesburg','America/New_York','America/Chicago','America/Denver','America/Los_Angeles','America/Toronto','America/Vancouver','America/Sao_Paulo','Australia/Perth','Australia/Sydney','Pacific/Auckland'];const current=state.settings?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';if(!zones.includes(current))zones.unshift(current);return zones.map(z=>`<option value="${esc(z)}" ${z===current?'selected':''}>${esc(z.replace(/_/g,' '))}</option>`).join('')}
 function setSetting(key,value){const allowed={suggestions:['On','Reduced','Off'],density:['Minimal','Normal'],theme:['Dark','Light','Auto'],font:FONT_OPTIONS.map(x=>x[0])};if(key==='timezone'){try{new Intl.DateTimeFormat('en',{timeZone:value})}catch(e){return}}else if(!allowed[key]||!allowed[key].includes(value))return;state.settings[key]=value;persist();applyTypographyAndTimezone();render()}
 function applyTypographyAndTimezone(){const root=document.documentElement;root.dataset.font=state.settings?.font||'system';root.dataset.timezone=state.settings?.timezone||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}
@@ -797,9 +995,9 @@ function dismissRecommendation(ruleId){const id=String(ruleId||'');if(!/^[A-Za-z
 async function storageHealth(){try{if(!navigator.storage?.estimate)return null;const x=await navigator.storage.estimate();return {usage:Number(x.usage||0),quota:Number(x.quota||0)}}catch(e){return null}}
 async function refreshStorageHealth(){const e=document.getElementById('storage-health');const bar=document.getElementById('storage-bar');if(!e)return;const x=await storageHealth();if(!x||!x.quota){e.textContent='Browser storage estimate unavailable on this browser.';return}const pct=Math.max(0,Math.min(100,x.usage/x.quota*100));e.textContent=`${__storageVersion}${__storagePersistRequested?' · persistent requested':''} · Approx. ${(x.usage/1048576).toFixed(1)} MB used of ${(x.quota/1048576).toFixed(1)} MB available`;if(bar)bar.style.width=pct.toFixed(1)+'%'}
 async function deleteIndexedDB(){if(__idbPromise){try{(await __idbPromise).close()}catch(e){}__idbPromise=null}try{await idbDeleteDatabase(IDB_NAME)}catch(e){}try{await idbDeleteDatabase('astralsurge.os.v1')}catch(e){}}
-async function deleteAllLocalData(){if(!confirm('Permanently erase this app’s local workspace, checkpoints, first-launch acknowledgement, settings, and reminders from this browser? Exported backup files are not deleted.'))return;try{localStorage.removeItem(KEY);localStorage.removeItem(CPK);localStorage.removeItem(BETA_KEY);localStorage.removeItem('astralsurge.legal.ack.v1')}catch(e){}await deleteIndexedDB();__encryptedEnvelope=null;__vaultDataKey=null;__vaultReady=false;state=freshWorkspace();evSeen=0;render();toast('Local app data erased')}
+async function deleteAllLocalData(){if(!confirm('Permanently erase this app’s Normal workspace, Minimal scribbles, checkpoints, first-launch acknowledgement, settings, and reminders from this browser? Exported backup files are not deleted.'))return;try{localStorage.removeItem(KEY);localStorage.removeItem(CPK);localStorage.removeItem(BETA_KEY);localStorage.removeItem(MODE_KEY);localStorage.removeItem(MIN_RETURN_KEY);localStorage.removeItem('astralsurge.legal.ack.v1')}catch(e){}await deleteIndexedDB();await minimalDeleteDatabase();__encryptedEnvelope=null;__vaultDataKey=null;__vaultReady=false;state=freshWorkspace();evSeen=0;render();toast('Local app data erased')}
 
-async function startFreshWorkspace(){if(!confirm('Start a new empty private workspace? Your current browser workspace will be replaced.'))return;try{localStorage.removeItem(KEY);localStorage.removeItem(CPK);localStorage.removeItem('astralsurge.legal.ack.v1');localStorage.setItem(BETA_KEY,'1')}catch(e){}await deleteIndexedDB();__encryptedEnvelope=null;__vaultDataKey=null;__vaultReady=false;state=freshWorkspace();ensureV2State();evSeen=state.events.length;persist();render();toast('New private workspace ready')} 
+async function startFreshWorkspace(){if(isMinimalMode()){try{safeStorageSet(BETA_KEY,'1','Beta acknowledgement');localStorage.setItem('astralsurge.legal.ack.v1',JSON.stringify({version:'2026-10-07',at:Date.now(),scope:'privacy-terms-risk-acknowledgement'}))}catch(e){}startMinimalExpiryTimer();render();toast('Minimal mode ready');return}if(!confirm('Start a new empty private workspace? Your current browser workspace will be replaced.'))return;try{localStorage.removeItem(KEY);localStorage.removeItem(CPK);localStorage.removeItem('astralsurge.legal.ack.v1');localStorage.setItem(BETA_KEY,'1')}catch(e){}await deleteIndexedDB();__encryptedEnvelope=null;__vaultDataKey=null;__vaultReady=false;state=freshWorkspace();ensureV2State();evSeen=state.events.length;persist();render();toast('New private workspace ready')} 
 async function sha(t){if(!(window.crypto&&crypto.subtle))return 'x'+[...t].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 async function readCheckpoint(){try{return await readCheckpointRecord()}catch(e){toast('Checkpoint is unavailable');return null}}
 async function createCheckpoint(){if(window.__asosReadOnly){toast('Editing is paused; checkpoint skipped');return}try{await writeCheckpointRecord(clone(state));state.vault.lastCheckpoint=today;state.events.push({type:'CHECKPOINT_CREATED',at:Date.now()});persist();render();toast('Checkpoint created')}catch(e){toast('Could not save checkpoint; export the image-free recovery backup instead')}}
@@ -848,7 +1046,7 @@ function viewCalendar(){const y=calendarCursor.getFullYear(),m=calendarCursor.ge
 function viewTimer(){return `<div class="page"><div class="eyebrow">Time tools</div><div class="h1">Timer & stopwatch</div><div class="lead">Use a countdown for focus blocks or a stopwatch for elapsed time. Both run locally in this tab.</div><section class="section panel focus-panel"><div style="text-align:center"><div class="eyebrow">Countdown</div><div id="tool-timer" style="font-size:clamp(42px,12vw,64px);letter-spacing:-.04em;font-variant-numeric:tabular-nums;margin:10px 0">${fmtClock(standalone)}</div><div class="actions" style="justify-content:center"><button class="btn primary" onclick="startStandaloneTimer()">Start</button><button class="btn" onclick="stopStandalone();toast('Timer paused')">Pause</button><button class="btn" onclick="resetStandaloneTimer()">Reset</button></div></div></section><section class="section panel pad"><div style="text-align:center"><div class="eyebrow">Stopwatch</div><div id="tool-stopwatch" style="font-size:clamp(38px,10vw,56px);font-variant-numeric:tabular-nums;margin:10px 0">00:00.0</div><div class="actions" style="justify-content:center"><button class="btn primary" onclick="startStopwatch()">Start</button><button class="btn" onclick="lapStopwatch()">Lap</button><button class="btn" onclick="pauseStopwatch()">Pause</button><button class="btn" onclick="resetStopwatch()">Reset</button></div><div id="stopwatch-laps" class="muted-line" style="margin-top:12px"></div></div></section></div>`}
 let standalone=1500,standaloneHandle=null,swElapsed=0,swStarted=0,swHandle=null,swLaps=[];function startStopwatch(){if(swHandle)return;swStarted=Date.now()-swElapsed;swHandle=setInterval(()=>{swElapsed=Date.now()-swStarted;const e=document.getElementById('tool-stopwatch');if(e)e.textContent=fmtStopwatch(swElapsed)},100);toast('Stopwatch started')}function fmtStopwatch(ms){const n=Math.floor(ms/100);return String(Math.floor(n/600)).padStart(2,'0')+':'+String(Math.floor(n/10)%60).padStart(2,'0')+'.'+n%10}function pauseStopwatch(){if(swHandle){swElapsed=Date.now()-swStarted;clearInterval(swHandle);swHandle=null;toast('Stopwatch paused')}}function lapStopwatch(){if(!swHandle&&swElapsed===0)return toast('Start the stopwatch first');swLaps.unshift(fmtStopwatch(swHandle?Date.now()-swStarted:swElapsed));const e=document.getElementById('stopwatch-laps');if(e)e.innerHTML=swLaps.map((x,i)=>`<div>Lap ${swLaps.length-i}: ${x}</div>`).join('')}function resetStopwatch(){pauseStopwatch();swElapsed=0;swLaps=[];const e=document.getElementById('tool-stopwatch');if(e)e.textContent='00:00.0';const l=document.getElementById('stopwatch-laps');if(l)l.textContent=''}function startStandaloneTimer(){if(standaloneHandle)return;if(standalone===0)standalone=1500;standaloneHandle=setInterval(()=>{standalone=Math.max(0,standalone-1);const e=document.getElementById('tool-timer');if(e)e.textContent=fmtClock(standalone);if(standalone===0){stopStandalone();toast('Timer finished')}},1000);toast('Timer started')};function stopStandalone(){clearInterval(standaloneHandle);standaloneHandle=null};function resetStandaloneTimer(){stopStandalone();standalone=1500;render()}
 function search(q){const needle=q.trim().toLowerCase();if(!needle)return [];const out=[];state.tasks.forEach(t=>{if([t.title,t.desc,...(t.tags||[])].join(' ').toLowerCase().includes(needle))out.push({type:'Task',title:t.title,id:t.id,context:`${t.status} · ${t.priority}`})});state.notes.forEach(n=>{if([n.title,n.content,...(n.tags||[])].join(' ').toLowerCase().includes(needle))out.push({type:'Note',title:n.title,id:n.id,context:'Memory'})});state.goals.forEach(g=>{if(g.title.toLowerCase().includes(needle))out.push({type:'Goal',title:g.title,id:g.id,context:'Goals'})});state.transactions.forEach(t=>{if([t.title,t.category].join(' ').toLowerCase().includes(needle))out.push({type:'Transaction',title:t.title,id:t.id,context:`${t.category} · ${money(t.amount)}`})});return out.slice(0,10)}
-function globalSearch(){if(state.vault.locked||!betaAck())return;openModal(()=>`<div class="modal-inner"><div class="split"><div><div class="eyebrow">Global search</div><h2 id="modal-title" style="margin:4px 0">Find anything</h2></div><button class="btn icon-btn" onclick="closeModal()">×</button></div><div class="field" style="margin-top:16px"><label>Workspace retrieval</label><input id="search-input" autofocus placeholder="Try proposal, launch, food…" oninput="drawSearchResults(this.value)"></div><div id="search-results" style="margin-top:12px"></div></div>`);drawSearchResults('');setTimeout(()=>document.getElementById('search-input')?.focus(),30)}
+function globalSearch(){if(isMinimalMode())return;if(state.vault.locked||!betaAck())return;openModal(()=>`<div class="modal-inner"><div class="split"><div><div class="eyebrow">Global search</div><h2 id="modal-title" style="margin:4px 0">Find anything</h2></div><button class="btn icon-btn" onclick="closeModal()">×</button></div><div class="field" style="margin-top:16px"><label>Workspace retrieval</label><input id="search-input" autofocus placeholder="Try proposal, launch, food…" oninput="drawSearchResults(this.value)"></div><div id="search-results" style="margin-top:12px"></div></div>`);drawSearchResults('');setTimeout(()=>document.getElementById('search-input')?.focus(),30)}
 function drawSearchResults(q){
  const e=document.getElementById('search-results');
  if(!e)return;
@@ -862,7 +1060,7 @@ function searchOpen(type,id){closeModal();if(type==='Task')inspect('task',id);el
 function navIcon(id){const p={today:'<circle cx="10" cy="10" r="7"></circle><circle cx="10" cy="10" r="2"></circle>',work:'<path d="M4 5h12M4 10h12M4 15h8"></path><path d="m14 14 2 2 3-4"></path>',focus:'<circle cx="10" cy="10" r="7"></circle><circle cx="10" cy="10" r="2.5"></circle>',plan:'<rect x="3" y="4" width="14" height="13" rx="2"></rect><path d="M6 2v4M14 2v4M3 8h14"></path>',more:'<circle cx="5" cy="10" r="1"></circle><circle cx="10" cy="10" r="1"></circle><circle cx="15" cy="10" r="1"></circle>'};return `<span class="bottom-nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20">${p[id]}</svg></span>`}
 function navItems(){return [['today','Today'],['work','Work'],['focus','Focus'],['plan','Plan'],['more','More']]}
 function renderShell(content){const n=nav();const grp=['calendar','reminders','timer'].includes(n)?'plan':['today','work','focus','plan'].includes(n)?n:'more';return `<div class="app ${state.settings.density==='Minimal'?'dens-min':''}"><aside class="sidebar"><div class="brand"><div class="brand-mark">AS</div><div><b>AstralSurge OS <i style="font-style:normal;font-size:9px;color:var(--amber);border:1px solid #473a25;border-radius:99px;padding:1px 5px;margin-left:4px">BETA</i></b><span>private operating system</span></div></div><nav class="nav">${navItems().map(([id,label])=>`<button class="${grp===id?'active':''}" onclick="setNav('${id}')">${navIcon(id)}${label}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="status"><div class="status-top"><span><i class="dot"></i>Local</span><span>${state.mode==='demo'?'Demo':'Private'}</span></div><div style="font-size:12px;margin-top:8px">${facts().openCount} open · Lv ${levelInfo().lvl} · ${state.xp} XP</div><div class="bar xp"><i style="width:${levelInfo().pct}%"></i></div><div class="quiet" style="margin-top:5px">${levelInfo().left} XP to next level</div><button class="btn mini" style="width:100%;margin-top:10px" onclick="setNav('vault')">Vault health</button></div></div></aside><main class="main"><header class="topbar"><div class="topbar-left"><div class="crumb">AstralSurge OS / ${esc(n.charAt(0).toUpperCase()+n.slice(1))}</div><button class="btn icon-btn" onclick="globalSearch()" aria-label="Search">⌕</button><span class="chip" id="clock"></span>${focusPill()}</div><div class="top-actions"><div class="search"><input aria-label="Search workspace" placeholder="Search workspace" onclick="globalSearch()"><span>⌘K</span></div><button class="btn primary" onclick="globalCreate()" aria-label="Create">＋<span> Create</span></button><button class="btn icon-btn" onclick="setNav('settings')">⚙</button></div></header>${content}<footer class="app-footer">Local-first app · <a href="#/legal">Privacy & Terms</a> · Data stays under your browser/device controls</footer><nav class="mobile-nav">${navItems().map(([id,label])=>`<button class="${grp===id?'active':''}" onclick="setNav('${id}')">${navIcon(id)}<span>${label}</span></button>`).join('')}</nav></main></div>`}
-function moreIndex(){return `<div class="page"><div class="eyebrow">More</div><div class="h1">The rest, when you need it.</div><div class="lead">Secondary contexts keep the primary experience calm without removing any capability.</div><section class="section grid grid-3">${[['goals','Goals','Roadmaps & milestones'],['life','Life','Fitness, habits, reminders'],['money','Money','Budgets, decisions, reality'],['memory','Memory','Notes, history, recovery'],['progress','Progress','XP, streaks, weekly review'],['rules','Agent activity','Suggestions & rule inspector'],['vault','Vault','Backup, checkpoints, restore'],['calendar','Calendar','Month view & aggregation'],['reminders','Reminders','Alarms & notifications'],['timer','Time tools','Countdown & stopwatch'],['settings','Settings','Preferences & data controls'],['legal','Legal','Source-of-truth legal copy']].map(x=>`<button class="btn" style="text-align:left;min-height:106px" onclick="setNav('${x[0]}')"><b style="font-size:14px">${x[1]}</b><span class="muted-line" style="display:block;margin-top:7px">${x[2]}</span></button>`).join('')}</section><div class="footer-note">THE USER BRINGS INTENT · THE SYSTEM UNDERSTANDS CONTEXT · THE USER REMAINS IN CONTROL.</div></div>`}
+function moreIndex(){return `<div class="page"><div class="eyebrow">More</div><div class="h1">The rest, when you need it.</div><div class="lead">Secondary contexts keep the primary experience calm without removing any capability.</div><section class="section grid grid-3">${[['goals','Goals','Roadmaps & milestones'],['life','Life','Fitness, habits, reminders'],['money','Money','Budgets, decisions, reality'],['split','Split','Shared expenses & settle up'],['memory','Memory','Notes, history, recovery'],['progress','Progress','XP, streaks, weekly review'],['rules','Agent activity','Suggestions & rule inspector'],['vault','Vault','Backup, checkpoints, restore'],['calendar','Calendar','Month view & aggregation'],['reminders','Reminders','Alarms & notifications'],['timer','Time tools','Countdown & stopwatch'],['settings','Settings','Preferences & data controls'],['legal','Legal','Source-of-truth legal copy']].map(x=>`<button class="btn" style="text-align:left;min-height:106px" onclick="setNav('${x[0]}')"><b style="font-size:14px">${x[1]}</b><span class="muted-line" style="display:block;margin-top:7px">${x[2]}</span></button>`).join('')}</section><div class="footer-note">THE USER BRINGS INTENT · THE SYSTEM UNDERSTANDS CONTEXT · THE USER REMAINS IN CONTROL.</div></div>`}
 let lastRoute=null;
 window.addEventListener('paste',e=>{if(!document.getElementById('img-zone'))return;const f=[...(e.clipboardData?.items||[])].filter(i=>i.type.startsWith('image/')).map(i=>i.getAsFile());if(f.length){e.preventDefault();addImgFiles(f)}});window.addEventListener('hashchange',()=>{closeModal();closeDrawer();render()});window.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();globalSearch()}if(e.key==='Escape'){closeModal();closeDrawer()}});
 
@@ -917,7 +1115,7 @@ async function persistEncryptedSnapshot(snapshot){if(!__vaultDataKey||!snapshot?
 async function persistWorkspaceSnapshot(snapshot){if(!window.indexedDB){const text=JSON.stringify(snapshot?.vault?.encryptionEnabled?await encryptSnapshot(snapshot,__vaultDataKey,snapshot.vault.encryptionMeta||{}):snapshot);if(!safeStorageSet(KEY,text,'Workspace'))throw new Error('IndexedDB unavailable and localStorage fallback failed');__storageVersion='localStorage fallback';return {bytes:text.length,compressed:false,imageAssets:0}}return snapshot?.vault?.encryptionEnabled?persistEncryptedSnapshot(snapshot):persistBlobRecord(IDB_WORKSPACE,snapshot,true)}
 let __storageWriteBusy=false;
 function queueWorkspaceSave(snapshot,label='Workspace'){if(window.__asosReadOnly)return Promise.resolve();const queued=clone(snapshot);__storageWriteBusy=true;__storageWrite=__storageWrite.catch(()=>{}).then(async()=>{try{const h=await storageHealth();if(h?.quota&&h.usage/h.quota>.86)await compactForStorage();let result;try{result=await persistWorkspaceSnapshot(queued)}catch(e){await compactForStorage();try{await idbDelete(IDB_KV,IDB_CHECKPOINT)}catch(x){}result=await persistWorkspaceSnapshot(state)}__storageVersion=result.compressed?'IndexedDB · compressed':'IndexedDB';if(label==='Workspace'&&result.bytes>2*1024*1024)toast(`Workspace saved · ${(result.bytes/1048576).toFixed(1)} MB`);return result}catch(e){toast(`${label} could not be saved. Export the image-free recovery backup before continuing.`);throw e}finally{__storageWriteBusy=false}});return __storageWrite}
-function persist(){if(window.__asosReadOnly){toast('Editing is paused to protect unreadable saved data');return}if(state&&state.vault&&!window.__noChangeCount)state.vault.changes=(state.vault.changes||0)+1;try{try{awardBadges()}catch(e){}const dv=state.events.length-evSeen;if(dv>0){state.activity=state.activity||{};state.activity[today]=(state.activity[today]||0)+dv}if(state.events.length>300)state.events=state.events.slice(-300);evSeen=state.events.length;queueWorkspaceSave(state,'Workspace').catch(()=>{})}catch(e){toast('Could not queue save')}}
+function persist(){if(isMinimalMode()||window.__minimalSwitching)return;if(window.__asosReadOnly){toast('Editing is paused to protect unreadable saved data');return}if(state&&state.vault&&!window.__noChangeCount)state.vault.changes=(state.vault.changes||0)+1;try{try{awardBadges()}catch(e){}const dv=state.events.length-evSeen;if(dv>0){state.activity=state.activity||{};state.activity[today]=(state.activity[today]||0)+dv}if(state.events.length>300)state.events=state.events.slice(-300);evSeen=state.events.length;queueWorkspaceSave(state,'Workspace').catch(()=>{})}catch(e){toast('Could not queue save')}}
 async function readCheckpointRecord(){const rec=await idbGet(IDB_KV,IDB_CHECKPOINT);if(!rec)return null;const c=JSON.parse(await gunzipData(rec));if(vaultEnvelope(c)&&c.snapshotKind==='checkpoint'){if(!__vaultDataKey){toast('Unlock the vault before opening the checkpoint');return null}return JSON.parse(await openEncryptedSnapshot(c,__vaultDataKey))}return hydrateImages(c)}
 async function writeCheckpointRecord(snapshot){if(snapshot.vault?.encryptionEnabled){if(!__vaultDataKey)throw new Error('Vault locked');const env=await encryptSnapshot(snapshot,__vaultDataKey,snapshot.vault.encryptionMeta||{});env.snapshotKind='checkpoint';const json=JSON.stringify(env),packed=await gzipText(json);await idbPut(IDB_KV,IDB_CHECKPOINT,{v:3,encoding:packed.encoding,data:packed.data,updatedAt:Date.now(),bytes:json.length,compressed:packed.encoding==='gzip'});return}const stamped=Object.assign(clone(snapshot),{__at:new Date().toISOString()});await persistBlobRecord(IDB_CHECKPOINT,stamped,true)}
 async function migrateLegacyToIndexedDB(){let raw=null;try{raw=localStorage.getItem(KEY)}catch(e){}if(!raw)return null;try{const parsed=JSON.parse(raw);if(vaultEnvelope(parsed)){const p=await gzipText(JSON.stringify(parsed));await idbPut(IDB_KV,IDB_WORKSPACE,{v:3,encoding:p.encoding,data:p.data,updatedAt:Date.now(),bytes:JSON.stringify(parsed).length,compressed:p.encoding==='gzip'});try{localStorage.removeItem(KEY)}catch(e){}return parsed}const legacy=normalizeWorkspace(parsed);await persistBlobRecord(IDB_WORKSPACE,legacy,true);try{localStorage.removeItem(KEY)}catch(e){}return await readIdbState(IDB_WORKSPACE)}catch(e){return null}}
@@ -926,7 +1124,7 @@ async function deleteIndexedDB(){if(__idbPromise){try{(await __idbPromise).close
 const WORKSPACE_SCHEMA=2;
 const BACKUP_FORMAT='astralsurge-backup';
 const FONT_OPTIONS=[['system','System (default)'],['humanist','Friendly'],['rounded','Rounded'],['geometric','Geometric'],['editorial','Editorial serif'],['serif','Classic serif'],['condensed','Condensed'],['mono','Monospace'],['accessible','High readability']];
-const WORKSPACE_LISTS=['tasks','planner','habits','workouts','budgets','transactions','notes','goals','stories','decisions','activities','reminders','trash'];
+const WORKSPACE_LISTS=['tasks','planner','habits','workouts','budgets','transactions','notes','goals','stories','decisions','activities','reminders','trash','groups'];
 const TRASH_DAYS=30;
 const REPEAT_RULES=['none','daily','weekdays','weekly'];
 const WORKSPACE_ITEM_LIMIT=20000;
@@ -960,6 +1158,7 @@ function normalizeWorkspace(input,opts={}){
  out.notes=out.notes.map(n=>({...n,id:String(n.id||uid('note')),title:String(n.title||''),content:String(n.content||''),tags:(Array.isArray(n.tags)?n.tags:[]).map(String),images:cleanImages(n.images)}));
  out.workouts=out.workouts.map(w=>({...w,id:String(w.id||uid('w')),title:String(w.title||'Workout'),exercises:(Array.isArray(w.exercises)?w.exercises:[]).filter(isPlainObj).map(e=>({name:String(e.name||''),sets:(Array.isArray(e.sets)?e.sets:[]).filter(isPlainObj).map(x=>({sets:Number(x.sets)||0,reps:Number(x.reps)||0,weight:Number(x.weight)||0}))}))}));
  out.trash=out.trash.filter(e=>isPlainObj(e)&&isPlainObj(e.item)&&(Date.now()-Number(e.deletedAt||0))<TRASH_DAYS*864e5);
+ out.groups=(Array.isArray(src.groups)?src.groups:[]).slice(0,200).map(normalizeGroup).filter(Boolean);
  migrate(out);
  return out;
 }
@@ -983,6 +1182,7 @@ function readLegacyLocalStorage(){try{const raw=localStorage.getItem(KEY);return
 function ensureV2State(){state=normalizeWorkspace(state)}
 function makeLockedState(){return {mode:'private',vault:{locked:true,encryptionEnabled:true,recoveryAvailable:true,lastBackup:null,lastCheckpoint:null,encryptionMeta:__encryptedEnvelope?{salt:__encryptedEnvelope.salt,iterations:__encryptedEnvelope.iterations,passWrap:__encryptedEnvelope.passWrap,recoveryWrap:__encryptedEnvelope.recoveryWrap}:{}},tasks:[],planner:[],habits:[],workouts:[],budgets:[],transactions:[],notes:[],goals:[],stories:[],decisions:[],activities:[],focus:{active:false,paused:false},activity:{},habitLog:{},xp:0,level:1,streak:0,settings:{suggestions:'On',density:'Normal',hideAmounts:false},dismissed:{},events:[]}}
 async function bootAstral(){
+ if(isMinimalMode()){window.__minimalIsolatedBoot=true;state=freshWorkspace();evSeen=0;render();startMinimalExpiryTimer();return}
  let persisted=null,readFailed=false;
  if(window.indexedDB){
   try{persisted=await readIdbState(IDB_WORKSPACE)}catch(e){readFailed=true}
@@ -995,7 +1195,7 @@ async function bootAstral(){
  else if(persisted){state=normalizeWorkspace(persisted)}
  else{state=normalizeWorkspace(demoState());if(!readFailed)queueWorkspaceSave(state,'Workspace').catch(()=>{})}
  evSeen=state.events.length;
- await loadRecoveryMeta();await maybeAutoCheckpoint();await requestPersistentStorage();render();ambientSetup();initPWA();checkReminders();setInterval(checkReminders,15000);refreshStorageHealth();
+ await loadRecoveryMeta();await maybeAutoCheckpoint();await requestPersistentStorage();await handleMinimalReturnPending();render();ambientSetup();initPWA();checkReminders();setInterval(checkReminders,15000);refreshStorageHealth();
  if(new URLSearchParams(location.search).get('capture')==='1')setTimeout(()=>{if(!state.vault.locked&&betaAck())openModal(taskModal)},250)
 }
 
@@ -1091,7 +1291,7 @@ async function notifyReminder(r){
 }
 function reminderDueAt(r){return r.snoozedUntil||r.dueAt}
 function checkReminders(){
- if(state.vault?.locked)return;const nowMs=Date.now();let changed=false;
+ if(isMinimalMode()||window.__minimalSwitching||state.vault?.locked)return;const nowMs=Date.now();let changed=false;
  state.reminders.forEach(r=>{if(r.status==='done')return;const due=new Date(reminderDueAt(r)).getTime();if(due<=nowMs&&(!r.lastNotified||nowMs-r.lastNotified>55*1000)){r.lastNotified=nowMs;r.status='due';changed=true;notifyReminder(r);toast(`Reminder due · ${r.title}`)}});if(changed)persist();
  const badge=state.reminders.filter(r=>r.status!=='done'&&new Date(reminderDueAt(r)).getTime()<=nowMs).length;document.documentElement.dataset.reminders=badge
 }
@@ -1155,10 +1355,10 @@ function viewToday(){const f=facts(),rec=recommendation();const main=rec?rec.tit
 
 function viewVault(){return `<div class="page"><div class="split"><div><div class="eyebrow">Vault</div><div class="h1">Private by construction, not by promise.</div><div class="lead">Workspace persistence is IndexedDB-first and local to this browser. JSON state is compressed; unencrypted image attachments are stored separately, while encrypted vaults keep their attachments inside the encrypted snapshot.</div></div><button class="btn primary" onclick="backupWorkspace()">${state.vault.encryptionEnabled?'Export encrypted backup':'Back up'}</button></div>${recoveryPanel()}<section class="section grid grid-2"><div class="panel pad"><div class="eyebrow">Encryption</div><h2 style="margin:7px 0">${state.vault.encryptionEnabled?'AES-GCM vault enabled':'Local vault not yet encrypted'}</h2><div class="muted-line">PBKDF2-SHA-256 derives a wrapping key from your passphrase; a random AES data key encrypts the workspace. The passphrase is never stored in app storage.</div><div class="actions">${state.vault.encryptionEnabled?`<button class="btn primary" onclick="toggleLock()">${state.vault.locked?'Unlock':'Lock vault'}</button><button class="btn" onclick="setPassphrase()">Change passphrase</button>`:`<button class="btn primary" onclick="setPassphrase()">Enable encrypted vault</button>`}<button class="btn" onclick="recoveryImport()">Unlock with recovery key</button></div><div class="notice-strip" style="margin-top:14px"><div><b>Threat-model boundary</b><span>Encryption does not protect data while the vault is unlocked or against a compromised browser/device/extension.</span></div></div></div><div class="panel pad"><div class="eyebrow">Storage health</div><h2 style="margin:7px 0">IndexedDB storage</h2><div id="storage-health" class="muted-line">Checking browser storage…</div><div class="storage-meter" style="margin-top:10px"><i id="storage-bar"></i></div><div class="field-help" style="margin-top:9px">IndexedDB is the primary workspace store, JSON is compressed when the browser supports CompressionStream, and image attachments are externalized for unencrypted workspaces. Persistent storage is requested where supported. Browser quota/eviction still cannot be guaranteed away, so keep portable backups for anything you cannot afford to lose.</div></div></section><section class="section panel"><div class="panel-header"><h2>Recovery & restore</h2><small>explicit, encrypted when possible</small></div><div style="padding:18px"><div class="feature-grid"><div class="feature-card"><div class="eyebrow">Checkpoint</div><div style="margin-top:6px">${dateShort(state.vault.lastCheckpoint)}</div><div class="field-help" style="margin-top:5px">${state.vault.encryptionEnabled?'Stored as an encrypted checkpoint while the vault is unlocked.':'Stored in IndexedDB for this browser profile.'}</div><div class="actions"><button class="btn mini" onclick="createCheckpoint()">Create</button><button class="btn mini" onclick="compareCheckpoint()">Compare</button></div></div><div class="feature-card"><div class="eyebrow">Portable backup</div><div style="margin-top:6px">${dateShort(state.vault.lastBackup)}</div><div class="field-help" style="margin-top:5px">${state.vault.encryptionEnabled?'Encrypted backup envelope.':'Readable JSON backup.'}</div><div class="actions"><button class="btn mini primary" onclick="backupWorkspace()">Export</button><button class="btn mini" onclick="exportRecoveryNoImages()">Recovery · no images</button><button class="btn mini" onclick="fileRestore()">Restore</button></div></div></div></div></section><section class="section panel"><div class="panel-header"><h2>Security notes</h2><small>honest boundaries</small></div><div class="row"><div><div class="row-title">Primary storage</div><div class="row-meta">This build persists the workspace in IndexedDB first; small compatibility metadata may still use localStorage. PWA assets may be cached by the service worker.</div></div><span class="chip good">local</span></div><div class="row"><div><div class="row-title">Recovery key</div><div class="row-meta">Exported once when encryption is enabled. The app does not intentionally retain the recovery key in browser storage.</div></div><span class="chip good">offline</span></div><div class="row"><div><div class="row-title">Plaintext checkpoints</div><div class="row-meta">Disabled while encrypted-vault mode is active; old plaintext checkpoint keys are removed when an encrypted envelope is detected.</div></div><span class="chip accent">hardened</span></div><div class="row"><div><div class="row-title">Offline / install</div><div class="row-meta">Offline behavior depends on a valid service worker and secure hosting. This HTML cannot guarantee OS background execution.</div></div><span class="chip">best effort</span></div></section></div>`}
 
-function applyTheme(){const t=['Dark','Light','Auto'].includes(state.settings.theme)?state.settings.theme:'Dark';const light=t==='Light'||(t==='Auto'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches);document.documentElement.setAttribute('data-theme',light?'light':'dark');const st=state.settings,ac=safeColor(st.accent,'#9d88ff'),ac2=safeColor(st.accent2,'');const rt=document.documentElement.style;rt.setProperty('--accent',ac);rt.setProperty('--accent2',ac2||`color-mix(in srgb,${ac} 50%,#64d7db)`);let w=['None','Daily',...Object.keys(WALLS),'Custom'].includes(st.wallpaper)?st.wallpaper:'None';if(w==='Daily'){const k=Object.keys(WALLS);w=k[Math.floor(Date.now()/864e5)%k.length]}const custom=safeImageData(st.wallImg);const img=w==='Custom'&&custom?`linear-gradient(rgba(12,14,17,.55),rgba(12,14,17,.55)),url(${custom})`:WALLS[w];document.body.style.backgroundImage=img||'none';document.body.style.backgroundAttachment='scroll';document.body.style.backgroundPosition='center top';document.body.style.backgroundRepeat='no-repeat';document.body.style.backgroundSize='cover';document.documentElement.setAttribute('data-wall',img?'1':'0');const m=document.querySelector('meta[name=theme-color]');if(m)m.content=light?'#f3f1ee':ac}
+function applyTheme(){const root=document.documentElement;root.classList.remove('minimal-mode-active');delete root.dataset.minimalTheme;document.body.style.removeProperty('background-color');root.style.removeProperty('color-scheme');const t=['Dark','Light','Auto'].includes(state.settings.theme)?state.settings.theme:'Dark';const light=t==='Light'||(t==='Auto'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches);document.documentElement.setAttribute('data-theme',light?'light':'dark');const st=state.settings,ac=safeColor(st.accent,'#9d88ff'),ac2=safeColor(st.accent2,'');const rt=document.documentElement.style;rt.setProperty('--accent',ac);rt.setProperty('--accent2',ac2||`color-mix(in srgb,${ac} 50%,#64d7db)`);let w=['None','Daily',...Object.keys(WALLS),'Custom'].includes(st.wallpaper)?st.wallpaper:'None';if(w==='Daily'){const k=Object.keys(WALLS);w=k[Math.floor(Date.now()/864e5)%k.length]}const custom=safeImageData(st.wallImg);const img=w==='Custom'&&custom?`linear-gradient(rgba(12,14,17,.55),rgba(12,14,17,.55)),url(${custom})`:WALLS[w];document.body.style.backgroundImage=img||'none';document.body.style.backgroundAttachment='scroll';document.body.style.backgroundPosition='center top';document.body.style.backgroundRepeat='no-repeat';document.body.style.backgroundSize='cover';document.documentElement.setAttribute('data-wall',img?'1':'0');const m=document.querySelector('meta[name=theme-color]');if(m)m.content=light?'#f3f1ee':ac}
 
 function lockScreen(){return `<div class="page" style="max-width:480px;padding-top:12vh;text-align:center"><div class="brand-mark" style="margin:0 auto 18px">AS</div><div class="eyebrow">Encrypted vault</div><div class="h1">Welcome back.</div><div class="lead" style="margin:0 auto">Your workspace is encrypted. Choose your unlock path.</div><div class="field" style="max-width:330px;margin:18px auto 0"><input id="unlock-input" type="password" placeholder="Vault passphrase" onkeydown="if(event.key==='Enter')unlockVault('pass')"></div><div class="actions" style="justify-content:center"><button class="btn primary" onclick="unlockVault('pass')">Unlock</button></div><div class="muted-line" style="margin-top:18px">Forgot the passphrase? Your recovery key can unlock the same encrypted vault.</div><div class="actions" style="justify-content:center"><button class="btn" onclick="recoveryImport()">Use recovery key</button></div></div>`}
-function viewSettings(){return `<div class="page"><div class="eyebrow">Settings</div><div class="h1">Keep the system calm.</div><div class="lead">High-signal preferences, privacy controls, installation, and data lifecycle in one place.</div><section class="section panel"><div class="panel-header"><h2>Preferences</h2><small>stored on this device</small></div><div class="row"><div><div class="row-title">Install app</div><div class="row-meta">Add AstralSurge OS to your phone/home screen with a Quick Capture shortcut.</div></div><button class="btn mini ${__installPrompt?'primary':''}" onclick="installPWA()">${isInstalled()?'Installed':'Install'}</button></div><div class="row"><div><div class="row-title">Notifications</div><div class="row-meta">Reminder alerts use the browser Notification API; delivery can be delayed by browser or OS suspension.</div></div><button class="btn mini" onclick="requestNotifications()">${window.Notification?.permission==='granted'?'Enabled':'Enable'}</button></div><div class="row"><div><div class="row-title">Suggestions</div><div class="row-meta">Control deterministic recommendation volume.</div></div><select aria-label="Suggestions" onchange="setSetting('suggestions',this.value)" style="background:#0f1216;color:#fff;border:1px solid #2b3038;border-radius:9px;padding:8px"><option ${state.settings.suggestions==='On'?'selected':''}>On</option><option ${state.settings.suggestions==='Reduced'?'selected':''}>Reduced</option><option ${state.settings.suggestions==='Off'?'selected':''}>Off</option></select></div><div class="row"><div><div class="row-title">Density</div><div class="row-meta">Reduce secondary copy without hiding essential controls.</div></div><select aria-label="Density" onchange="setSetting('density',this.value)" style="background:#0f1216;color:#fff;border:1px solid #2b3038;border-radius:9px;padding:8px"><option ${state.settings.density==='Minimal'?'selected':''}>Minimal</option><option ${state.settings.density==='Normal'?'selected':''}>Normal</option></select></div><div class="row"><div class="row-main"><div class="row-title">Font style</div><div class="row-meta">Choose a typeface for readability across the app.</div></div><select aria-label="Font style" onchange="setSetting('font',this.value)">${FONT_OPTIONS.map(([v,l])=>`<option value="${v}" ${(state.settings.font||'system')===v?'selected':''}>${l}</option>`).join('')}</select></div><div class="row"><div class="row-main"><div class="row-title">Time zone</div><div class="row-meta">Controls app-local date and time formatting. Choose a named time zone.</div></div><select aria-label="Time zone" onchange="setSetting('timezone',this.value)">${timeZoneOptions()}</select></div><div class="row"><div><div class="row-title">Hide amounts</div><div class="row-meta">Visually suppress money values on screen. This is not encryption.</div></div><button class="btn mini" onclick="toggleHideAmounts()">${state.settings.hideAmounts?'On':'Off'}</button></div><div class="row"><div><div class="row-title">Theme</div><div class="row-meta">Dark, light, or automatic system preference.</div></div><select aria-label="Theme" onchange="setSetting('theme',this.value)" style="background:#0f1216;color:#fff;border:1px solid #2b3038;border-radius:9px;padding:8px">${['Dark','Light','Auto'].map(x=>`<option ${(state.settings.theme||'Dark')===x?'selected':''}>${x}</option>`).join('')}</select></div></section>${appearancePanel()}<section class="section panel"><div class="panel-header"><h2>Data lifecycle</h2><small>you control the copy</small></div><div class="row"><div><div class="row-title">Export workspace</div><div class="row-meta">Primary backup. Encrypted vaults export an encrypted backup; unencrypted workspaces export readable JSON.</div></div><button class="btn mini" onclick="downloadState()">Export</button></div><div class="row"><div><div class="row-title">Recovery export · no images</div><div class="row-meta">Creates a much smaller restore file with image attachments removed. Use it as a fallback when storage grows or media becomes problematic.</div></div><button class="btn mini" onclick="exportRecoveryNoImages()">Export recovery</button></div><div class="row"><div><div class="row-title">Delete all local data</div><div class="row-meta">Erases app storage and the local checkpoint. Exported files outside the browser are untouched.</div></div><button class="btn mini" onclick="deleteAllLocalData()">Erase local data</button></div><div class="row"><div><div class="row-title">Privacy & terms</div><div class="row-meta">Read the full privacy notice, security boundaries, disclaimers, and liability limits.</div></div><button class="btn mini" onclick="setNav('legal')">Open</button></div><div class="row"><div><div class="row-title">Beta notice</div><div class="row-meta">Review the launch disclosure and acknowledgement.</div></div><button class="btn mini" onclick="showBeta()">View</button></div><div class="row"><div><div class="row-title">Reset demo</div><div class="row-meta">Recreates explicit demo data. It is not a secure deletion method.</div></div><button class="btn mini" onclick="resetDemo()">Reset</button></div></section></div>`}
+function viewSettings(){return `<div class="page"><div class="eyebrow">Settings</div><div class="h1">Keep the system calm.</div><div class="lead">High-signal preferences, privacy controls, installation, and data lifecycle in one place.</div><section class="section panel"><div class="panel-header"><h2>Preferences</h2><small>stored on this device</small></div><div class="row"><div class="row-main"><div class="row-title">Minimal mode</div><div class="row-meta">A separate quick-scribble space with its own local database. It does not load your Normal workspace.</div></div><button class="btn mini" onclick="switchMinimalMode('minimal')">Switch to Minimal</button></div><div class="row"><div><div class="row-title">Install app</div><div class="row-meta">Add AstralSurge OS to your phone/home screen with a Quick Capture shortcut.</div></div><button class="btn mini ${__installPrompt?'primary':''}" onclick="installPWA()">${isInstalled()?'Installed':'Install'}</button></div><div class="row"><div><div class="row-title">Notifications</div><div class="row-meta">Reminder alerts use the browser Notification API; delivery can be delayed by browser or OS suspension.</div></div><button class="btn mini" onclick="requestNotifications()">${window.Notification?.permission==='granted'?'Enabled':'Enable'}</button></div><div class="row"><div><div class="row-title">Suggestions</div><div class="row-meta">Control deterministic recommendation volume.</div></div><select aria-label="Suggestions" onchange="setSetting('suggestions',this.value)" style="background:#0f1216;color:#fff;border:1px solid #2b3038;border-radius:9px;padding:8px"><option ${state.settings.suggestions==='On'?'selected':''}>On</option><option ${state.settings.suggestions==='Reduced'?'selected':''}>Reduced</option><option ${state.settings.suggestions==='Off'?'selected':''}>Off</option></select></div><div class="row"><div><div class="row-title">Density</div><div class="row-meta">Reduce secondary copy without hiding essential controls.</div></div><select aria-label="Density" onchange="setSetting('density',this.value)" style="background:#0f1216;color:#fff;border:1px solid #2b3038;border-radius:9px;padding:8px"><option ${state.settings.density==='Minimal'?'selected':''}>Minimal</option><option ${state.settings.density==='Normal'?'selected':''}>Normal</option></select></div><div class="row"><div class="row-main"><div class="row-title">Font style</div><div class="row-meta">Choose a typeface for readability across the app.</div></div><select aria-label="Font style" onchange="setSetting('font',this.value)">${FONT_OPTIONS.map(([v,l])=>`<option value="${v}" ${(state.settings.font||'system')===v?'selected':''}>${l}</option>`).join('')}</select></div><div class="row"><div class="row-main"><div class="row-title">Time zone</div><div class="row-meta">Controls app-local date and time formatting. Choose a named time zone.</div></div><select aria-label="Time zone" onchange="setSetting('timezone',this.value)">${timeZoneOptions()}</select></div><div class="row"><div><div class="row-title">Hide amounts</div><div class="row-meta">Visually suppress money values on screen. This is not encryption.</div></div><button class="btn mini" onclick="toggleHideAmounts()">${state.settings.hideAmounts?'On':'Off'}</button></div><div class="row"><div><div class="row-title">Theme</div><div class="row-meta">Dark, light, or automatic system preference.</div></div><select aria-label="Theme" onchange="setSetting('theme',this.value)" style="background:#0f1216;color:#fff;border:1px solid #2b3038;border-radius:9px;padding:8px">${['Dark','Light','Auto'].map(x=>`<option ${(state.settings.theme||'Dark')===x?'selected':''}>${x}</option>`).join('')}</select></div></section>${appearancePanel()}<section class="section panel"><div class="panel-header"><h2>Data lifecycle</h2><small>you control the copy</small></div><div class="row"><div><div class="row-title">Export workspace</div><div class="row-meta">Primary backup. Encrypted vaults export an encrypted backup; unencrypted workspaces export readable JSON.</div></div><button class="btn mini" onclick="downloadState()">Export</button></div><div class="row"><div><div class="row-title">Recovery export · no images</div><div class="row-meta">Creates a much smaller restore file with image attachments removed. Use it as a fallback when storage grows or media becomes problematic.</div></div><button class="btn mini" onclick="exportRecoveryNoImages()">Export recovery</button></div><div class="row"><div><div class="row-title">Delete all local data</div><div class="row-meta">Erases app storage and the local checkpoint. Exported files outside the browser are untouched.</div></div><button class="btn mini" onclick="deleteAllLocalData()">Erase local data</button></div><div class="row"><div><div class="row-title">Privacy & terms</div><div class="row-meta">Read the full privacy notice, security boundaries, disclaimers, and liability limits.</div></div><button class="btn mini" onclick="setNav('legal')">Open</button></div><div class="row"><div><div class="row-title">Beta notice</div><div class="row-meta">Review the launch disclosure and acknowledgement.</div></div><button class="btn mini" onclick="showBeta()">View</button></div><div class="row"><div><div class="row-title">Reset demo</div><div class="row-meta">Recreates explicit demo data. It is not a secure deletion method.</div></div><button class="btn mini" onclick="resetDemo()">Reset</button></div></section></div>`}
 
 
 function resetDemo(){if(!confirm('Reset all workspace content to the demo data while keeping your vault encryption settings?'))return;const enc=state.vault?.encryptionEnabled, meta=clone(state.vault||{});state=demoState();ensureV2State();if(enc){state.vault={...state.vault,...meta,locked:false,encryptionEnabled:true};}persist();render();toast('Demo workspace reset')}
@@ -1166,12 +1366,352 @@ function downloadState(){backupWorkspace()}
 
 // New render route implementation keeps the original secondary screens but upgrades the feature-heavy routes.
 
+
+/* ===== Minimal mode: fully separate IndexedDB storage ===== */
+let __minimalIsolatedBoot=false,__minimalTimer=null,__minimalRenderSeq=0,__minimalDataCache=null,__minimalDrawingOpen=false,__minimalCanvas=null,__minimalDrawing=false,__minimalLastPoint=null,__minimalStorageReadFailed=false;window.__minimalSwitching=false;
+const MIN_DB_STORE='kv',MIN_DB_KEY='scribbles',MIN_MAX_ITEMS=500,MIN_MAX_TEXT=2000;
+function minDefaultData(){return {items:[],converted:false,theme:'dark'}}
+function minNormalizeData(raw){
+ const d=isPlainObj(raw)?raw:{},seen=new Set();
+ const items=(Array.isArray(d.items)?d.items:[]).map(x=>{
+  if(!isPlainObj(x))return null;
+  const id=String(x.id||'').slice(0,80),kind=x.kind==='drawing'?'drawing':'text',createdAt=Number(x.createdAt);
+  if(!id||seen.has(id)||!Number.isFinite(createdAt)||createdAt<=0)return null;
+  seen.add(id);
+  const expiresAt=x.expiresAt===null?null:Number(x.expiresAt);
+  if(expiresAt!==null&&(!Number.isFinite(expiresAt)||expiresAt<=0))return null;
+  if(kind==='drawing'){
+   const image=safeImageData(x.image);if(!image)return null;
+   return {id,kind,createdAt,expiresAt,pinned:!!x.pinned,image};
+  }
+  return {id,kind:'text',createdAt,expiresAt,pinned:!!x.pinned,text:String(x.text??'').slice(0,MIN_MAX_TEXT)};
+ }).filter(Boolean).sort((a,b)=>b.createdAt-a.createdAt).slice(0,MIN_MAX_ITEMS);
+ return {items,converted:d.converted===true,theme:d.theme==='light'?'light':'dark'};
+}
+function minOpenDB(){
+ if(!window.indexedDB)return Promise.reject(new Error('IndexedDB unavailable'));
+ return new Promise((resolve,reject)=>{let req;try{req=indexedDB.open(MIN_DB_NAME,1)}catch(e){reject(e);return}
+  req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(MIN_DB_STORE))db.createObjectStore(MIN_DB_STORE)};
+  req.onsuccess=()=>{const db=req.result;db.onversionchange=()=>db.close();resolve(db)};
+  req.onerror=()=>reject(req.error||new Error('Minimal database open failed'));
+  req.onblocked=()=>reject(new Error('Minimal database is blocked by another tab'));
+ });
+}
+async function minReadSafe(){
+ let db=null;
+ try{db=await minOpenDB();const out=await new Promise((resolve,reject)=>{const tx=db.transaction(MIN_DB_STORE,'readonly'),req=tx.objectStore(MIN_DB_STORE).get(MIN_DB_KEY);let value;req.onsuccess=()=>{value=req.result};req.onerror=()=>reject(req.error||new Error('Minimal read failed'));tx.oncomplete=()=>resolve(value);tx.onerror=()=>reject(tx.error||new Error('Minimal read failed'));tx.onabort=()=>reject(tx.error||new Error('Minimal read aborted'))});__minimalStorageReadFailed=false;return minNormalizeData(out)}catch(e){__minimalStorageReadFailed=true;toast('Minimal storage could not be read.');return minDefaultData()}finally{try{db?.close()}catch(e){}}
+}
+async function minWriteSafe(data){
+ if(__minimalStorageReadFailed){toast('Minimal storage is unavailable; no changes were saved.');return false}
+ let db=null;
+ try{db=await minOpenDB();await new Promise((resolve,reject)=>{const tx=db.transaction(MIN_DB_STORE,'readwrite');tx.objectStore(MIN_DB_STORE).put(minNormalizeData(data),MIN_DB_KEY);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error('Minimal write failed'));tx.onabort=()=>reject(tx.error||new Error('Minimal write aborted'))});return true}catch(e){toast('Minimal storage could not be saved.');return false}finally{try{db?.close()}catch(e){}}
+}
+async function minimalDeleteDatabase(){
+ if(!window.indexedDB)return;
+ try{await new Promise((resolve,reject)=>{let req;try{req=indexedDB.deleteDatabase(MIN_DB_NAME)}catch(e){reject(e);return}req.onsuccess=()=>resolve();req.onerror=()=>reject(req.error||new Error('Minimal database delete failed'));req.onblocked=()=>reject(new Error('Minimal database is still open in another tab'))})}catch(e){toast('Minimal database could not be deleted. Close other AstralSurge tabs and retry.')}
+}
+function minExpiryLabel(item){if(item.expiresAt===null)return 'stays';const ms=item.expiresAt-Date.now();if(ms<=0)return 'expired';const minutes=Math.max(1,Math.ceil(ms/60000));if(minutes>=60)return `${Math.ceil(minutes/60)}h left`;return `${minutes}m left`}
+function minTimestamp(ms){try{return appDateTime(ms,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:true})}catch(e){return new Date(ms).toLocaleString()}}
+function setMinimalDocumentTheme(theme){
+ const root=document.documentElement;
+ root.classList.add('minimal-mode-active');
+ root.dataset.minimalTheme=theme==='dark'?'dark':'light';
+ document.body.style.removeProperty('background-color');
+ document.body.style.backgroundImage='none';
+}
+function minimalSwitchUI(){return `<div class="minimal-mode-row"><div><div>minimal mode</div><div class="minimal-mode-label">separate local scribbles · normal data stays untouched</div></div><button type="button" class="btn mini" onclick="switchMinimalMode('normal')">switch to normal</button></div>`}
+function minimalItemHtml(item){
+ const image=item.kind==='drawing'?safeImageData(item.image):'';
+ const body=item.kind==='drawing'?`<img class="minimal-drawing" src="${esc(image)}" alt="hand-drawn scribble">`:`<div class="minimal-item-text">${esc(item.text)}</div>`;
+ return `<article class="minimal-item ${item.pinned?'pinned':''}"><div class="minimal-item-top"><span class="minimal-stamp">${esc(minTimestamp(item.createdAt))}</span><span class="minimal-stamp">${esc(minExpiryLabel(item))}${item.pinned?' · pinned':''}</span></div>${body}<div class="minimal-item-bottom"><span class="minimal-stamp">${item.kind==='drawing'?'drawing':'note'}</span><div class="minimal-actions"><button type="button" class="btn mini" onclick="minimalPin(${jarg(item.id)})">${item.pinned?'unpin':'pin'}</button><button type="button" class="btn mini" onclick="minimalDelete(${jarg(item.id)})">delete</button></div></div></article>`;
+}
+function renderMinimalUi(data,seq){
+ if(!isMinimalMode()||seq!==__minimalRenderSeq)return;
+ __minimalDataCache=data;setMinimalDocumentTheme(data.theme);
+ const feed=data.items.slice().sort((a,b)=>(Number(b.pinned)-Number(a.pinned))||(b.createdAt-a.createdAt));
+ const content=`<div class="minimal-app" data-min-theme="${data.theme}"><div class="minimal-wrap"><header class="minimal-head"><div><div class="minimal-brand">astralsurge / scribbles</div><div class="minimal-sub">quick thoughts. no dashboard. local only.</div></div><div class="minimal-controls"><button type="button" class="btn mini" onclick="minimalToggleTheme()">${data.theme==='dark'?'light mode':'dark mode'}</button></div></header>${minimalSwitchUI()}<section class="minimal-compose"><label class="minimal-label" for="minimal-note">write a quick note</label><textarea class="minimal-control" id="minimal-note" maxlength="2000" placeholder="something on your mind…"></textarea><div class="minimal-compose-row"><select class="minimal-control" id="minimal-duration" aria-label="How long the note lasts"><option value="stays">stays</option><option value="1h">1h</option><option value="24h" selected>24h</option></select><button type="button" class="btn mini" onclick="minimalPostText()">post</button><button type="button" class="btn mini" onclick="minimalOpenDrawing()">draw</button><span class="minimal-stamp" id="minimal-char-count">0 / 2000</span></div></section>${__minimalDrawingOpen?minimalDrawingUi(data.theme):''}<div class="minimal-count">${feed.length} / ${MIN_MAX_ITEMS} scribbles</div><section class="minimal-feed" aria-label="scribble feed">${feed.map(minimalItemHtml).join('')||'<div class="minimal-empty">nothing here. yet.</div>'}</section><footer class="minimal-footer">no network · no normal workspace access · expires are removed automatically</footer></div></div>`;
+ document.getElementById('app').innerHTML=!betaAck()?betaScreen():content;
+ if(betaAck()){
+  const t=document.getElementById('minimal-note'),counter=document.getElementById('minimal-char-count');if(t&&counter)t.addEventListener('input',()=>counter.textContent=`${t.value.length} / 2000`);
+  if(__minimalDrawingOpen)initMinimalCanvas(data.theme);
+ }
+ document.title='AstralSurge OS · minimal';
+}
+function minimalDrawingUi(theme){return `<section class="minimal-draw-shell" aria-label="drawing canvas"><div class="minimal-draw-title">draw something</div><div class="minimal-stamp">pointer, touch or pen · about 6px stroke</div><canvas id="minimal-canvas" class="minimal-canvas" width="600" height="600" aria-label="Draw on this square canvas"></canvas><div class="minimal-compose-row"><button type="button" class="btn mini" onclick="minimalClearDrawing()">clear</button><button type="button" class="btn mini" onclick="minimalPostDrawing()">post drawing · 24h</button><button type="button" class="btn mini" onclick="minimalCloseDrawing()">close</button></div></section>`}
+async function renderMinimal(){
+ const seq=++__minimalRenderSeq;
+ if(!betaAck()){
+  setMinimalDocumentTheme('light');document.getElementById('app').innerHTML=betaScreen();document.title='AstralSurge OS';return;
+ }
+ let data=await minReadSafe();const now=Date.now(),before=data.items.length;data.items=data.items.filter(x=>x.expiresAt===null||x.expiresAt>now);
+ if(data.items.length!==before)await minWriteSafe(data);
+ renderMinimalUi(data,seq);
+}
+function startMinimalExpiryTimer(){if(__minimalTimer)return;__minimalTimer=setInterval(async()=>{if(!isMinimalMode()||!betaAck())return;await renderMinimal()},60000)}
+async function minimalPostText(){
+ if(!isMinimalMode()||!betaAck())return;
+ const ta=document.getElementById('minimal-note'),duration=document.getElementById('minimal-duration');if(!ta||!duration)return;
+ const text=String(ta.value||'').slice(0,MIN_MAX_TEXT);if(!text.trim()){toast('Write something first.');ta.focus();return}
+ const data=await minReadSafe(),now=Date.now(),value=duration.value,expiresAt=value==='stays'?null:now+(value==='1h'?3600000:86400000);
+ data.items.unshift({id:uid('scribble'),kind:'text',text,createdAt:now,expiresAt,pinned:false});data.items=data.items.slice(0,MIN_MAX_ITEMS);
+ if(await minWriteSafe(data)){__minimalDrawingOpen=false;await renderMinimal();toast('Posted.');}
+}
+function initMinimalCanvas(theme){
+ const canvas=document.getElementById('minimal-canvas');if(!canvas)return;__minimalCanvas=canvas;const ctx=canvas.getContext('2d');if(!ctx){toast('Drawing is unavailable in this browser.');return}
+ ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=12;ctx.strokeStyle=theme==='light'?'#000':'#fff';ctx.fillStyle=theme==='light'?'#fff':'#000';ctx.fillRect(0,0,canvas.width,canvas.height);
+ const point=e=>{const r=canvas.getBoundingClientRect();return {x:(e.clientX-r.left)*(canvas.width/r.width),y:(e.clientY-r.top)*(canvas.height/r.height)}};
+ canvas.onpointerdown=e=>{e.preventDefault();__minimalDrawing=true;__minimalLastPoint=point(e);try{canvas.setPointerCapture(e.pointerId)}catch(x){}ctx.beginPath();ctx.moveTo(__minimalLastPoint.x,__minimalLastPoint.y);ctx.lineTo(__minimalLastPoint.x+.1,__minimalLastPoint.y+.1);ctx.stroke()};
+ canvas.onpointermove=e=>{if(!__minimalDrawing)return;e.preventDefault();const p=point(e);ctx.beginPath();ctx.moveTo(__minimalLastPoint.x,__minimalLastPoint.y);ctx.lineTo(p.x,p.y);ctx.stroke();__minimalLastPoint=p};
+ const up=e=>{__minimalDrawing=false;__minimalLastPoint=null;try{if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId)}catch(x){}};
+ canvas.onpointerup=up;canvas.onpointercancel=up;canvas.onlostpointercapture=()=>{__minimalDrawing=false;__minimalLastPoint=null};
+}
+function minimalOpenDrawing(){__minimalDrawingOpen=true;renderMinimal()}
+function minimalCloseDrawing(){__minimalDrawingOpen=false;__minimalCanvas=null;__minimalDrawing=false;renderMinimal()}
+function minimalClearDrawing(){if(!__minimalCanvas||!document.getElementById('minimal-canvas'))return;const ctx=__minimalCanvas.getContext('2d');if(!ctx)return;const theme=__minimalDataCache?.theme||'dark';ctx.fillStyle=theme==='light'?'#fff':'#000';ctx.fillRect(0,0,__minimalCanvas.width,__minimalCanvas.height)}
+async function minimalPostDrawing(){
+ const canvas=document.getElementById('minimal-canvas');if(!canvas)return;let src;try{src=canvas.toDataURL('image/png')}catch(e){toast('Could not prepare this drawing.');return}
+ const image=safeImageData(src);if(!image){toast('Drawing is too large. Clear some strokes and try again.');return}
+ const data=await minReadSafe(),now=Date.now();data.items.unshift({id:uid('scribble'),kind:'drawing',image,createdAt:now,expiresAt:now+86400000,pinned:false});data.items=data.items.slice(0,MIN_MAX_ITEMS);
+ if(await minWriteSafe(data)){__minimalDrawingOpen=false;__minimalCanvas=null;await renderMinimal();toast('Drawing posted for 24h.');}
+}
+async function minimalPin(id){const data=await minReadSafe(),item=data.items.find(x=>x.id===id);if(!item)return;item.pinned=!item.pinned;if(await minWriteSafe(data)){await renderMinimal();toast(item.pinned?'Pinned.':'Unpinned.')}}
+async function minimalDelete(id){const data=await minReadSafe();const before=data.items.length;data.items=data.items.filter(x=>x.id!==id);if(before===data.items.length)return;if(await minWriteSafe(data)){await renderMinimal();toast('Deleted.')}}
+async function minimalToggleTheme(){const data=await minReadSafe();data.theme=data.theme==='dark'?'light':'dark';if(await minWriteSafe(data))await renderMinimal()}
+function minimalLiveData(data){const now=Date.now();data.items=data.items.filter(x=>x.expiresAt===null||x.expiresAt>now);return data}
+async function maybeConvertMinimalScribbles(){
+ const original=await minReadSafe();if(__minimalStorageReadFailed)return false;
+ const data=minimalLiveData(original),expired=data.items.length!==original.items.length;
+ if(!data.converted&&data.items.length&&!state.vault?.locked&&!window.__asosReadOnly){
+  const copy=confirm(`You have ${data.items.length} live Minimal scribble${data.items.length===1?'':'s'}. OK copies them into Normal notes tagged "scribble". Cancel keeps them only in Minimal. Continue?`);
+  if(copy){state.notes=Array.isArray(state.notes)?state.notes:[];for(const item of data.items.slice().sort((a,b)=>b.createdAt-a.createdAt)){
+    const drawing=item.kind==='drawing',created=isoDate(new Date(item.createdAt));
+    state.notes.unshift({id:uid('note'),title:drawing?'Scribble drawing':String(item.text||'Scribble').split(/\r?\n/)[0].trim().slice(0,80)||'Scribble',content:drawing?'Drawing captured in Minimal mode.':item.text,tags:['scribble'],created,images:drawing?[safeImageData(item.image)].filter(Boolean):[]});
+   }
+   persist();try{await __storageWrite}catch(e){toast('Some converted notes may not have been saved. Export a backup before continuing.')}
+  }
+  data.converted=true;
+  if(!await minWriteSafe(data))return false;
+  return true;
+ }
+ if(expired&&!await minWriteSafe(data))return false;
+ return true;
+}
+async function handleMinimalReturnPending(){
+ let requested=false;try{requested=localStorage.getItem(MIN_RETURN_KEY)==='1'}catch(e){}
+ if(!requested||!betaAck()||state.vault?.locked||window.__asosReadOnly)return;
+ const done=await maybeConvertMinimalScribbles();
+ if(done){try{localStorage.removeItem(MIN_RETURN_KEY)}catch(e){}}
+}
+async function switchMinimalMode(target){
+ const next=target==='minimal'?'minimal':'normal';if(next===appMode())return;
+ if(next==='minimal'){
+  window.__minimalSwitching=true;
+  if(timerHandle){clearInterval(timerHandle);timerHandle=null}
+  /* Drain Normal writes already queued before crossing the storage boundary. */
+  try{let last;do{last=__storageWrite;try{await last}catch(e){} }while(last!==__storageWrite)}catch(e){}
+  try{localStorage.setItem(MODE_KEY,'minimal')}catch(e){window.__minimalSwitching=false;toast('Could not save mode preference.');if(state.focus.active&&!timerHandle)timerHandle=setInterval(tick,1000);return}
+  __minimalIsolatedBoot=false;__minimalDrawingOpen=false;window.__minimalSwitching=false;startMinimalExpiryTimer();render();return;
+ }
+ if(__minimalIsolatedBoot){
+  try{localStorage.setItem(MIN_RETURN_KEY,'1');localStorage.setItem(MODE_KEY,'normal')}catch(e){toast('Could not save mode preference.');return}
+  __minimalIsolatedBoot=false;__minimalDrawingOpen=false;__minimalCanvas=null;
+  await bootAstral();return;
+ }
+ if(!window.__asosReadOnly&&!state.vault?.locked){const done=await maybeConvertMinimalScribbles();if(done){try{localStorage.removeItem(MIN_RETURN_KEY)}catch(e){}}}
+ try{localStorage.setItem(MODE_KEY,'normal')}catch(e){toast('Could not save mode preference.');return}
+ __minimalDrawingOpen=false;__minimalCanvas=null;render();
+}
+
+
+/* ===== Split views and actions ===== */
+const splitGroup=id=>(state.groups||[]).find(g=>g.id===id)||null;
+const splitInitials=n=>esc(String(n).trim().split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase());
+const splitHasUnsettled=g=>Object.values(groupTotals(g).net).some(v=>v!==0);
+function splitParseNames(text){
+ const seen=new Set(),out=[];
+ String(text||'').split(/[\n,]+/).map(s=>s.trim().replace(/\s+/g,' ')).filter(Boolean).forEach(n=>{
+  const clean=n.slice(0,40),k=clean.toLowerCase();
+  if(!seen.has(k)){seen.add(k);out.push(clean)}
+ });
+ return out;
+}
+function splitViewRoute(n){
+ if(n==='split')return splitViewList();
+ const g=splitGroup(n.slice(6));
+ if(!g)return `<div class="page"><div class="empty"><strong>Group not found.</strong>It may have been deleted.<div style="margin-top:12px"><a class="btn" href="#/split">Back to Split</a></div></div></div>`;
+ return splitViewGroup(g);
+}
+function splitViewList(){
+ const groups=state.groups||[];
+ const total=groups.reduce((a,g)=>a+g.expenses.reduce((b,e)=>b+e.amountP,0),0);
+ const rows=groups.map(g=>{const open=splitHasUnsettled(g);return `<a class="row" href="#/split/${esc(g.id)}"><div class="row-main"><div class="row-title">${esc(g.name)}</div><div class="row-meta">${g.people.length} people · ${g.expenses.length} expenses</div></div><span class="chip ${open?'warn':'good'}">${open?'unsettled':'settled up'}</span></a>`}).join('');
+ return `<div class="page split-page"><div class="split"><div><div class="eyebrow">Split</div><div class="h1">Who owes whom?</div><div class="lead">Share costs with the people you travel or live with. Every amount is exact to the paisa.</div></div><button class="btn primary" onclick="splitGroupModal()">+ Group</button></div><section class="section grid grid-2"><div class="panel metric"><div class="label">Total shared</div><div class="value">${fmtP(total)}</div><div class="trend">across ${groups.length} group${groups.length===1?'':'s'}</div></div></section><section class="section panel"><div class="panel-header"><h2>Groups</h2><small>${groups.length}</small></div><div class="list">${rows||'<div class="empty"><strong>No groups yet.</strong>Create one for a trip, a flat or a dinner.</div>'}</div></section></div>`;
+}
+function splitViewGroup(g){
+ const {net,owed}=groupTotals(g);
+ const plan=settlePlan(net,g.people);
+ const total=g.expenses.reduce((a,e)=>a+e.amountP,0);
+ const unsettled=Object.values(net).filter(v=>v>0).reduce((a,b)=>a+b,0);
+ const nm=id=>esc(g.people.find(p=>p.id===id)?.name||'Unknown');
+ const balances=g.people.map(p=>{const v=net[p.id]||0,cls=v>0?'good':v<0?'warn':'',label=v>0?'gets back':v<0?'owes':'settled up',pct=total?Math.round((owed[p.id]||0)/total*100):0;
+  return `<div class="row" style="display:block"><div class="split" style="align-items:center"><div class="split-person"><span class="split-avatar">${splitInitials(p.name)}</span><div class="row-main"><div class="row-title">${esc(p.name)}</div><div class="row-meta">${label} · ${pct}% of spend</div></div></div><span class="chip ${cls}">${v?fmtP(Math.abs(v)):fmtP(0)}</span></div><div class="bar" style="margin-top:9px"><i style="width:${pct}%"></i></div></div>`}).join('');
+ const settle=plan.length
+  ?plan.map(x=>`<div class="row"><div class="row-main"><div class="row-title">${nm(x.fromId)} → ${nm(x.toId)}</div><div class="row-meta">pays ${fmtP(x.amountP)}</div></div><button class="btn mini primary split-touch" onclick="splitMarkPaid(${jarg(g.id)},${jarg(x.fromId)},${jarg(x.toId)},${x.amountP})">Mark paid</button></div>`).join('')
+    +`<div class="actions"><button class="btn" onclick="splitMarkAll(${jarg(g.id)})">Mark all paid</button></div>`
+  :'<div class="empty"><strong>All settled up.</strong>Nobody owes anybody in this group.</div>';
+ const expenses=g.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(e=>{
+  const r=computeSplit(e.amountP,e.splitType,e.includedIds,e.splitValues);
+  const chips=r.ok?g.people.filter(p=>p.id in r.shares).map(p=>`<span class="chip">${esc(p.name)} · ${fmtP(r.shares[p.id])}</span>`).join(''):'<span class="chip danger">invalid split</span>';
+  return `<div class="row split-expense"><div class="row-main"><div class="row-title">${esc(e.title)}</div><div class="row-meta">${dateShort(e.date)} · paid by ${nm(e.payerId)} · ${SPLIT_LABEL[e.splitType]}</div><div class="chips">${chips}</div></div><div class="row-actions"><b class="pill-value">${fmtP(e.amountP)}</b><button class="btn mini" onclick="splitExpenseModal(${jarg(g.id)},${jarg(e.id)})">Edit</button><button class="btn mini ghost" onclick="splitDeleteExpense(${jarg(g.id)},${jarg(e.id)})">Delete</button></div></div>`;
+ }).join('')||'<div class="empty"><strong>No expenses yet.</strong>Add the first one.</div>';
+ const payments=g.payments.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<div class="row"><div class="row-main"><div class="row-title">${nm(x.fromId)} paid ${nm(x.toId)}</div><div class="row-meta">${dateShort(x.date)}</div></div><div class="row-actions"><b class="pill-value">${fmtP(x.amountP)}</b><button class="btn mini ghost" onclick="splitUndoPayment(${jarg(g.id)},${jarg(x.id)})">Undo</button></div></div>`).join('')||'<div class="quiet" style="padding:12px 16px">No settlements recorded.</div>';
+ const people=g.people.map(p=>`<div class="row"><div class="split-person"><span class="split-avatar">${splitInitials(p.name)}</span><div class="row-title">${esc(p.name)}</div></div><button class="btn mini ghost" onclick="splitRemovePerson(${jarg(g.id)},${jarg(p.id)})">Remove</button></div>`).join('');
+ return `<div class="page split-page">
+ <div class="split"><div><a class="quiet" href="#/split">← all groups</a><div class="h1">${esc(g.name)}</div><div class="lead">${g.people.length} people · ${g.expenses.length} expenses · ${g.payments.length} settlements</div></div><div class="actions" style="margin:0"><button class="btn" onclick="splitGroupModal(${jarg(g.id)})">Rename</button><button class="btn" onclick="splitDeleteGroup(${jarg(g.id)})">Delete</button><button class="btn primary" onclick="splitExpenseModal(${jarg(g.id)})">+ Expense</button></div></div>
+ <section class="section grid grid-3"><div class="panel metric"><div class="label">Total shared</div><div class="value">${fmtP(total)}</div><div class="trend">${g.expenses.length} expenses</div></div><div class="panel metric"><div class="label">Still owed</div><div class="value">${fmtP(unsettled)}</div><div class="trend">total across the group</div></div><div class="panel metric"><div class="label">Status</div><div class="value" style="font-size:20px">${unsettled?'Unsettled':'Settled up'}</div><div class="trend">${plan.length} suggested payment${plan.length===1?'':'s'}</div></div></section>
+ <section class="section grid grid-2"><div class="panel"><div class="panel-header"><h2>Balances</h2><small>who gets back, who owes</small></div><div style="padding:8px 16px 16px;display:grid;gap:12px">${balances}</div></div><div class="panel"><div class="panel-header"><h2>Settle up</h2><small>fewest payments</small></div><div class="list">${settle}</div></div></section>
+ <section class="section grid grid-2"><div class="panel"><div class="panel-header"><h2>Expenses</h2><small>${g.expenses.length}</small></div><div class="list">${expenses}</div></div><div class="panel"><div class="panel-header"><h2>People</h2><small>${g.people.length} of 50</small></div><div class="list">${people}</div><form class="mini-form split-add" style="margin:12px 16px 16px" onsubmit="splitAddPeople(event,${jarg(g.id)})"><input name="names" placeholder="Add people, comma-separated" required maxlength="400" aria-label="Names to add"><button class="btn mini primary">Add</button></form></div></section>
+ <section class="section panel"><div class="panel-header"><h2>Settlements</h2><small>${g.payments.length} recorded</small></div><div class="list">${payments}</div></section>
+ </div>`;
+}
+function splitGroupModal(gid){
+ const g=gid?splitGroup(gid):null;
+ openModal(()=>`<div class="modal-inner split-modal"><div class="split"><div><div class="eyebrow">Split group</div><h2 id="modal-title" style="margin:4px 0">${g?'Rename group':'New group'}</h2></div><button class="btn icon-btn" onclick="closeModal()" aria-label="Close">×</button></div><form class="form" onsubmit="splitSaveGroup(event,${jarg(g?g.id:'')})" style="margin-top:18px"><div class="field"><label>Group name</label><input name="name" required maxlength="60" value="${esc(g?g.name:'')}" placeholder="e.g. Goa trip"></div>${g?'':`<div class="field"><label>People</label><textarea name="people" required placeholder="One per line, or comma-separated (2 to 50)"></textarea><div class="field-help">Duplicates are removed. Names up to 40 characters.</div></div>`}<div class="form-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">${g?'Save name':'Create group'}</button></div></form></div>`);
+}
+function splitSaveGroup(e,id){
+ e.preventDefault();
+ const f=new FormData(e.target),name=String(f.get('name')||'').trim().slice(0,60);
+ if(!name){toast('Name the group');return}
+ state.groups=state.groups||[];
+ if(id){const g=splitGroup(id);if(!g)return;g.name=name}
+ else{
+  const names=splitParseNames(f.get('people'));
+  if(names.length<2){toast('Add at least 2 people');return}
+  if(names.length>SPLIT_MAX_PEOPLE){toast('A group can have at most 50 people');return}
+  if(state.groups.length>=200){toast('Group limit reached');return}
+  state.groups.push({id:uid('grp'),name,people:names.map(n=>({id:uid('p'),name:n})),expenses:[],payments:[]});
+ }
+ persist();closeModal();render();toast(id?'Group renamed':'Group created');
+}
+function splitDeleteGroup(gid){
+ const g=splitGroup(gid);if(!g)return;
+ if(!confirm(`Delete "${g.name}" with its ${g.expenses.length} expenses and ${g.payments.length} settlements? This cannot be undone.`))return;
+ state.groups=state.groups.filter(x=>x.id!==gid);
+ persist();setNav('split');render();toast('Group deleted');
+}
+function splitAddPeople(e,gid){
+ e.preventDefault();const g=splitGroup(gid);if(!g)return;
+ const incoming=splitParseNames(new FormData(e.target).get('names'));
+ const have=new Set(g.people.map(p=>p.name.toLowerCase()));
+ const fresh=incoming.filter(n=>!have.has(n.toLowerCase()));
+ if(!fresh.length){toast('Those people are already in the group');return}
+ if(g.people.length+fresh.length>SPLIT_MAX_PEOPLE){toast('A group can have at most 50 people');return}
+ fresh.forEach(n=>g.people.push({id:uid('p'),name:n}));
+ persist();render();toast(`Added ${fresh.length}`);
+}
+function splitRemovePerson(gid,pid){
+ const g=splitGroup(gid);if(!g)return;const p=g.people.find(x=>x.id===pid);if(!p)return;
+ if(splitPersonInUse(g,pid)){toast(`${p.name} is in an expense or settlement. Delete those first.`);return}
+ if(g.people.length<=2){toast('A group needs at least 2 people');return}
+ if(!confirm(`Remove ${p.name} from ${g.name}?`))return;
+ g.people=g.people.filter(x=>x.id!==pid);persist();render();toast('Person removed');
+}
+function splitExpenseModal(gid,eid){
+ const g=splitGroup(gid);if(!g){toast('Group not found');return}
+ const e=eid?g.expenses.find(x=>x.id===eid):null,type=e?.splitType||'equal';
+ const inc=new Set(e?e.includedIds:g.people.map(p=>p.id));
+ const valOf=id=>{if(!e||type==='equal')return '';const v=e.splitValues[id];return type==='exact'?fmtInput(v):type==='percent'?fmtInput(v):String(v)};
+ openModal(()=>`<div class="modal-inner split-modal"><div class="split"><div><div class="eyebrow">Split expense</div><h2 id="modal-title" style="margin:4px 0">${e?'Edit expense':'New expense'}</h2></div><button class="btn icon-btn" onclick="closeModal()" aria-label="Close">×</button></div>
+ <form class="form split-form" data-gid="${esc(g.id)}" data-eid="${esc(e?e.id:'')}" oninput="splitPreview(this)" onchange="splitPreview(this)" onsubmit="splitSaveExpense(event)" style="margin-top:18px">
+ <div class="field"><label>Title</label><input name="title" required maxlength="120" value="${esc(e?e.title:'')}"></div>
+ <div class="grid grid-2"><div class="field"><label>Amount (₹)</label><input name="amount" inputmode="decimal" required placeholder="0.00" value="${esc(e?fmtInput(e.amountP):'')}"></div><div class="field"><label>Date</label><input name="date" type="date" required value="${esc(e?e.date:today)}"></div></div>
+ <div class="grid grid-2"><div class="field"><label>Paid by</label><select name="payer">${g.people.map(p=>`<option value="${esc(p.id)}" ${(e?e.payerId:g.people[0].id)===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div><div class="field"><label>Split</label><select name="splitType">${SPLIT_TYPES.map(t=>`<option value="${t}" ${type===t?'selected':''}>${SPLIT_LABEL[t]}</option>`).join('')}</select></div></div>
+ <div class="field"><label>Between · <span id="split-col">included</span></label><div class="split-people">${g.people.map(p=>`<div class="split-line"><label class="check"><input type="checkbox" data-inc ${inc.has(p.id)?'checked':''}> ${esc(p.name)}</label><input data-pid="${esc(p.id)}" inputmode="decimal" placeholder="value" value="${esc(valOf(p.id))}" aria-label="Value for ${esc(p.name)}"></div>`).join('')}</div></div>
+ <div class="field"><label>Each share</label><div id="split-preview" class="split-preview" aria-live="polite"></div></div>
+ <div class="form-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">${e?'Save changes':'Save expense'}</button></div>
+ </form></div>`);
+ const f=document.querySelector('#modal .split-form');if(f)splitPreview(f);
+}
+function splitReadForm(f){
+ const g=splitGroup(f.dataset.gid);if(!g)return {hint:'Group not found.'};
+ const title=f.querySelector('[name=title]').value.trim().slice(0,120);
+ const type=f.querySelector('[name=splitType]').value;
+ const amountP=parseFixed2(f.querySelector('[name=amount]').value,SPLIT_MAX_AMOUNT_P);
+ const payerId=f.querySelector('[name=payer]').value;
+ const date=f.querySelector('[name=date]').value;
+ if(!SPLIT_TYPES.includes(type)||!g.people.some(p=>p.id===payerId))return {hint:'Choose who paid.'};
+ if(!splitValidDay(date))return {hint:'Choose a valid date.'};
+ if(!title)return {hint:'Add a title to see the split.'};
+ if(amountP===null||amountP<=0)return {hint:'Enter an amount above ₹0.00 (up to 2 decimals).'};
+ const includedIds=[],splitValues={};
+ for(const line of f.querySelectorAll('.split-line')){
+  const cb=line.querySelector('[data-inc]'),inp=line.querySelector('[data-pid]');
+  if(!cb.checked)continue;
+  const id=inp.dataset.pid;includedIds.push(id);
+  if(type==='equal')continue;
+  const raw=inp.value.trim();let v=null;
+  if(type==='exact')v=parseFixed2(raw,SPLIT_MAX_AMOUNT_P);
+  else if(type==='percent')v=parseFixed2(raw,10000);
+  else if(/^\d{1,4}$/.test(raw))v=Number(raw);
+  if(v===null){const who=g.people.find(p=>p.id===id)?.name||'';return {hint:`Enter a ${type==='exact'?'amount':type==='percent'?'percentage':'number of shares'} for ${who}.`}}
+  splitValues[id]=v;
+ }
+ const r=computeSplit(amountP,type,includedIds,splitValues);
+ if(!r.ok)return {error:r.error};
+ return {data:{title,amountP,payerId,date,includedIds,splitType:type,splitValues:type==='equal'?{}:splitValues},shares:r.shares};
+}
+function splitPreview(f){
+ const box=document.getElementById('split-preview');if(!box||!f||!f.dataset)return;
+ const type=f.querySelector('[name=splitType]').value;
+ const col=document.getElementById('split-col');
+ if(col)col.textContent={equal:'included',exact:'amount each',percent:'% each',shares:'shares each'}[type]||'';
+ f.querySelectorAll('.split-line').forEach(line=>{const on=line.querySelector('[data-inc]').checked;line.querySelector('[data-pid]').disabled=type==='equal'||!on});
+ const r=splitReadForm(f);
+ if(r.hint){box.innerHTML=`<div class="quiet">${esc(r.hint)}</div>`;return}
+ if(r.error){box.innerHTML=`<div class="danger-note">${esc(r.error)}</div>`;return}
+ const g=splitGroup(f.dataset.gid);
+ box.innerHTML=`<div class="success-note">Each person's share</div>`+g.people.filter(p=>p.id in r.shares).map(p=>`<div class="row" style="padding:6px 0"><div class="row-main"><div class="row-title">${esc(p.name)}</div></div><span class="pill-value">${fmtP(r.shares[p.id])}</span></div>`).join('');
+}
+function splitSaveExpense(e){
+ e.preventDefault();
+ const f=e.target,r=splitReadForm(f);
+ if(!r.data){toast(r.error||r.hint||'Check the form');splitPreview(f);return}
+ const g=splitGroup(f.dataset.gid);if(!g)return;
+ const stored=Object.assign({id:f.dataset.eid||uid('exp')},r.data);
+ const i=g.expenses.findIndex(x=>x.id===stored.id);
+ if(i<0&&g.expenses.length>=2000){toast('Expense limit reached for this group');return}
+ if(i>=0)g.expenses[i]=stored;else g.expenses.push(stored);
+ state.events.push({type:i>=0?'SPLIT_EXPENSE_UPDATED':'SPLIT_EXPENSE_CREATED',entityId:stored.id,at:Date.now()});
+ persist();closeModal();render();toast('Expense saved');
+}
+function splitDeleteExpense(gid,eid){
+ const g=splitGroup(gid);if(!g||!confirm('Delete this expense?'))return;
+ g.expenses=g.expenses.filter(x=>x.id!==eid);persist();render();toast('Expense deleted');
+}
+function splitMarkPaid(gid,fromId,toId,amountP){
+ const g=splitGroup(gid);if(!g)return;
+ const plan=settlePlan(groupTotals(g).net,g.people);
+ if(!plan.some(x=>x.fromId===fromId&&x.toId===toId&&x.amountP===Number(amountP))){toast('Balances have changed. Review the list.');render();return}
+ g.payments.push({id:uid('pay'),fromId,toId,amountP:Number(amountP),date:today});
+ persist();render();toast('Settlement recorded');
+}
+function splitMarkAll(gid){
+ const g=splitGroup(gid);if(!g)return;
+ const plan=settlePlan(groupTotals(g).net,g.people);
+ if(!plan.length){toast('Already settled up');return}
+ plan.forEach(x=>g.payments.push({id:uid('pay'),fromId:x.fromId,toId:x.toId,amountP:x.amountP,date:today}));
+ persist();render();toast(`${plan.length} settlement${plan.length===1?'':'s'} recorded`);
+}
+function splitUndoPayment(gid,pid){
+ const g=splitGroup(gid);if(!g||!confirm('Remove this settlement? Balances will change back.'))return;
+ g.payments=g.payments.filter(x=>x.id!==pid);persist();render();
+}
 function bindDelegatedInteractions(){
  if(window.__asosDelegated==='1')return;window.__asosDelegated='1';
  document.addEventListener('click',e=>{const el=e.target.closest?.('[data-action]');if(!el)return;const a=el.dataset.action;if(a==='delete-sub')delSub(el.dataset.id,el.dataset.subId);else if(a==='search-open')searchOpen(el.dataset.type,el.dataset.id)});
  document.addEventListener('change',e=>{const el=e.target.closest?.('[data-action]');if(!el)return;if(el.dataset.action==='toggle-sub')toggleSub(el.dataset.id,el.dataset.subId)});
 }
-function render(){applyTypographyAndTimezone();applyTheme();const n=nav();const y=lastRoute===n?window.scrollY:0;let c='';if(n==='today')c=viewToday();else if(n==='work')c=viewWork();else if(n==='focus')c=viewFocus();else if(n==='plan')c=viewPlan();else if(n==='more')c=moreIndex();else if(n==='goals')c=viewGoals();else if(n==='life')c=viewLife();else if(n==='money')c=viewMoney();else if(n==='memory')c=viewMemory();else if(n==='progress')c=viewProgress();else if(n==='rules')c=viewRules();else if(n==='vault')c=viewVault();else if(n==='calendar')c=viewCalendar();else if(n==='reminders')c=viewReminders();else if(n==='timer')c=viewTimer();else if(n==='settings')c=viewSettings();else if(n==='legal')c=viewLegal();else c=viewToday();document.getElementById('app').innerHTML=!betaAck()?betaScreen():state.vault.locked?lockScreen():renderShell(c);bindDelegatedInteractions();if(!state.focus.active)document.title='AstralSurge OS';lastRoute=n;window.scrollTo(0,y);tickClock();if(document.querySelectorAll)document.querySelectorAll('.heat-wrap').forEach(e=>e.scrollLeft=e.scrollWidth);if(timerHandle)clearInterval(timerHandle);if(state.focus.active)timerHandle=setInterval(tick,1000);refreshStorageHealth()}
+function render(){if(isMinimalMode()){renderMinimal();return}applyTypographyAndTimezone();applyTheme();const n=nav();const y=lastRoute===n?window.scrollY:0;let c='';if(n==='today')c=viewToday();else if(n==='work')c=viewWork();else if(n==='focus')c=viewFocus();else if(n==='plan')c=viewPlan();else if(n==='more')c=moreIndex();else if(n==='goals')c=viewGoals();else if(n==='life')c=viewLife();else if(n==='money')c=viewMoney();else if(n==='memory')c=viewMemory();else if(n==='progress')c=viewProgress();else if(n==='rules')c=viewRules();else if(n==='vault')c=viewVault();else if(n==='calendar')c=viewCalendar();else if(n==='reminders')c=viewReminders();else if(n==='timer')c=viewTimer();else if(n==='split'||n.startsWith('split/'))c=splitViewRoute(n);else if(n==='settings')c=viewSettings();else if(n==='legal')c=viewLegal();else c=viewToday();document.getElementById('app').innerHTML=!betaAck()?betaScreen():state.vault.locked?lockScreen():renderShell(c);bindDelegatedInteractions();if(!state.focus.active)document.title='AstralSurge OS';lastRoute=n;window.scrollTo(0,y);tickClock();if(document.querySelectorAll)document.querySelectorAll('.heat-wrap').forEach(e=>e.scrollLeft=e.scrollWidth);if(timerHandle)clearInterval(timerHandle);if(state.focus.active)timerHandle=setInterval(tick,1000);refreshStorageHealth()}
 
 
 // Preserve legacy restore UI but support encrypted backups.
@@ -1189,7 +1729,7 @@ async function applyEncryptedRestore(){
  }catch(e){toast('Could not restore encrypted backup')}
 }
 
-Object.assign(window,{nextDue,quickCapture,restoreFromTrash,purgeFromTrash,undoLastRestore,restoreAutoSnapshot,applyEncryptedRestore,demoState,load,persist,resetDemo,toast,nav,setNav,formatDay,dateShort,taskById,facts,daysSince,startFreshWorkspace,openUpcoming,setSetting,toggleHideAmounts,setAmbientEffect,setAmbientStrength,setFocusSound,setFocusSoundVolume,toggleFocusSound,dismissRecommendation,deleteAllLocalData,legalSummaryModal,toggleBetaContinue,
+Object.assign(window,{switchMinimalMode,minimalPostText,minimalOpenDrawing,minimalCloseDrawing,minimalClearDrawing,minimalPostDrawing,minimalPin,minimalDelete,minimalToggleTheme,splitViewRoute,splitGroupModal,splitSaveGroup,splitDeleteGroup,splitAddPeople,splitRemovePerson,splitExpenseModal,splitPreview,splitSaveExpense,splitDeleteExpense,splitMarkPaid,splitMarkAll,splitUndoPayment,handleMinimalReturnPending,nextDue,quickCapture,restoreFromTrash,purgeFromTrash,undoLastRestore,restoreAutoSnapshot,applyEncryptedRestore,demoState,load,persist,resetDemo,toast,nav,setNav,formatDay,dateShort,taskById,facts,daysSince,startFreshWorkspace,openUpcoming,setSetting,toggleHideAmounts,setAmbientEffect,setAmbientStrength,setFocusSound,setFocusSoundVolume,toggleFocusSound,dismissRecommendation,deleteAllLocalData,legalSummaryModal,toggleBetaContinue,
   recommendation,actionForRec,completeTask,startFocus,scheduleTask,stopFocus,resumeFocus,pauseFocus,tick,renderFocusTimerOnly,
   openModal,closeModal,openDrawer,closeDrawer,taskModal,saveTask,noteModal,saveNote,expenseModal,saveExpense,decisionModal,openDecision,reconcile,
   createGoalModal,saveGoal,globalCreate,inspect,viewToday,viewWork,viewFocus,viewPlan,viewGoals,executeStep,viewLife,toggleHabit,
