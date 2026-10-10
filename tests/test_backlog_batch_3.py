@@ -3,7 +3,6 @@ completion, prompt builder, decision review loop, workout repeat and personal be
 Also responsive checks for the new and changed views at 320 and 390 px."""
 import json
 import os
-import re
 import sys
 import tempfile
 from datetime import date, timedelta
