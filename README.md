@@ -93,8 +93,9 @@ CI (`.github/workflows/ci.yml`) runs the static gate, browser tests, a `pip-audi
 |---|---|---|
 | `tests/persistence_tests.py` | 45 | Backup round trip into an empty browser, legacy migration, older imports, bad files, recovery exports, encryption, checkpoints, read-only protection |
 | `tests/sweep_tests.py` | 19 | Habits, notes, goals, workouts, expenses, decisions, search, calendar, reviews, reminders, settings, encrypted restore |
+| `tests/test_responsive.py` | 85 | Every main view at 320, 390, 430, 768 and 1280 px: no horizontal scrolling |
 
-Total: **64 checks**. Both suites are collected by `tests/test_browser_suites.py`. To point the suites at a different server, set `ASOS_URL` to the full app URL.
+Total: **149 checks**. Both suites are collected by `tests/test_browser_suites.py`. To point the suites at a different server, set `ASOS_URL` to the full app URL.
 
 ## Release notes (this version)
 
