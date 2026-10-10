@@ -151,7 +151,7 @@ with sync_playwright() as p:
     acknowledge(page)
     nav(page, "vault")
     for label, content, expect in [
-        ("E1 non-JSON rejected", "not json at all", "not valid JSON"),
+        ("E1 non-JSON rejected", "not json at all", "No AstralSurge backup JSON"),
         ("E2 newer schema rejected", json.dumps({"format": "astralsurge-backup", "schema": 99, "workspace": {"tasks": []}}), "newer version"),
         ("E3 list-type violation rejected", json.dumps({"tasks": "oops", "notes": []}), "must be a list"),
     ]:
