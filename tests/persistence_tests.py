@@ -1,7 +1,7 @@
 import json, base64, time, os, sys, tempfile
 from playwright.sync_api import sync_playwright
 
-URL = "http://127.0.0.1:8765/astralsurge.html"
+URL = os.environ.get("ASOS_URL", "http://127.0.0.1:8765/index.html")
 OUT = tempfile.mkdtemp(prefix="asos_")
 results = []
 page_errors = []
@@ -100,7 +100,7 @@ with sync_playwright() as p:
     ctx, page = new_app(browser, "B")
     acknowledge(page, mode="new")
     nav(page, "vault")
-    set_file_via(page, lambda: page.get_by_role("button", name="Restore", exact=True).first.click(), backup_path)
+    set_file_via(page, lambda: page.locator('button[onclick="fileRestore()"]').click(), backup_path)
     check("B1 restore preview opens", page.get_by_text("Restore preview").count() == 1)
     page.get_by_role("button", name="Replace workspace").click()
     page.wait_for_timeout(600)
@@ -135,7 +135,7 @@ with sync_playwright() as p:
     ctx, page = new_app(browser, "D")
     acknowledge(page, mode="new")
     nav(page, "vault")
-    set_file_via(page, lambda: page.get_by_role("button", name="Restore", exact=True).first.click(), old_path)
+    set_file_via(page, lambda: page.locator('button[onclick="fileRestore()"]').click(), old_path)
     check("D1 older bare backup is accepted", page.get_by_text("Restore preview").count() == 1)
     page.get_by_role("button", name="Replace workspace").click()
     page.wait_for_timeout(600)
@@ -156,7 +156,7 @@ with sync_playwright() as p:
         ("E3 list-type violation rejected", json.dumps({"tasks": "oops", "notes": []}), "must be a list"),
     ]:
         path = write(f"bad_{label[:2]}.json", content)
-        set_file_via(page, lambda: page.get_by_role("button", name="Restore", exact=True).first.click(), path)
+        set_file_via(page, lambda: page.locator('button[onclick="fileRestore()"]').click(), path)
         page.wait_for_timeout(200)
         check(label, page.locator("#toast").inner_text().find(expect) >= 0 if True else False, page.locator("#toast").inner_text())
         page.wait_for_timeout(1600)
@@ -188,7 +188,7 @@ with sync_playwright() as p:
     ctx, page = new_app(browser, "F2")
     acknowledge(page, mode="new")
     nav(page, "vault")
-    set_file_via(page, lambda: page.get_by_role("button", name="Restore", exact=True).first.click(), rec_path)
+    set_file_via(page, lambda: page.locator('button[onclick="fileRestore()"]').click(), rec_path)
     page.get_by_role("button", name="Replace workspace").click()
     page.wait_for_timeout(600)
     stored = idb_workspace(page)
@@ -226,7 +226,7 @@ with sync_playwright() as p:
     ctx, page = new_app(browser, "G2")
     acknowledge(page, mode="new")
     nav(page, "vault")
-    set_file_via(page, lambda: page.get_by_role("button", name="Restore", exact=True).first.click(), enc_path)
+    set_file_via(page, lambda: page.locator('button[onclick="fileRestore()"]').click(), enc_path)
     check("G6 encrypted backup shows storage replace preview", page.get_by_text("Encrypted backup").count() == 1)
     page.get_by_role("button", name="Replace storage").click()
     page.wait_for_timeout(1000)
