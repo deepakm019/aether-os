@@ -1221,6 +1221,7 @@ async function enableEncryption(pass){
  const recovery=b64u(recoveryRaw);downloadText('astralsurge-recovery-key.txt',`AstralSurge OS recovery key\n\n${recovery}\n\nStore this key offline. It is the only recovery path if you forget your passphrase. Anyone with this key can unlock the encrypted vault.`);
  toast('Vault encrypted · recovery key exported');return true;
 }
+function backupStamp(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`}
 function downloadText(name,txt){const b=new Blob([txt],{type:'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),800)}
 async function changePassphrase(pass){
  const meta=state.vault.encryptionMeta;if(!__vaultDataKey||!meta?.recoveryWrap){toast('Unlock the encrypted vault first');return}
@@ -1260,19 +1261,19 @@ async function exportRecoveryNoImages(){
  const safe=stripImagesForExport(exportableWorkspace(state));
  const meta={format:BACKUP_FORMAT,schema:WORKSPACE_SCHEMA,exportedAt:new Date().toISOString(),imagesExcluded:true,excludedImageCount:safe.count,excludedImageBytes:safe.bytes};
  try{
-  if(state.vault?.encryptionEnabled&&__vaultDataKey){const env=await encryptSnapshot(Object.assign({},meta,{workspace:safe.data}),__vaultDataKey,state.vault.encryptionMeta||{});env.recoveryExportNoImages=true;downloadText(`astralsurge-recovery-no-images-${today}.asbackup`,JSON.stringify(env));toast(`Recovery export created · ${safe.count} images excluded`);return}
+  if(state.vault?.encryptionEnabled&&__vaultDataKey){const env=await encryptSnapshot(Object.assign({},meta,{workspace:safe.data}),__vaultDataKey,state.vault.encryptionMeta||{});env.recoveryExportNoImages=true;downloadText(`astralsurge-recovery-no-images-${backupStamp()}.asbackup`,JSON.stringify(env));toast(`Recovery export created · ${safe.count} images excluded`);return}
   downloadText(`astralsurge-recovery-no-images-${today}.json`,JSON.stringify(Object.assign(meta,{workspace:safe.data}),null,2));
   toast(`Recovery export created · ${safe.count} images excluded`);
  }catch(e){toast('Could not create recovery export')}
 }
-function encryptedBackup(){if(state.vault.encryptionEnabled&&__encryptedEnvelope){state.vault.lastBackup=today;persist();downloadText('astralsurge-encrypted-backup.asbackup',JSON.stringify(__encryptedEnvelope));toast('Encrypted backup exported');render();return true}return false}
+function encryptedBackup(){if(state.vault.encryptionEnabled&&__encryptedEnvelope){state.vault.lastBackup=today;persist();downloadText(`astralsurge-encrypted-backup-${backupStamp()}.asbackup`,JSON.stringify(__encryptedEnvelope));toast('Encrypted backup exported');render();return true}return false}
 function backupWorkspace(){
  if(window.__asosReadOnly){toast('Export blocked: saved data could not be read');return}
  if(state.vault?.encryptionEnabled){if(encryptedBackup())return;toast('Encrypted backup could not be prepared');return}
  if(!confirm('Create a readable JSON backup? Anyone who gets the downloaded file can read your workspace data.'))return;
  state.vault.lastBackup=today;state.vault.changes=0;state.events.push({type:'BACKUP_EXPORTED',at:Date.now()});window.__noChangeCount=true;try{persist()}finally{window.__noChangeCount=false}
  const payload={format:BACKUP_FORMAT,schema:WORKSPACE_SCHEMA,exportedAt:new Date().toISOString(),workspace:exportableWorkspace(state)};
- downloadText(`astralsurge-backup-${today}.json`,JSON.stringify(payload,null,2));render();toast('Readable backup created')
+ downloadText(`astralsurge-backup-${backupStamp()}.json`,JSON.stringify(payload,null,2));render();toast('Readable backup created')
 }
 function recoveryImport(){const i=document.createElement('input');i.type='file';i.accept='.txt,.key,.recovery';i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const raw=String(r.result).match(/[A-Za-z0-9_-]{30,}/)?.[0];if(!raw){toast('No recovery key found');return}closeModal();openModal(()=>`<div class="modal-inner"><div class="eyebrow">Recovery</div><h2 id="modal-title">Use recovery key</h2><div class="field" style="margin-top:14px"><label>Recovery key</label><input id="recovery-input" value="${esc(raw)}"></div><div class="form-actions"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="unlockVault('recovery')">Unlock vault</button></div></div>`)};r.readAsText(f)};i.click()}
 function installPWA(){if(__installPrompt){__installPrompt.prompt();__installPrompt.userChoice.then(()=>{__installPrompt=null;render()});return}toast('Use your browser menu → Install app')}
