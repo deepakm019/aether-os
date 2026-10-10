@@ -52,7 +52,13 @@ Working list of planned features and improvements. Each item ships in its own PR
 | 37 | Bulk import from other apps (Todoist, Notion, etc.) | Integration | 55% |
 | 38 | Settings export and import | Extra | 50% |
 | 39 | Commute and transit "leave by" times | Integration | 45% |
-| 42 | Device sync via QR and WebRTC | Integration | 30% |
+| 42 | Device sync via QR and WebRTC (on hold: needs a decision on signalling and network use, see PR notes) | Integration | 30% |
+
+## Shipped
+
+- #1, #2, #3, #5, #6, #10, #11, #13, #15: P0 and P1 batches 1 and 2.
+- #7 auto-sort on completion (tasks only; goals and milestones not yet covered), #23 decision review loop, #30 workout repeat-last and personal bests, #44 prompt builder.
+- Polish: timer input theme, converter speed/area/time/data categories.
 
 ## Parked
 

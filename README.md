@@ -22,7 +22,7 @@ The live site is deployed from the repository root with GitHub Pages, on the cus
 - **Quick expense** from Today.
 - **Energy check-in** (morning wizard, editable from Today).
 - **Recommendations** for the next best action, with the evidence shown.
-- **Work** board with Inbox, To Do, In Progress and Completed tabs. Task inspector with subtasks, XP and images.
+- **Work** board with Inbox, To Do, In Progress and Completed tabs. Task inspector with subtasks, XP and images. With **Auto-sort tasks** on (Settings, the default), open tasks are ordered by urgency, importance, priority and due date, and the Completed tab shows the most recent first.
 - **Recurring tasks**: set a task to repeat every day, every weekday, or every week. Completing it creates the next instance, dated correctly (weekends are skipped for "every weekday").
 - **Tags** on tasks, shown on cards and in the inspector, and searchable.
 - **Calendar export**: download open dated tasks as an `.ics` file (all-day events, importable into most calendar apps).
@@ -30,8 +30,10 @@ The live site is deployed from the repository root with GitHub Pages, on the cus
 - **Plan** planner blocks and scheduling into open 45-minute windows.
 - **Calendar**, **Reminders** (with snooze presets, including "tomorrow at 9:00"), **Habits**, **Goals** with milestones, **Workouts**, **Notes**, **Memory**, and **Time tools**.
 - **Timer and stopwatch**: the countdown has presets (5, 10, 25, 50 minutes) and a custom length from 1 to 180 minutes. The stopwatch has laps.
-- **Converter**: length, weight, volume and temperature units, with swap and live results.
-- **Money**: budgets, expenses (quick capture), recurring bills, and decisions that reconcile planned against actual spend.
+- **Converter**: length, weight, volume, speed, area, time, data (decimal and binary) and temperature units, with swap and live results.
+- **Prompt builder** (Utilities): answer a short form (role, task, context, constraints, format, tone, length) and get a structured prompt to copy into any AI tool. It is built in your browser.
+- **Money**: budgets, expenses (quick capture), recurring bills, and decisions that reconcile planned against actual spend. Reconciling a decision schedules a review 30 days later; when it is due, record the outcome and what you learned.
+- **Workouts** (Life): log exercises with sets, reps and weight. Saving a heavier set announces a new personal best. **Repeat last** opens the form prefilled from your most recent session.
 - **Progress**: XP, levels, badges, weekly reviews.
 
 ### Safety and recovery
@@ -138,11 +140,15 @@ Every change goes through a branch and a pull request. Direct pushes to protecte
 | `tests/test_today_top3.py` | 10 | Top 3 ordering, Start focus, Copy summary, WhatsApp link |
 | `tests/test_p1_batch.py` | 6 | Snooze presets, copy and share of today's summary |
 | `tests/test_p1_batch_2.py` | 20 | Bills due in 7 days, quick expense from Today, `.ics` export |
+| `tests/test_backlog_batch_3.py` | 55 | Themed timer input, converter speed/area/time/data, auto-sort, prompt builder, decision review loop, workout repeat and personal bests, responsive checks at 320 and 390 px |
 
-Total: **221 checks** across 10 suites, all passing at the time of writing. `tests/test_browser_suites.py` discovers every `tests/*_tests.py` and `tests/test_*.py` file automatically, so a new suite needs no runner change. To point the suites at a different server, set `ASOS_URL` to the full app URL.
+Total: **276 checks** across 11 suites, all passing at the time of writing. `tests/test_browser_suites.py` discovers every `tests/*_tests.py` and `tests/test_*.py` file automatically, so a new suite needs no runner change. To point the suites at a different server, set `ASOS_URL` to the full app URL.
 
 ## Recent changes
 
+- Added: auto-sort for tasks (setting), structured prompt builder, decision review loop, workout repeat-last and personal-best alerts.
+- Fixed: the timer's custom-minutes input used browser-default styling; converter dropdowns are themed in dark and light modes.
+- Added: converter speed, area, time and data categories.
 - Fixed: split-cost names overlapped the checkbox on phones.
 - Added: backup filenames include the date and time.
 - Added: configurable countdown timer (1 to 180 minutes).
