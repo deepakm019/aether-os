@@ -1,0 +1,14 @@
+{
+  "name": "aether-os",
+  "private": true,
+  "description": "AstralSurge OS: a local-first, static, single-page personal operating system.",
+  "license": "UNLICENSED",
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "test": "python -m pytest",
+    "verify": "npm run check && npm run test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

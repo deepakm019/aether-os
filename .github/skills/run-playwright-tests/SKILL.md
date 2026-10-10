@@ -17,16 +17,17 @@ Use this skill when asked to execute, diagnose, or extend the app's Playwright e
 
 Run the complete suite from the repository root:
 
-```powershell
-python -m pytest
+```bash
+npm run test
 ```
 
-Run one test module or case when iterating:
+Run one suite when iterating:
 
-```powershell
-python -m pytest tests/test_screens.py
-python -m pytest tests/test_workflows.py
-python -m pytest -k "encrypted_v3"
+```bash
+python -m pytest tests/test_browser_suites.py -k persistence
+python -m pytest tests/test_browser_suites.py -k sweep
 ```
 
-The tests start a temporary local static HTTP server and launch headless Chromium. They cover desktop and mobile navigation, all app screens, data-entry workflows, local encrypted storage, external-request absence, and app-shell service-worker caching.
+Suites can also run directly, for example `python tests/sweep_tests.py`. They read the app URL from `ASOS_URL`, which defaults to `http://127.0.0.1:8765/index.html`. The pytest fixture in `tests/conftest.py` starts that server for you.
+
+The suites cover backup and restore round trips, legacy migration, bad-file rejection, encrypted vault restore, and the main workflows. Each suite fails if any check fails or a page error is raised.

@@ -1,6 +1,6 @@
 import json, time, os, tempfile, sys
 from playwright.sync_api import sync_playwright
-URL="http://127.0.0.1:8765/astralsurge.html"
+URL = os.environ.get("ASOS_URL", "http://127.0.0.1:8765/index.html")
 OUT=tempfile.mkdtemp(prefix="sweep_")
 results=[]; errs=[]
 PROMPTS=[]
@@ -107,7 +107,7 @@ with sync_playwright() as p:
     pg.get_by_role("button",name="Enable encrypted vault").click(); pg.wait_for_timeout(3000)
     nav(pg,"vault")
     with pg.expect_file_chooser() as fc:
-        pg.get_by_role("button",name="Restore",exact=True).first.click()
+        pg.locator('button[onclick="fileRestore()"]').click()
     fc.value.set_files(plain); pg.wait_for_timeout(500)
     pg.get_by_role("button",name="Replace workspace").click(); pg.wait_for_timeout(800)
     s=None

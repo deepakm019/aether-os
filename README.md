@@ -4,12 +4,14 @@ A personal operating system for planning, focus, money, habits and notes. It is 
 
 ## Running it
 
-Open the app over HTTP, not by double-clicking the file. IndexedDB does not work reliably from `file://` URLs.
+The app is a static site: `index.html` contains all markup, styles and logic. Serve the repository root over HTTP, not by opening the file directly. IndexedDB and the service worker do not work reliably from `file://` URLs.
 
 ```bash
 python3 -m http.server 8765
-# then open http://127.0.0.1:8765/AstralSurge_OS_v3.html
+# then open http://127.0.0.1:8765/index.html
 ```
+
+The live site is deployed from the repository root with GitHub Pages.
 
 ## Feature list
 
@@ -68,31 +70,31 @@ localStorage is used only as a fallback. If IndexedDB is unavailable, a copy of 
 - **"Changes since backup"** counts saves, so creating a new workspace counts as one change.
 - **Browser storage can be evicted** by the browser under pressure. The app requests persistent storage, but the browser decides. Regular backups remain the real protection.
 
-## Tests
+## Development
 
-All suites drive the real app in headless Chromium through Playwright. Run them against the server above.
+| Command | What it does |
+|---|---|
+| `npm run check` | Static build gate: parses the inline script, `sw.js` and `manifest.json`, verifies the service-worker app shell exists, and checks the Content-Security-Policy and external references. No dependencies. |
+| `npm run test` | Playwright browser suites (`python -m pytest`). Starts a local server on port 8765 and drives headless Chromium. |
+| `npm run verify` | Both of the above. |
+
+One-time setup for the browser tests:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m playwright install --with-deps chromium
+```
+
+CI (`.github/workflows/ci.yml`) runs the static gate, browser tests, a `pip-audit` dependency audit, a gitleaks secret scan and CodeQL on every push and pull request. Dependabot keeps GitHub Actions and pip dependencies current.
+
+## Tests
 
 | Suite | Checks | What it covers |
 |---|---|---|
-| `astralsurge_core_playwright_tests.py` | 32 | Boot, check-in, timer and stopwatch, money baseline, subtasks, reminders, overflow on every route |
-| `astralsurge_ui_regression_tests.py` | 45 | Layout at four widths, font and timezone settings, focus spacing, tag separation, inspector |
-| `persistence_tests.py` | 45 | Backup round trip into an empty browser, legacy migration, older imports, bad files, recovery exports, encryption, checkpoints, read-only protection, fonts, tags, focus |
-| `sweep_tests.py` | 19 | Habits, notes, goals, workouts, expenses, decisions, search, calendar, reviews, reminders, completion, settings, encrypted restore |
-| `features_v3_tests.py` | 31 | Quick capture, recurrence rules and editor, trash (restore, delete forever, 30-day expiry), daily snapshots, undo and its 24-hour expiry, restore preview, backup nudges |
-| `e2e_journey_tests.py` | 21 | One continuous user story on a phone-sized viewport: capture, recurring task, trash, backup, restore, undo, reload, encryption, lock, unlock, snapshot restore in the vault |
+| `tests/persistence_tests.py` | 45 | Backup round trip into an empty browser, legacy migration, older imports, bad files, recovery exports, encryption, checkpoints, read-only protection |
+| `tests/sweep_tests.py` | 19 | Habits, notes, goals, workouts, expenses, decisions, search, calendar, reviews, reminders, settings, encrypted restore |
 
-Total: **193 checks**.
-
-```bash
-python3 astralsurge_core_playwright_tests.py
-python3 astralsurge_ui_regression_tests.py
-python3 persistence_tests.py
-python3 sweep_tests.py
-python3 features_v3_tests.py
-python3 e2e_journey_tests.py
-```
-
-The suites expect the app at `http://127.0.0.1:8765/AstralSurge_OS_v3.html`, served from the folder that contains this README (the persistence, sweep, features and journey suites). The core and UI suites read the app from the same folder as the script.
+Total: **64 checks**. Both suites are collected by `tests/test_browser_suites.py`. To point the suites at a different server, set `ASOS_URL` to the full app URL.
 
 ## Release notes (this version)
 
