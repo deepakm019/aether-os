@@ -499,7 +499,7 @@ a.row{color:inherit;text-decoration:none}
 html.minimal-mode-active,html.minimal-mode-active body{background:#fff!important;color:#171a1f!important;color-scheme:light}
 html.minimal-mode-active[data-minimal-theme="dark"],html.minimal-mode-active[data-minimal-theme="dark"] body{background:#000!important;color:#fff!important;color-scheme:dark}
 html.minimal-mode-active #app{min-height:100vh;background:inherit;color:inherit}
-.minimal-app{--min-bg:#fff;--min-fg:#171a1f;--min-line:#e3e6eb;--min-muted:#6b7480;--min-surface:#f6f7f9;box-sizing:border-box;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;width:100%;margin:0;background:var(--min-bg);color:var(--min-fg);font:inherit;padding:clamp(24px,6vw,44px) max(clamp(20px,6vw,40px),env(safe-area-inset-right)) calc(36px + env(safe-area-inset-bottom)) max(clamp(20px,6vw,40px),env(safe-area-inset-left))}
+.minimal-app{--min-bg:#fff;--min-fg:#171a1f;--min-line:#e3e6eb;--min-muted:#6b7480;--min-surface:#f6f7f9;box-sizing:border-box;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;width:100%;margin:0;background:var(--min-bg);color:var(--min-fg);font:inherit;padding:15vh max(clamp(20px,6vw,40px),env(safe-area-inset-right)) calc(15vh + env(safe-area-inset-bottom)) max(clamp(20px,6vw,40px),env(safe-area-inset-left));padding-top:15dvh;padding-bottom:calc(15dvh + env(safe-area-inset-bottom))}
 .minimal-app[data-min-theme="dark"]{--min-bg:#000;--min-fg:#f4f4f5;--min-line:#2a2b30;--min-muted:#9096a0;--min-surface:#0d0e11}
 .minimal-app *{box-sizing:border-box}
 .minimal-wrap{flex:1 0 auto;display:flex;flex-direction:column;width:100%;max-width:680px;margin:0 auto;min-width:0}
@@ -566,6 +566,10 @@ html .minimal-app .minimal-control:focus,html .minimal-app .minimal-control:focu
 .top3-row .row-title{white-space:normal;overflow-wrap:anywhere;line-height:1.35}
 .top3-row .btn{white-space:nowrap;min-width:118px;justify-content:center}
 @media(max-width:620px){.top3-row{grid-template-columns:minmax(0,1fr) auto;gap:10px}.top3-row .btn{min-width:108px;padding-left:12px;padding-right:12px}}
+html.minimal-mode-active #ambient-canvas{display:none!important}
+html.minimal-mode-active .toast{bottom:auto;top:max(18px,env(safe-area-inset-top));transform:translate(-50%,-8px)}
+html.minimal-mode-active .toast.show{transform:translate(-50%,0)}
+.drawer:not(.open){box-shadow:none}
 </style>
 </head>
 <body>
@@ -1617,7 +1621,7 @@ async function minimalPostDrawing(){
  if(await minWriteSafe(data)){__minimalDrawingOpen=false;__minimalCanvas=null;await renderMinimal();toast('Drawing posted for 24h.');}
 }
 async function minimalPin(id){const data=await minReadSafe(),item=data.items.find(x=>x.id===id);if(!item)return;item.pinned=!item.pinned;if(await minWriteSafe(data)){await renderMinimal();toast(item.pinned?'Pinned.':'Unpinned.')}}
-async function minimalDelete(id){const data=await minReadSafe();const before=data.items.length;data.items=data.items.filter(x=>x.id!==id);if(before===data.items.length)return;if(await minWriteSafe(data)){await renderMinimal();toast('Deleted.')}}
+async function minimalDelete(id){if(!confirm('Delete this scribble? This cannot be undone.'))return;const data=await minReadSafe();const before=data.items.length;data.items=data.items.filter(x=>x.id!==id);if(before===data.items.length)return;if(await minWriteSafe(data)){await renderMinimal();toast('Deleted.')}}
 async function minimalToggleTheme(){const data=await minReadSafe();data.theme=data.theme==='dark'?'light':'dark';if(await minWriteSafe(data))await renderMinimal()}
 function minimalLiveData(data){const now=Date.now();data.items=data.items.filter(x=>x.expiresAt===null||x.expiresAt>now);return data}
 async function maybeConvertMinimalScribbles(){
