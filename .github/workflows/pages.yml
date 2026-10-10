@@ -1,0 +1,67 @@
+name: Deploy to GitHub Pages
+
+# Runs the static gate and the Playwright browser tests first. The site is
+# deployed only when both pass. Requires Settings → Pages → Build and deployment
+# → Source set to "GitHub Actions" (not "Deploy from a branch").
+
+on:
+  push:
+    branches: [new]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Verify before deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Static build gate
+        run: npm run check
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
+      - name: Playwright browser tests
+        run: python -m pytest
+
+  deploy:
+    name: Deploy site
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage published files only
+        run: |
+          mkdir -p _site
+          cp index.html standalone.html sw.js manifest.json CNAME .nojekyll _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
