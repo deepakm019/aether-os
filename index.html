@@ -587,6 +587,48 @@ html .minimal-app textarea.minimal-control::placeholder{color:var(--min-muted)}
 html .minimal-app textarea.minimal-control:focus{border-color:var(--min-muted);box-shadow:none}
 html .minimal-app .minimal-count{color:var(--min-muted)}
 @media (prefers-reduced-motion:reduce){.minimal-item{transition:none!important}}
+/* Scribble colors, drag grip, edit form and countdown. All scoped to .minimal-app so Normal mode is untouched. */
+html .minimal-app .minimal-item[data-color="pink"]{background:linear-gradient(180deg,#ffd3e2 0%,#ffc4da 100%)}
+html .minimal-app .minimal-item[data-color="green"]{background:linear-gradient(180deg,#d9f7c8 0%,#c6eeb2 100%)}
+html .minimal-app .minimal-item[data-color="blue"]{background:linear-gradient(180deg,#d4e8ff 0%,#bfdcff 100%)}
+html .minimal-app .minimal-item[data-color="orange"]{background:linear-gradient(180deg,#ffdcb4 0%,#ffcb98 100%)}
+html .minimal-app .minimal-item .minimal-label{color:rgba(43,37,8,.72)}
+html .minimal-app .minimal-top-left{display:flex;align-items:center;gap:8px;min-width:0}
+html .minimal-app .minimal-grip{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;background:transparent;border:0;color:rgba(43,37,8,.5);font-size:14px;line-height:1;letter-spacing:-2px;min-width:32px;min-height:32px;padding:6px 4px;border-radius:8px}
+html .minimal-app .minimal-grip:hover{background:rgba(255,255,255,.4);color:#2b2508}
+html .minimal-app .minimal-grip:focus-visible{outline:2px solid #2b2508;outline-offset:2px}
+html .minimal-app .minimal-countdown{font-variant-numeric:tabular-nums}
+html .minimal-app .minimal-edit{display:grid;gap:10px;margin:14px 0}
+html .minimal-app .minimal-edit textarea{min-height:110px}
+html .minimal-app .minimal-edit .minimal-compose-row{gap:8px}
+html .minimal-app .minimal-swatches{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+html .minimal-app .minimal-swatch{position:relative;display:inline-flex;cursor:pointer}
+html .minimal-app .minimal-swatch input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
+html .minimal-app .minimal-swatch span{display:block;width:30px;height:30px;border-radius:50%;border:2px solid rgba(43,37,8,.25)}
+html .minimal-app .minimal-swatch input:checked + span{border-color:#2b2508;box-shadow:inset 0 0 0 3px #fffbe0}
+html .minimal-app .minimal-swatch input:focus-visible + span{outline:2px solid #2b2508;outline-offset:2px}
+html .minimal-app .minimal-swatch[data-color="yellow"] span{background:#fff09a}
+html .minimal-app .minimal-swatch[data-color="pink"] span{background:#ffc4da}
+html .minimal-app .minimal-swatch[data-color="green"] span{background:#c6eeb2}
+html .minimal-app .minimal-swatch[data-color="blue"] span{background:#bfdcff}
+html .minimal-app .minimal-swatch[data-color="orange"] span{background:#ffcb98}
+@media (max-width:620px){
+ html .minimal-app{padding-top:max(18px,env(safe-area-inset-top));padding-bottom:max(20px,env(safe-area-inset-bottom));padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+ html .minimal-app .minimal-head{padding-bottom:14px;gap:10px}
+ html .minimal-app .minimal-brand{font-size:22px}
+ html .minimal-app .minimal-sub{margin-top:4px}
+ html .minimal-app .minimal-mode-row{padding:12px 0;gap:10px}
+ html .minimal-app .minimal-compose{padding:16px 0}
+ html .minimal-app .minimal-compose-row{gap:8px}
+ html .minimal-app .minimal-compose-row select{flex:1 1 100%}
+ html .minimal-app .minimal-compose-row .btn{flex:1 1 0;min-width:0}
+ html .minimal-app .minimal-compose-row .minimal-stamp{margin-left:0;width:100%;text-align:right}
+ html .minimal-app .minimal-feed{padding:14px 0;gap:12px}
+ html .minimal-app .minimal-empty{min-height:28vh}
+ html .minimal-app .minimal-item{padding:16px 14px 12px}
+ html .minimal-app .minimal-actions{width:100%;justify-content:flex-end}
+ html .minimal-app .minimal-actions .btn{min-height:34px;padding:6px 10px}
+}
 .restore-panel{border-color:var(--accent-line)}
 .restore-btn{min-height:44px;min-width:150px;white-space:nowrap}
 @media(max-width:620px){.restore-panel .row{flex-direction:column;align-items:stretch}.restore-btn{width:100%}}
@@ -1572,6 +1614,13 @@ function downloadState(){backupWorkspace()}
 /* ===== Minimal mode: fully separate IndexedDB storage ===== */
 let __minimalIsolatedBoot=false,__minimalTimer=null,__minimalRenderSeq=0,__minimalDataCache=null,__minimalDrawingOpen=false,__minimalCanvas=null,__minimalDrawing=false,__minimalLastPoint=null,__minimalStorageReadFailed=false;window.__minimalSwitching=false;
 const MIN_DB_STORE='kv',MIN_DB_KEY='scribbles',MIN_MAX_ITEMS=500,MIN_MAX_TEXT=2000;
+const MIN_NOTE_COLORS=['yellow','pink','green','blue','orange'],MIN_SNOOZE_MS=3600000,MIN_DRAG_PX=70;
+const MIN_DURATIONS={stays:null,'3m':180000,'6m':360000,'12m':720000,'1h':3600000,'24h':86400000};
+const MIN_DURATION_LABELS={stays:'stays','3m':'3 min','6m':'6 min','12m':'12 min','1h':'1 h','24h':'24 h'};
+let __minimalEditingId=null,__minimalTick=null,__minimalRefreshing=false;
+let __minimalDrag=null;
+const minColor=c=>MIN_NOTE_COLORS.includes(c)?c:'yellow';
+const minPad=n=>String(n).padStart(2,'0');
 function minDefaultData(){return {items:[],converted:false,theme:'dark'}}
 function minNormalizeData(raw){
  const d=isPlainObj(raw)?raw:{},seen=new Set();
@@ -1584,9 +1633,9 @@ function minNormalizeData(raw){
   if(expiresAt!==null&&(!Number.isFinite(expiresAt)||expiresAt<=0))return null;
   if(kind==='drawing'){
    const image=safeImageData(x.image);if(!image)return null;
-   return {id,kind,createdAt,expiresAt,pinned:!!x.pinned,image};
+   return {id,kind,createdAt,expiresAt,pinned:!!x.pinned,color:minColor(x.color),image};
   }
-  return {id,kind:'text',createdAt,expiresAt,pinned:!!x.pinned,text:String(x.text??'').slice(0,MIN_MAX_TEXT)};
+  return {id,kind:'text',createdAt,expiresAt,pinned:!!x.pinned,color:minColor(x.color),text:String(x.text??'').slice(0,MIN_MAX_TEXT)};
  }).filter(Boolean).sort((a,b)=>b.createdAt-a.createdAt).slice(0,MIN_MAX_ITEMS);
  return {items,converted:d.converted===true,theme:d.theme==='light'?'light':'dark'};
 }
@@ -1612,7 +1661,8 @@ async function minimalDeleteDatabase(){
  if(!window.indexedDB)return;
  try{await new Promise((resolve,reject)=>{let req;try{req=indexedDB.deleteDatabase(MIN_DB_NAME)}catch(e){reject(e);return}req.onsuccess=()=>resolve();req.onerror=()=>reject(req.error||new Error('Minimal database delete failed'));req.onblocked=()=>reject(new Error('Minimal database is still open in another tab'))})}catch(e){toast('Minimal database could not be deleted. Close other AstralSurge tabs and retry.')}
 }
-function minExpiryLabel(item){if(item.expiresAt===null)return 'stays';const ms=item.expiresAt-Date.now();if(ms<=0)return 'expired';const minutes=Math.max(1,Math.ceil(ms/60000));if(minutes>=60)return `${Math.ceil(minutes/60)}h left`;return `${minutes}m left`}
+function minCountdownText(ms){const total=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),sec=total%60;return h?`${h}:${minPad(m)}:${minPad(sec)} left`:`${minPad(m)}:${minPad(sec)} left`}
+function minExpiryLabel(item){if(item.expiresAt===null)return 'stays';const ms=item.expiresAt-Date.now();if(ms<=0)return 'expired';return minCountdownText(ms)}
 function minTimestamp(ms){try{return appDateTime(ms,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:true})}catch(e){return new Date(ms).toLocaleString()}}
 function setMinimalDocumentTheme(theme){
  const root=document.documentElement;
@@ -1623,15 +1673,26 @@ function setMinimalDocumentTheme(theme){
 }
 function minimalSwitchUI(){return `<div class="minimal-mode-row"><div><div>minimal mode</div><div class="minimal-mode-label">separate local scribbles · normal data stays untouched</div></div><button type="button" class="btn mini" onclick="switchMinimalMode('normal')">switch to normal</button></div>`}
 function minimalItemHtml(item){
- const image=item.kind==='drawing'?safeImageData(item.image):'';
- const body=item.kind==='drawing'?`<img class="minimal-drawing" src="${esc(image)}" alt="hand-drawn scribble">`:`<div class="minimal-item-text">${esc(item.text)}</div>`;
- return `<article class="minimal-item ${item.pinned?'pinned':''}"><div class="minimal-item-top"><span class="minimal-stamp">${esc(minTimestamp(item.createdAt))}</span><span class="minimal-stamp">${esc(minExpiryLabel(item))}${item.pinned?' · pinned':''}</span></div>${body}<div class="minimal-item-bottom"><span class="minimal-stamp">${item.kind==='drawing'?'drawing':'note'}</span><div class="minimal-actions"><button type="button" class="btn mini" onclick="minimalPin(${jarg(item.id)})">${item.pinned?'unpin':'pin'}</button><button type="button" class="btn mini" onclick="minimalDelete(${jarg(item.id)})">delete</button></div></div></article>`;
+ const editing=__minimalEditingId===item.id,color=minColor(item.color),drawing=item.kind==='drawing',timed=item.expiresAt!==null;
+ const image=drawing?safeImageData(item.image):'';
+ const body=editing?minimalEditHtml(item):(drawing?`<img class="minimal-drawing" src="${esc(image)}" alt="hand-drawn scribble">`:`<div class="minimal-item-text">${esc(item.text)}</div>`);
+ const timer=timed?`<span class="minimal-stamp minimal-countdown" data-expires="${Number(item.expiresAt)}">${esc(minExpiryLabel(item))}</span>`:'<span class="minimal-stamp">stays</span>';
+ const actions=editing?'':`<div class="minimal-actions"><button type="button" class="btn mini" onclick="minimalPin(${jarg(item.id)})">${item.pinned?'unpin':'pin'}</button><button type="button" class="btn mini" onclick="minimalStartEdit(${jarg(item.id)})">edit</button>${timed?`<button type="button" class="btn mini" onclick="minimalSnooze(${jarg(item.id)})">+1 h</button>`:''}<button type="button" class="btn mini" onclick="minimalDelete(${jarg(item.id)})">delete</button></div>`;
+ return `<article class="minimal-item ${item.pinned?'pinned':''}" data-color="${color}" data-id="${esc(item.id)}"><div class="minimal-item-top"><div class="minimal-top-left"><button type="button" class="minimal-grip" aria-label="Drag up to pin, drag down to unpin" title="drag up to pin, down to unpin">&#8942;&#8942;</button><span class="minimal-stamp">${esc(minTimestamp(item.createdAt))}</span></div>${timer}</div>${body}<div class="minimal-item-bottom"><span class="minimal-stamp">${drawing?'drawing':'note'}${item.pinned?' · pinned':''}</span>${actions}</div></article>`;
+}
+function minimalEditHtml(item){
+ const color=minColor(item.color),drawing=item.kind==='drawing';
+ const text=drawing?'':`<label class="minimal-label" for="minimal-edit-text">note text</label><textarea class="minimal-control" id="minimal-edit-text" maxlength="${MIN_MAX_TEXT}">${esc(item.text)}</textarea>`;
+ const swatches=MIN_NOTE_COLORS.map(c=>`<label class="minimal-swatch" data-color="${c}"><input type="radio" name="minimal-edit-color" value="${c}" aria-label="${c} note" ${c===color?'checked':''}><span></span></label>`).join('');
+ const opts=`<option value="keep" selected>keep current time</option>`+Object.keys(MIN_DURATIONS).map(k=>`<option value="${k}">${esc(MIN_DURATION_LABELS[k])}</option>`).join('');
+ return `<form class="minimal-edit" onsubmit="event.preventDefault();minimalSaveEdit(${jarg(item.id)},false)">${text}<span class="minimal-label">color</span><div class="minimal-swatches">${swatches}</div><label class="minimal-label" for="minimal-edit-expiry">time</label><select class="minimal-control" id="minimal-edit-expiry">${opts}</select><div class="minimal-compose-row"><button type="submit" class="btn mini primary">save</button><button type="button" class="btn mini" onclick="minimalSaveEdit(${jarg(item.id)},true)">save + 1 h</button><button type="button" class="btn mini" onclick="minimalCancelEdit()">cancel</button></div></form>`;
 }
 function renderMinimalUi(data,seq){
  if(!isMinimalMode()||seq!==__minimalRenderSeq)return;
  __minimalDataCache=data;setMinimalDocumentTheme(data.theme);
+ if(__minimalEditingId&&!data.items.some(x=>x.id===__minimalEditingId))__minimalEditingId=null;
  const feed=data.items.slice().sort((a,b)=>(Number(b.pinned)-Number(a.pinned))||(b.createdAt-a.createdAt));
- const content=`<div class="minimal-app" data-min-theme="${data.theme}"><div class="minimal-wrap"><header class="minimal-head"><div><div class="minimal-brand">astralsurge / scribbles</div><div class="minimal-sub">quick thoughts. no dashboard. local only.</div></div><div class="minimal-controls"><button type="button" class="btn mini" onclick="minimalToggleTheme()">${data.theme==='dark'?'light mode':'dark mode'}</button></div></header>${minimalSwitchUI()}<section class="minimal-compose"><label class="minimal-label" for="minimal-note">write a quick note</label><textarea class="minimal-control" id="minimal-note" maxlength="2000" placeholder="something on your mind…"></textarea><div class="minimal-compose-row"><select class="minimal-control" id="minimal-duration" aria-label="How long the note lasts"><option value="stays">stays</option><option value="1h">1h</option><option value="24h" selected>24h</option></select><button type="button" class="btn mini primary" onclick="minimalPostText()">post</button><button type="button" class="btn mini" onclick="minimalOpenDrawing()">draw</button><span class="minimal-stamp" id="minimal-char-count">0 / 2000</span></div></section>${__minimalDrawingOpen?minimalDrawingUi(data.theme):''}<div class="minimal-count">${feed.length} / ${MIN_MAX_ITEMS} scribbles</div><section class="minimal-feed" aria-label="scribble feed">${feed.map(minimalItemHtml).join('')||'<div class="minimal-empty">nothing here. yet.</div>'}</section><footer class="minimal-footer">no network · no normal workspace access · expires are removed automatically</footer></div></div>`;
+ const content=`<div class="minimal-app" data-min-theme="${data.theme}"><div class="minimal-wrap"><header class="minimal-head"><div><div class="minimal-brand">astralsurge / scribbles</div><div class="minimal-sub">quick thoughts. no dashboard. local only.</div></div><div class="minimal-controls"><button type="button" class="btn mini" onclick="minimalToggleTheme()">${data.theme==='dark'?'light mode':'dark mode'}</button></div></header>${minimalSwitchUI()}<section class="minimal-compose"><label class="minimal-label" for="minimal-note">write a quick note</label><textarea class="minimal-control" id="minimal-note" maxlength="2000" placeholder="something on your mind…"></textarea><div class="minimal-compose-row"><select class="minimal-control" id="minimal-duration" aria-label="How long the note lasts">${Object.keys(MIN_DURATIONS).map(k=>`<option value="${k}"${k==='24h'?' selected':''}>${esc(MIN_DURATION_LABELS[k])}</option>`).join('')}</select><button type="button" class="btn mini primary" onclick="minimalPostText()">post</button><button type="button" class="btn mini" onclick="minimalOpenDrawing()">draw</button><span class="minimal-stamp" id="minimal-char-count">0 / 2000</span></div></section>${__minimalDrawingOpen?minimalDrawingUi(data.theme):''}<div class="minimal-count">${feed.length} / ${MIN_MAX_ITEMS} scribbles</div><section class="minimal-feed" aria-label="scribble feed">${feed.map(minimalItemHtml).join('')||'<div class="minimal-empty">nothing here. yet.</div>'}</section><footer class="minimal-footer">no network · no normal workspace access · expires are removed automatically</footer></div></div>`;
  document.getElementById('app').innerHTML=!betaAck()?betaScreen():content;
  if(betaAck()){
   const t=document.getElementById('minimal-note'),counter=document.getElementById('minimal-char-count');if(t&&counter)t.addEventListener('input',()=>counter.textContent=`${t.value.length} / 2000`);
@@ -1649,13 +1710,29 @@ async function renderMinimal(){
  if(data.items.length!==before)await minWriteSafe(data);
  renderMinimalUi(data,seq);
 }
-function startMinimalExpiryTimer(){if(__minimalTimer)return;__minimalTimer=setInterval(async()=>{if(!isMinimalMode()||!betaAck())return;await renderMinimal()},60000)}
+function startMinimalExpiryTimer(){if(__minimalTimer)return;__minimalTimer=setInterval(minimalTick,1000)}
+function minimalTick(){
+ if(!isMinimalMode()||!betaAck())return;
+ const now=Date.now();let due=false;
+ document.querySelectorAll('.minimal-countdown[data-expires]').forEach(el=>{const at=Number(el.dataset.expires);if(!(at>now))due=true;else el.textContent=minCountdownText(at-now)});
+ if(due&&!__minimalRefreshing)minimalRefresh();
+}
+async function minimalRefresh(){
+ const pick=id=>document.getElementById(id);
+ const keep={note:pick('minimal-note')?.value,duration:pick('minimal-duration')?.value,editText:pick('minimal-edit-text')?.value,editExpiry:pick('minimal-edit-expiry')?.value,editColor:document.querySelector('input[name="minimal-edit-color"]:checked')?.value};
+ __minimalRefreshing=true;
+ try{await renderMinimal()}finally{__minimalRefreshing=false}
+ const restore=(id,val)=>{const el=pick(id);if(el&&val!==undefined)el.value=val};
+ restore('minimal-note',keep.note);restore('minimal-duration',keep.duration);restore('minimal-edit-text',keep.editText);restore('minimal-edit-expiry',keep.editExpiry);
+ if(keep.editColor){const r=document.querySelector(`input[name="minimal-edit-color"][value="${keep.editColor}"]`);if(r)r.checked=true}
+ const counter=pick('minimal-char-count'),t=pick('minimal-note');if(counter&&t)counter.textContent=`${t.value.length} / 2000`;
+}
 async function minimalPostText(){
  if(!isMinimalMode()||!betaAck())return;
  const ta=document.getElementById('minimal-note'),duration=document.getElementById('minimal-duration');if(!ta||!duration)return;
  const text=String(ta.value||'').slice(0,MIN_MAX_TEXT);if(!text.trim()){toast('Write something first.');ta.focus();return}
- const data=await minReadSafe(),now=Date.now(),value=duration.value,expiresAt=value==='stays'?null:now+(value==='1h'?3600000:86400000);
- data.items.unshift({id:uid('scribble'),kind:'text',text,createdAt:now,expiresAt,pinned:false});data.items=data.items.slice(0,MIN_MAX_ITEMS);
+ const data=await minReadSafe(),now=Date.now(),value=duration.value,span=MIN_DURATIONS[value],expiresAt=typeof span==='number'?now+span:null;
+ data.items.unshift({id:uid('scribble'),kind:'text',text,createdAt:now,expiresAt,pinned:false,color:'yellow'});data.items=data.items.slice(0,MIN_MAX_ITEMS);
  if(await minWriteSafe(data)){__minimalDrawingOpen=false;await renderMinimal();toast('Posted.');}
 }
 function initMinimalCanvas(theme){
@@ -1673,10 +1750,57 @@ function minimalClearDrawing(){if(!__minimalCanvas||!document.getElementById('mi
 async function minimalPostDrawing(){
  const canvas=document.getElementById('minimal-canvas');if(!canvas)return;let src;try{src=canvas.toDataURL('image/png')}catch(e){toast('Could not prepare this drawing.');return}
  const image=safeImageData(src);if(!image){toast('Drawing is too large. Clear some strokes and try again.');return}
- const data=await minReadSafe(),now=Date.now();data.items.unshift({id:uid('scribble'),kind:'drawing',image,createdAt:now,expiresAt:now+86400000,pinned:false});data.items=data.items.slice(0,MIN_MAX_ITEMS);
+ const data=await minReadSafe(),now=Date.now();data.items.unshift({id:uid('scribble'),kind:'drawing',image,createdAt:now,expiresAt:now+86400000,pinned:false,color:'yellow'});data.items=data.items.slice(0,MIN_MAX_ITEMS);
  if(await minWriteSafe(data)){__minimalDrawingOpen=false;__minimalCanvas=null;await renderMinimal();toast('Drawing posted for 24h.');}
 }
 async function minimalPin(id){const data=await minReadSafe(),item=data.items.find(x=>x.id===id);if(!item)return;item.pinned=!item.pinned;if(await minWriteSafe(data)){await renderMinimal();toast(item.pinned?'Pinned.':'Unpinned.')}}
+function minimalStartEdit(id){__minimalEditingId=id;minimalRefresh()}
+function minimalCancelEdit(){__minimalEditingId=null;minimalRefresh()}
+async function minimalMutate(id,fn,msg){
+ const data=await minReadSafe(),item=data.items.find(x=>x.id===id);if(!item)return false;
+ if(fn(item)===false)return false;
+ item.updatedAt=Date.now();
+ if(await minWriteSafe(data)){await minimalRefresh();if(msg)toast(msg);return true}
+ return false;
+}
+async function minimalSnooze(id){
+ await minimalMutate(id,item=>{if(item.expiresAt===null){toast('This one stays until you delete it.');return false}item.expiresAt=Math.max(item.expiresAt,Date.now())+MIN_SNOOZE_MS},'Snoozed 1 h.');
+}
+async function minimalSetPinned(id,value){await minimalMutate(id,item=>{item.pinned=!!value},value?'Pinned.':'Unpinned.')}
+async function minimalSaveEdit(id,snooze){
+ const data=await minReadSafe(),item=data.items.find(x=>x.id===id);
+ if(!item){__minimalEditingId=null;await minimalRefresh();return}
+ const now=Date.now();
+ if(item.kind==='text'){const t=String(document.getElementById('minimal-edit-text')?.value||'').slice(0,MIN_MAX_TEXT);if(!t.trim()){toast('Write something first.');return}item.text=t}
+ const color=document.querySelector('input[name="minimal-edit-color"]:checked')?.value;if(MIN_NOTE_COLORS.includes(color))item.color=color;
+ const pick=document.getElementById('minimal-edit-expiry')?.value;
+ if(pick&&pick!=='keep'&&Object.prototype.hasOwnProperty.call(MIN_DURATIONS,pick)){const span=MIN_DURATIONS[pick];item.expiresAt=typeof span==='number'?now+span:null}
+ if(snooze){if(item.expiresAt===null)toast('This one stays until you delete it.');else item.expiresAt=Math.max(item.expiresAt,now)+MIN_SNOOZE_MS}
+ item.updatedAt=now;
+ if(await minWriteSafe(data)){__minimalEditingId=null;await minimalRefresh();toast(snooze&&item.expiresAt!==null?'Saved. Snoozed 1 h.':'Saved.')}
+}
+/* Drag the grip up to pin a scribble, down to unpin it. Only the grip captures the pointer, so page scrolling still works. */
+function minimalDragStart(e){
+ const g=e.target&&e.target.closest?e.target.closest('.minimal-grip'):null;if(!g||!isMinimalMode())return;
+ const card=g.closest('.minimal-item');if(!card)return;
+ __minimalDrag={id:card.dataset.id,card,startY:e.clientY,pointerId:e.pointerId,dy:0};
+ e.preventDefault();try{g.setPointerCapture(e.pointerId)}catch(x){}
+}
+function minimalDragMove(e){
+ if(!__minimalDrag||e.pointerId!==__minimalDrag.pointerId)return;
+ __minimalDrag.dy=e.clientY-__minimalDrag.startY;
+ __minimalDrag.card.style.transform=`translateY(${Math.max(-120,Math.min(120,__minimalDrag.dy))}px)`;
+}
+async function minimalDragEnd(e){
+ if(!__minimalDrag||(e&&e.pointerId!==__minimalDrag.pointerId))return;
+ const d=__minimalDrag;__minimalDrag=null;d.card.style.transform='';
+ if(d.dy<=-MIN_DRAG_PX)await minimalSetPinned(d.id,true);
+ else if(d.dy>=MIN_DRAG_PX)await minimalSetPinned(d.id,false);
+}
+document.addEventListener('pointerdown',minimalDragStart);
+document.addEventListener('pointermove',minimalDragMove);
+document.addEventListener('pointerup',minimalDragEnd);
+document.addEventListener('pointercancel',minimalDragEnd);
 async function minimalDelete(id){if(!confirm('Delete this scribble? This cannot be undone.'))return;const data=await minReadSafe();const before=data.items.length;data.items=data.items.filter(x=>x.id!==id);if(before===data.items.length)return;if(await minWriteSafe(data)){await renderMinimal();toast('Deleted.')}}
 async function minimalToggleTheme(){const data=await minReadSafe();data.theme=data.theme==='dark'?'light':'dark';if(await minWriteSafe(data))await renderMinimal()}
 function minimalLiveData(data){const now=Date.now();data.items=data.items.filter(x=>x.expiresAt===null||x.expiresAt>now);return data}
@@ -1932,7 +2056,7 @@ async function applyEncryptedRestore(){
  }catch(e){toast('Could not restore encrypted backup')}
 }
 
-Object.assign(window,{switchMinimalMode,minimalPostText,minimalOpenDrawing,minimalCloseDrawing,minimalClearDrawing,minimalPostDrawing,minimalPin,minimalDelete,minimalToggleTheme,splitViewRoute,splitGroupModal,splitSaveGroup,splitDeleteGroup,splitAddPeople,splitRemovePerson,splitExpenseModal,splitPreview,splitSaveExpense,splitDeleteExpense,splitMarkPaid,splitMarkAll,splitUndoPayment,handleMinimalReturnPending,nextDue,quickCapture,restoreFromTrash,purgeFromTrash,undoLastRestore,restoreAutoSnapshot,applyEncryptedRestore,demoState,load,persist,resetDemo,toast,nav,setNav,formatDay,dateShort,taskById,facts,daysSince,startFreshWorkspace,openUpcoming,setSetting,toggleHideAmounts,setAmbientEffect,setAmbientStrength,setFocusSound,setFocusSoundVolume,toggleFocusSound,dismissRecommendation,deleteAllLocalData,legalSummaryModal,toggleBetaContinue,
+Object.assign(window,{switchMinimalMode,minimalStartEdit,minimalCancelEdit,minimalSaveEdit,minimalSnooze,minimalSetPinned,minimalPostText,minimalOpenDrawing,minimalCloseDrawing,minimalClearDrawing,minimalPostDrawing,minimalPin,minimalDelete,minimalToggleTheme,splitViewRoute,splitGroupModal,splitSaveGroup,splitDeleteGroup,splitAddPeople,splitRemovePerson,splitExpenseModal,splitPreview,splitSaveExpense,splitDeleteExpense,splitMarkPaid,splitMarkAll,splitUndoPayment,handleMinimalReturnPending,nextDue,quickCapture,restoreFromTrash,purgeFromTrash,undoLastRestore,restoreAutoSnapshot,applyEncryptedRestore,demoState,load,persist,resetDemo,toast,nav,setNav,formatDay,dateShort,taskById,facts,daysSince,startFreshWorkspace,openUpcoming,setSetting,toggleHideAmounts,setAmbientEffect,setAmbientStrength,setFocusSound,setFocusSoundVolume,toggleFocusSound,dismissRecommendation,deleteAllLocalData,legalSummaryModal,toggleBetaContinue,
   recommendation,actionForRec,completeTask,startFocus,scheduleTask,stopFocus,resumeFocus,pauseFocus,tick,renderFocusTimerOnly,
   openModal,closeModal,openDrawer,closeDrawer,taskModal,saveTask,noteModal,saveNote,expenseModal,saveExpense,decisionModal,openDecision,reconcile,
   createGoalModal,saveGoal,globalCreate,inspect,viewToday,viewWork,viewFocus,viewPlan,viewGoals,executeStep,viewLife,toggleHabit,
