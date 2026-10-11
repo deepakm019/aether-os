@@ -1615,8 +1615,8 @@ function downloadState(){backupWorkspace()}
 let __minimalIsolatedBoot=false,__minimalTimer=null,__minimalRenderSeq=0,__minimalDataCache=null,__minimalDrawingOpen=false,__minimalCanvas=null,__minimalDrawing=false,__minimalLastPoint=null,__minimalStorageReadFailed=false;window.__minimalSwitching=false;
 const MIN_DB_STORE='kv',MIN_DB_KEY='scribbles',MIN_MAX_ITEMS=500,MIN_MAX_TEXT=2000;
 const MIN_NOTE_COLORS=['yellow','pink','green','blue','orange'],MIN_SNOOZE_MS=3600000;
-const MIN_DURATIONS={stays:null,'3m':180000,'6m':360000,'12m':720000,'1h':3600000,'24h':86400000};
-const MIN_DURATION_LABELS={stays:'stays','3m':'3 min','6m':'6 min','12m':'12 min','1h':'1 h','24h':'24 h'};
+const MIN_DURATIONS={stays:null,'1h':3600000,'3h':10800000,'6h':21600000,'12h':43200000,'24h':86400000};
+const MIN_DURATION_LABELS={stays:'stays','1h':'1 h','3h':'3 h','6h':'6 h','12h':'12 h','24h':'24 h'};
 let __minimalEditingId=null,__minimalTick=null,__minimalRefreshing=false;
 let __minimalDrag=null;
 const minColor=c=>MIN_NOTE_COLORS.includes(c)?c:'yellow';
