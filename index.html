@@ -983,14 +983,14 @@ function ambientSetup(){
  __ambientCtx.setTransform(dpr,0,0,dpr,0,0);
  __ambientParticles=ambientParticles(type,w,h,ambientStrength());
  __ambientLast=0;
- if(prefersReducedMotion()){drawAmbient(type,0,0);return} // static frame, no movement
+ if(prefersReducedMotion()){c.style.display='none';return} // respect Reduce Motion: no layer at all
  __ambientRaf=requestAnimationFrame(ambientFrame);
 }
 function ambientParticles(type,w,h,strength=45){
  const mobile=w<700;
  const base=(w*h)/18000;
  const scale=.4+.6*(Math.max(10,Math.min(90,strength))-10)/80;
- const count=Math.min(mobile?70:120,Math.max(12,Math.round(base*scale)));
+ const count=Math.min(mobile?48:120,Math.max(12,Math.round(base*scale)));
  const a=[];
  for(let i=0;i<count;i++){
   a.push({x:Math.random()*w,y:Math.random()*h,r:.7+Math.random()*(type==='Snow'?1.6:1.4),a:Math.random(),phase:Math.random()*Math.PI*2,speed:.06+Math.random()*.16,drift:(Math.random()-.5)*.25,tw:.4+Math.random()*1.2,depth:.4+Math.random()*.7});
@@ -999,9 +999,10 @@ function ambientParticles(type,w,h,strength=45){
 }
 function ambientFrame(ts){
  const type=ambientType();
- if(type==='Off'||!__ambientCtx){__ambientRaf=0;return}
- if(!__ambientLast)__ambientLast=ts;
- const dt=Math.min(64,ts-__ambientLast);
+ if(type==='Off'||!__ambientCtx||prefersReducedMotion()){__ambientRaf=0;return}
+ // Cap at ~30 fps: ProMotion iPhones run rAF at 120 Hz, which doubles the work for no visible gain.
+ if(__ambientLast&&ts-__ambientLast<33){__ambientRaf=requestAnimationFrame(ambientFrame);return}
+ const dt=__ambientLast?Math.min(64,ts-__ambientLast):16.7;
  __ambientLast=ts;
  drawAmbient(type,ts/1000,dt);
  __ambientRaf=requestAnimationFrame(ambientFrame);
