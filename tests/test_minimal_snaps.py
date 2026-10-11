@@ -69,29 +69,29 @@ def run():
         check("minimal phone top padding is compact", pad_top <= 40, f"{pad_top}px")
         ctx.close()
 
-        # 2. Duration dropdown offers 3m / 6m / 12m alongside stays, 1h, 24h; default 24h.
+        # 2. Duration dropdown offers stays, 1h, 3h, 6h, 12h, 24h; default 24h.
         ctx, page = open_minimal(browser)
         opts = page.locator("#minimal-duration option").evaluate_all("els => els.map(e => e.value)")
-        check("dropdown has stays,3m,6m,12m,1h,24h", opts == ["stays", "3m", "6m", "12m", "1h", "24h"], str(opts))
+        check("dropdown has stays,1h,3h,6h,12h,24h", opts == ["stays", "1h", "3h", "6h", "12h", "24h"], str(opts))
         check("dropdown defaults to 24h", page.locator("#minimal-duration").input_value() == "24h")
 
-        # 3. Posting with 3m sets a ~3 minute expiry and shows a live countdown.
-        post(page, "three minute snap", "3m")
-        it = [i for i in items(page) if i.get("text") == "three minute snap"][0]
+        # 3. Posting with 3h sets a ~3 hour expiry and shows a live countdown.
+        post(page, "three hour snap", "3h")
+        it = [i for i in items(page) if i.get("text") == "three hour snap"][0]
         span = it["expiresAt"] - it["createdAt"]
-        check("3m snap expires in ~3 minutes", abs(span - 180000) < 3000, f"{span}ms")
-        label = card(page, "three minute snap").locator(".minimal-countdown").text_content()
-        check("countdown shows mm:ss left", "left" in label and label[:2].isdigit(), label)
+        check("3h snap expires in ~3 hours", abs(span - 10800000) < 3000, f"{span}ms")
+        label = card(page, "three hour snap").locator(".minimal-countdown").text_content()
+        check("countdown shows h:mm:ss left", "left" in label and label[:1].isdigit(), label)
         page.wait_for_timeout(2200)
-        label2 = card(page, "three minute snap").locator(".minimal-countdown").text_content()
+        label2 = card(page, "three hour snap").locator(".minimal-countdown").text_content()
         check("countdown ticks down live", label2 != label, f"{label} -> {label2}")
 
         # 4. Edit text, then cancel keeps old text, empty save is rejected.
-        card(page, "three minute snap").locator("button:has-text('edit')").click()
+        card(page, "three hour snap").locator("button:has-text('edit')").click()
         page.fill("#minimal-edit-text", "edited snap text")
         page.click("button:has-text('cancel')")
-        check("cancel keeps original text", card(page, "three minute snap").count() == 1)
-        card(page, "three minute snap").locator("button:has-text('edit')").click()
+        check("cancel keeps original text", card(page, "three hour snap").count() == 1)
+        card(page, "three hour snap").locator("button:has-text('edit')").click()
         page.fill("#minimal-edit-text", "   ")
         page.click("form.minimal-edit button[type=submit]")
         page.wait_for_timeout(200)
@@ -114,14 +114,14 @@ def run():
         post(page, "fresh default snap")
         check("default color is yellow for new snaps", card(page, "fresh default snap").get_attribute("data-color") == "yellow")
 
-        # 6. Edit time: choose 12m from edit form.
+        # 6. Edit time: choose 12h from edit form.
         card(page, "edited snap text").locator("button:has-text('edit')").click()
-        page.select_option("#minimal-edit-expiry", "12m")
+        page.select_option("#minimal-edit-expiry", "12h")
         page.click("form.minimal-edit button[type=submit]")
         page.wait_for_timeout(300)
         it = [i for i in items(page) if i.get("text") == "edited snap text"][0]
         remaining = it["expiresAt"] - page.evaluate("() => Date.now()")
-        check("edit time change to 12m", abs(remaining - 720000) < 5000, f"{remaining}ms")
+        check("edit time change to 12h", abs(remaining - 43200000) < 5000, f"{remaining}ms")
 
         # 7. +1 h snooze adds exactly one hour to the expiry.
         before = it["expiresAt"]
