@@ -142,26 +142,40 @@ def run():
         post(page, "forever snap", "stays")
         check("stays snap has no +1 h button", card(page, "forever snap").locator("button:has-text('+1 h')").count() == 0)
 
-        # 10. Drag up pins, drag down unpins (grip only).
-        grip = card(page, "forever snap").locator(".minimal-grip")
-        box = grip.bounding_box()
-        page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
-        page.mouse.down()
-        for step in range(1, 11):
-            page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2 - step * 12)
-        page.mouse.up()
+        # 10. Drag the grip to reorder; pinned snaps keep their own group on top.
+        def drag_card(text, target_text, offset=-4):
+            src = card(page, text).locator(".minimal-grip")
+            box = src.bounding_box()
+            tgt = card(page, target_text).bounding_box()
+            cx, cy = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+            ty = tgt["y"] + tgt["height"] / 2 + offset
+            page.mouse.move(cx, cy)
+            page.mouse.down()
+            for step in range(1, 16):
+                page.mouse.move(cx, cy + (ty - cy) * step / 15)
+            page.mouse.up()
+            page.wait_for_timeout(400)
+
+        def feed_texts():
+            return page.locator(".minimal-item .minimal-item-text").all_text_contents()
+
+        for t in ["reorder A", "reorder B", "reorder C"]:
+            post(page, t)
+        check("new snaps start newest-first", feed_texts()[:3] == ["reorder C", "reorder B", "reorder A"], str(feed_texts()[:3]))
+        drag_card("reorder A", "reorder C")
+        check("drag A up above C reorders the feed", feed_texts()[0] == "reorder A", str(feed_texts()[:3]))
+        page.reload(wait_until="load")
+        page.wait_for_selector("#app")
+        page.evaluate("() => switchMinimalMode('minimal')")
+        page.wait_for_selector(".minimal-item:has-text('reorder A')")
+        check("reorder persists across reload", feed_texts()[0] == "reorder A", str(feed_texts()[:3]))
+
+        card(page, "reorder B").locator("button:has-text('pin')").click()
         page.wait_for_timeout(300)
-        check("drag up pins the snap", card(page, "forever snap").get_attribute("class").find("pinned") >= 0)
-        feed_first = page.locator(".minimal-item").first.text_content()
-        check("pinned snap moves to top of feed", "forever snap" in feed_first)
-        box = page.locator(".minimal-item", has_text="forever snap").first.locator(".minimal-grip").bounding_box()
-        page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
-        page.mouse.down()
-        for step in range(1, 11):
-            page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2 + step * 12)
-        page.mouse.up()
-        page.wait_for_timeout(300)
-        check("drag down unpins the snap", "pinned" not in card(page, "forever snap").get_attribute("class"))
+        check("pinned snap moves to top group", feed_texts()[0] == "reorder B", str(feed_texts()[:3]))
+        drag_card("reorder A", "reorder B", offset=-30)
+        check("unpinned snap cannot be dragged above a pinned snap", feed_texts()[0] == "reorder B", str(feed_texts()[:3]))
+        check("dragging keeps the pinned flag unchanged", card(page, "reorder A").get_attribute("data-pinned") == "0")
 
         # 11. Composer draft survives a re-render (edit start).
         page.fill("#minimal-note", "draft kept")

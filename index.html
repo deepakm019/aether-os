@@ -1614,7 +1614,7 @@ function downloadState(){backupWorkspace()}
 /* ===== Minimal mode: fully separate IndexedDB storage ===== */
 let __minimalIsolatedBoot=false,__minimalTimer=null,__minimalRenderSeq=0,__minimalDataCache=null,__minimalDrawingOpen=false,__minimalCanvas=null,__minimalDrawing=false,__minimalLastPoint=null,__minimalStorageReadFailed=false;window.__minimalSwitching=false;
 const MIN_DB_STORE='kv',MIN_DB_KEY='scribbles',MIN_MAX_ITEMS=500,MIN_MAX_TEXT=2000;
-const MIN_NOTE_COLORS=['yellow','pink','green','blue','orange'],MIN_SNOOZE_MS=3600000,MIN_DRAG_PX=70;
+const MIN_NOTE_COLORS=['yellow','pink','green','blue','orange'],MIN_SNOOZE_MS=3600000;
 const MIN_DURATIONS={stays:null,'3m':180000,'6m':360000,'12m':720000,'1h':3600000,'24h':86400000};
 const MIN_DURATION_LABELS={stays:'stays','3m':'3 min','6m':'6 min','12m':'12 min','1h':'1 h','24h':'24 h'};
 let __minimalEditingId=null,__minimalTick=null,__minimalRefreshing=false;
@@ -1633,10 +1633,13 @@ function minNormalizeData(raw){
   if(expiresAt!==null&&(!Number.isFinite(expiresAt)||expiresAt<=0))return null;
   if(kind==='drawing'){
    const image=safeImageData(x.image);if(!image)return null;
-   return {id,kind,createdAt,expiresAt,pinned:!!x.pinned,color:minColor(x.color),image};
+   return {id,kind,createdAt,expiresAt,pinned:!!x.pinned,color:minColor(x.color),order:Number.isFinite(x.order)?x.order:null,image};
   }
-  return {id,kind:'text',createdAt,expiresAt,pinned:!!x.pinned,color:minColor(x.color),text:String(x.text??'').slice(0,MIN_MAX_TEXT)};
+  return {id,kind:'text',createdAt,expiresAt,pinned:!!x.pinned,color:minColor(x.color),order:Number.isFinite(x.order)?x.order:null,text:String(x.text??'').slice(0,MIN_MAX_TEXT)};
  }).filter(Boolean).sort((a,b)=>b.createdAt-a.createdAt).slice(0,MIN_MAX_ITEMS);
+ /* Legacy snaps have no manual order: number them newest-first once. */
+ if(!items.every(i=>Number.isFinite(i.order)))items.forEach((i,idx)=>{i.order=idx});
+ items.sort((a,b)=>a.order-b.order);
  return {items,converted:d.converted===true,theme:d.theme==='light'?'light':'dark'};
 }
 function minOpenDB(){
@@ -1672,13 +1675,14 @@ function setMinimalDocumentTheme(theme){
  document.body.style.backgroundImage='none';
 }
 function minimalSwitchUI(){return `<div class="minimal-mode-row"><div><div>minimal mode</div><div class="minimal-mode-label">separate local scribbles · normal data stays untouched</div></div><button type="button" class="btn mini" onclick="switchMinimalMode('normal')">switch to normal</button></div>`}
+function minTopOrder(data){return data.items.reduce((m,i)=>Math.min(m,Number.isFinite(i.order)?i.order:0),0)-1}
 function minimalItemHtml(item){
  const editing=__minimalEditingId===item.id,color=minColor(item.color),drawing=item.kind==='drawing',timed=item.expiresAt!==null;
  const image=drawing?safeImageData(item.image):'';
  const body=editing?minimalEditHtml(item):(drawing?`<img class="minimal-drawing" src="${esc(image)}" alt="hand-drawn scribble">`:`<div class="minimal-item-text">${esc(item.text)}</div>`);
  const timer=timed?`<span class="minimal-stamp minimal-countdown" data-expires="${Number(item.expiresAt)}">${esc(minExpiryLabel(item))}</span>`:'<span class="minimal-stamp">stays</span>';
  const actions=editing?'':`<div class="minimal-actions"><button type="button" class="btn mini" onclick="minimalPin(${jarg(item.id)})">${item.pinned?'unpin':'pin'}</button><button type="button" class="btn mini" onclick="minimalStartEdit(${jarg(item.id)})">edit</button>${timed?`<button type="button" class="btn mini" onclick="minimalSnooze(${jarg(item.id)})">+1 h</button>`:''}<button type="button" class="btn mini" onclick="minimalDelete(${jarg(item.id)})">delete</button></div>`;
- return `<article class="minimal-item ${item.pinned?'pinned':''}" data-color="${color}" data-id="${esc(item.id)}"><div class="minimal-item-top"><div class="minimal-top-left"><button type="button" class="minimal-grip" aria-label="Drag up to pin, drag down to unpin" title="drag up to pin, down to unpin">&#8942;&#8942;</button><span class="minimal-stamp">${esc(minTimestamp(item.createdAt))}</span></div>${timer}</div>${body}<div class="minimal-item-bottom"><span class="minimal-stamp">${drawing?'drawing':'note'}${item.pinned?' · pinned':''}</span>${actions}</div></article>`;
+ return `<article class="minimal-item ${item.pinned?'pinned':''}" data-color="${color}" data-id="${esc(item.id)}" data-pinned="${item.pinned?'1':'0'}"><div class="minimal-item-top"><div class="minimal-top-left"><button type="button" class="minimal-grip" aria-label="Drag to reorder" title="drag to reorder">&#8942;&#8942;</button><span class="minimal-stamp">${esc(minTimestamp(item.createdAt))}</span></div>${timer}</div>${body}<div class="minimal-item-bottom"><span class="minimal-stamp">${drawing?'drawing':'note'}${item.pinned?' · pinned':''}</span>${actions}</div></article>`;
 }
 function minimalEditHtml(item){
  const color=minColor(item.color),drawing=item.kind==='drawing';
@@ -1691,7 +1695,7 @@ function renderMinimalUi(data,seq){
  if(!isMinimalMode()||seq!==__minimalRenderSeq)return;
  __minimalDataCache=data;setMinimalDocumentTheme(data.theme);
  if(__minimalEditingId&&!data.items.some(x=>x.id===__minimalEditingId))__minimalEditingId=null;
- const feed=data.items.slice().sort((a,b)=>(Number(b.pinned)-Number(a.pinned))||(b.createdAt-a.createdAt));
+ const feed=data.items.slice().sort((a,b)=>(Number(b.pinned)-Number(a.pinned))||(a.order-b.order));
  const content=`<div class="minimal-app" data-min-theme="${data.theme}"><div class="minimal-wrap"><header class="minimal-head"><div><div class="minimal-brand">astralsurge / scribbles</div><div class="minimal-sub">quick thoughts. no dashboard. local only.</div></div><div class="minimal-controls"><button type="button" class="btn mini" onclick="minimalToggleTheme()">${data.theme==='dark'?'light mode':'dark mode'}</button></div></header>${minimalSwitchUI()}<section class="minimal-compose"><label class="minimal-label" for="minimal-note">write a quick note</label><textarea class="minimal-control" id="minimal-note" maxlength="2000" placeholder="something on your mind…"></textarea><div class="minimal-compose-row"><select class="minimal-control" id="minimal-duration" aria-label="How long the note lasts">${Object.keys(MIN_DURATIONS).map(k=>`<option value="${k}"${k==='24h'?' selected':''}>${esc(MIN_DURATION_LABELS[k])}</option>`).join('')}</select><button type="button" class="btn mini primary" onclick="minimalPostText()">post</button><button type="button" class="btn mini" onclick="minimalOpenDrawing()">draw</button><span class="minimal-stamp" id="minimal-char-count">0 / 2000</span></div></section>${__minimalDrawingOpen?minimalDrawingUi(data.theme):''}<div class="minimal-count">${feed.length} / ${MIN_MAX_ITEMS} scribbles</div><section class="minimal-feed" aria-label="scribble feed">${feed.map(minimalItemHtml).join('')||'<div class="minimal-empty">nothing here. yet.</div>'}</section><footer class="minimal-footer">no network · no normal workspace access · expires are removed automatically</footer></div></div>`;
  document.getElementById('app').innerHTML=!betaAck()?betaScreen():content;
  if(betaAck()){
@@ -1732,7 +1736,7 @@ async function minimalPostText(){
  const ta=document.getElementById('minimal-note'),duration=document.getElementById('minimal-duration');if(!ta||!duration)return;
  const text=String(ta.value||'').slice(0,MIN_MAX_TEXT);if(!text.trim()){toast('Write something first.');ta.focus();return}
  const data=await minReadSafe(),now=Date.now(),value=duration.value,span=MIN_DURATIONS[value],expiresAt=typeof span==='number'?now+span:null;
- data.items.unshift({id:uid('scribble'),kind:'text',text,createdAt:now,expiresAt,pinned:false,color:'yellow'});data.items=data.items.slice(0,MIN_MAX_ITEMS);
+ data.items.unshift({id:uid('scribble'),kind:'text',text,createdAt:now,expiresAt,pinned:false,color:'yellow',order:minTopOrder(data)});data.items=data.items.slice(0,MIN_MAX_ITEMS);
  if(await minWriteSafe(data)){__minimalDrawingOpen=false;await renderMinimal();toast('Posted.');}
 }
 function initMinimalCanvas(theme){
@@ -1750,7 +1754,7 @@ function minimalClearDrawing(){if(!__minimalCanvas||!document.getElementById('mi
 async function minimalPostDrawing(){
  const canvas=document.getElementById('minimal-canvas');if(!canvas)return;let src;try{src=canvas.toDataURL('image/png')}catch(e){toast('Could not prepare this drawing.');return}
  const image=safeImageData(src);if(!image){toast('Drawing is too large. Clear some strokes and try again.');return}
- const data=await minReadSafe(),now=Date.now();data.items.unshift({id:uid('scribble'),kind:'drawing',image,createdAt:now,expiresAt:now+86400000,pinned:false,color:'yellow'});data.items=data.items.slice(0,MIN_MAX_ITEMS);
+ const data=await minReadSafe(),now=Date.now();data.items.unshift({id:uid('scribble'),kind:'drawing',image,createdAt:now,expiresAt:now+86400000,pinned:false,color:'yellow',order:minTopOrder(data)});data.items=data.items.slice(0,MIN_MAX_ITEMS);
  if(await minWriteSafe(data)){__minimalDrawingOpen=false;__minimalCanvas=null;await renderMinimal();toast('Drawing posted for 24h.');}
 }
 async function minimalPin(id){const data=await minReadSafe(),item=data.items.find(x=>x.id===id);if(!item)return;item.pinned=!item.pinned;if(await minWriteSafe(data)){await renderMinimal();toast(item.pinned?'Pinned.':'Unpinned.')}}
@@ -1779,11 +1783,11 @@ async function minimalSaveEdit(id,snooze){
  item.updatedAt=now;
  if(await minWriteSafe(data)){__minimalEditingId=null;await minimalRefresh();toast(snooze&&item.expiresAt!==null?'Saved. Snoozed 1 h.':'Saved.')}
 }
-/* Drag the grip up to pin a scribble, down to unpin it. Only the grip captures the pointer, so page scrolling still works. */
+/* Drag the grip to reorder snaps. Pinned and unpinned snaps stay in their own groups. */
 function minimalDragStart(e){
  const g=e.target&&e.target.closest?e.target.closest('.minimal-grip'):null;if(!g||!isMinimalMode())return;
  const card=g.closest('.minimal-item');if(!card)return;
- __minimalDrag={id:card.dataset.id,card,startY:e.clientY,pointerId:e.pointerId,dy:0};
+ __minimalDrag={id:card.dataset.id,card,pinned:card.dataset.pinned==='1',startCenter:e.clientY,startY:e.clientY,pointerId:e.pointerId,dy:0};
  e.preventDefault();try{g.setPointerCapture(e.pointerId)}catch(x){}
 }
 function minimalDragMove(e){
@@ -1791,11 +1795,29 @@ function minimalDragMove(e){
  __minimalDrag.dy=e.clientY-__minimalDrag.startY;
  __minimalDrag.card.style.transform=`translateY(${Math.max(-120,Math.min(120,__minimalDrag.dy))}px)`;
 }
+function minimalComputeOrder(d){
+ const others=[...document.querySelectorAll('.minimal-feed .minimal-item')].filter(c=>c!==d.card);
+ const group=others.filter(c=>(c.dataset.pinned==='1')===d.pinned);
+ const finalCenter=d.startCenter+d.dy;
+ const t=group.filter(c=>{const r=c.getBoundingClientRect();return r.top+r.height/2<finalCenter}).length;
+ let at;
+ if(!group.length)at=d.pinned?0:others.length;
+ else if(t>=group.length)at=others.indexOf(group[group.length-1])+1;
+ else at=others.indexOf(group[t]);
+ const list=others.slice();list.splice(at,0,d.card);
+ return list.map(c=>c.dataset.id);
+}
+async function minimalApplyOrder(ids){
+ const data=await minReadSafe(),pos=new Map(ids.map((id,i)=>[id,i]));
+ let changed=false;
+ data.items.forEach(it=>{if(pos.has(it.id)&&it.order!==pos.get(it.id)){it.order=pos.get(it.id);changed=true}});
+ if(changed&&await minWriteSafe(data))await minimalRefresh();
+}
 async function minimalDragEnd(e){
  if(!__minimalDrag||(e&&e.pointerId!==__minimalDrag.pointerId))return;
  const d=__minimalDrag;__minimalDrag=null;d.card.style.transform='';
- if(d.dy<=-MIN_DRAG_PX)await minimalSetPinned(d.id,true);
- else if(d.dy>=MIN_DRAG_PX)await minimalSetPinned(d.id,false);
+ if(Math.abs(d.dy)<8)return;
+ await minimalApplyOrder(minimalComputeOrder(d));
 }
 document.addEventListener('pointerdown',minimalDragStart);
 document.addEventListener('pointermove',minimalDragMove);
