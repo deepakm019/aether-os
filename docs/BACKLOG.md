@@ -39,7 +39,6 @@ Working list of planned features and improvements. Each item ships in its own PR
 | 24 | QR tags (scan to open a task or timer) | Integration | 70% |
 | 25 | Planner: auto-fill open windows | Extra | 70% |
 | 26 | Goals: progress bars and next step | Extra | 70% |
-| 27 | Weekly review prompt (auto-filled) | Extra | 70% |
 | 28 | Money CSV import | Integration | 65% |
 | 29 | Voice announcement on completion (setting) | Feature | 65% |
 | 30 | Workouts: repeat last session, personal bests | Extra | 65% |
@@ -58,6 +57,7 @@ Working list of planned features and improvements. Each item ships in its own PR
 
 - #1, #2, #3, #5, #6, #10, #11, #13, #15: P0 and P1 batches 1 and 2.
 - #7 auto-sort on completion (tasks only; goals and milestones not yet covered), #23 decision review loop, #30 workout repeat-last and personal bests, #44 prompt builder.
+- #27 weekly review prompt (auto-filled). The home card now covers the current week, Monday through today.
 - Polish: timer input theme, converter speed/area/time/data categories.
 
 ## Parked
