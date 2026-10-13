@@ -8,7 +8,7 @@ from playwright.sync_api import sync_playwright
 URL = os.environ.get("ASOS_URL", "http://127.0.0.1:8765/index.html")
 results = []
 
-SHORTCUT_COUNT = 16
+SHORTCUT_COUNT = 15
 
 
 def check(name, ok, detail=""):

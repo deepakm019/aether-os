@@ -23,7 +23,7 @@ DEVICES = [
 VIEWS = [
     "today", "work", "focus", "plan", "more", "goals", "life", "money",
     "memory", "progress", "rules", "vault", "calendar", "reminders",
-    "timer", "music", "settings", "legal",
+    "timer", "settings", "legal",
 ]
 
 results = []
