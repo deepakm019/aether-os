@@ -992,7 +992,142 @@ function actionForRec(rec){
 function localIso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function nextDue(base,rule){const d=new Date((base||today)+'T00:00:00');do{d.setDate(d.getDate()+(rule==='weekly'?7:1))}while(rule==='weekdays'&&(d.getDay()===0||d.getDay()===6));return localIso(d)}
 function spawnNextRecurrence(t){if(!t||!t.repeat||t.repeat==='none')return;const base=t.due&&t.due>today?t.due:today;const next=Object.assign(clone(t),{id:uid('tsk'),status:'Inbox',scheduled:false,timeSpent:0,due:nextDue(base,t.repeat),subtasks:(t.subtasks||[]).map(x=>({...x,done:false})),images:[]});state.tasks.unshift(next);state.events.push({type:'TASK_RECURRED',entityId:next.id,at:Date.now()});return next}
-function quickCapture(e){e.preventDefault();const i=e.target.querySelector('input[name=qc]');const title=String(i.value||'').trim();if(!title){toast('Type something first');return}state.tasks.unshift({id:uid('tsk'),title,desc:'',priority:'Medium',energy:'Light',due:null,status:'Inbox',important:false,urgent:false,scheduled:false,goalId:null,tags:[],timeSpent:0,subtasks:[],images:[],repeat:'none'});state.events.push({type:'TASK_CREATED',at:Date.now()});persist();render();toast('Captured to Inbox')}
+/* ---------- Typed capture: parse, check, save ---------- */
+function captureLabel(k){return {task:'Task',reminder:'Reminder',expense:'Expense',note:'Note',block:'Planner block',problem:'Problem'}[k]||'Task'}
+function captureTitleCase(s){return s?s.charAt(0).toUpperCase()+s.slice(1):s}
+function captureIso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function captureDateFromWord(word,now){
+ const w=String(word).toLowerCase();
+ if(w==='today'||w==='tonight')return captureIso(now);
+ if(w==='tomorrow'){const d=new Date(now);d.setDate(d.getDate()+1);return captureIso(d)}
+ const days=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+ const idx=days.indexOf(w);
+ if(idx<0)return '';
+ const d=new Date(now);d.setDate(d.getDate()+((idx-d.getDay()+7)%7));return captureIso(d);
+}
+function captureTime(h,m,ampm){
+ let hour=Number(h),min=Number(m||0);
+ if(min>59||hour>23)return null;
+ let assumed=false;
+ if(ampm){if(hour<1||hour>12)return null;const ap=ampm.toLowerCase();if(ap==='pm'&&hour<12)hour+=12;if(ap==='am'&&hour===12)hour=0}
+ else if(hour>=1&&hour<=7){hour+=12;assumed=true}
+ return {hhmm:`${String(hour).padStart(2,'0')}:${String(min).padStart(2,'0')}`,assumed};
+}
+function parseCapture(raw,now){
+ const when=now instanceof Date?now:new Date();
+ const text=String(raw||'').replace(/\s+/g,' ').trim();
+ const out={raw:text,intent:'task',confidence:'high',alternatives:[],reasons:[],values:{title:text,due:'',time:'',amount:'',category:'',duration:'',step:'',why:'',content:''}};
+ if(!text)return out;
+ let rest=text;
+ const cut=re=>{const m=rest.match(re);if(!m)return null;rest=(rest.slice(0,m.index)+' '+rest.slice(m.index+m[0].length)).replace(/\s+/g,' ').trim();return m};
+ const set=(k,why,conf,alts)=>{out.intent=k;out.reasons.push(why);out.confidence=conf||'high';out.alternatives=alts||[]};
+ const problemM=cut(/^(?:problem|issue)\s*[:\-]\s*/i);
+ const stuckM=!problemM&&cut(/^(?:i(?:'|’)?m stuck(?: on)?|stuck on)\s+/i);
+ const avoidM=!problemM&&!stuckM&&cut(/^i\s+(?:keep|keep on)\s+(?:putting off|avoiding|postponing)\s+|^i\s+(?:can(?:'|’)?t|cannot)\s+(?:stop\s+)?(?:putting off|start|seem to start)\s+/i);
+ const none=!problemM&&!stuckM&&!avoidM;
+ const reminderM=none&&cut(/^(?:please\s+)?remind me(?:\s+to|\s+about)?\s+/i);
+ const rememberToM=none&&!reminderM&&cut(/^remember to\s+/i);
+ const blockM=none&&!reminderM&&!rememberToM&&cut(/^block\s+(\d+)\s*(minutes?|mins?|hours?|hrs?|h|m)\s+(?:for\s+)?/i);
+ const noteM=none&&!reminderM&&!rememberToM&&!blockM&&cut(/^(?:note(?: that)?|remember(?: that)?)[:,]?\s+/i);
+ const amountRe=/(?:[£$€]\s?)?\b(\d+(?:[.,]\d{1,2})?)\b/;
+ const expenseVerb=/\b(spent|paid|cost|bought)\b/i;
+ const isExpense=none&&!reminderM&&!rememberToM&&!blockM&&!noteM&&expenseVerb.test(rest)&&amountRe.test(rest);
+ if(isExpense){
+  const amt=rest.match(amountRe);
+  const cleaned=rest.replace(amountRe,' ').replace(expenseVerb,' ').replace(/^\s*i\s+/i,' ').replace(/\s+/g,' ').trim().replace(/\s+(?:on|for|at)$/i,'').trim();
+  const onM=cleaned.match(/^.*\b(?:on|for)\s+(.+)$/i);
+  const title=(onM?onM[1]:cleaned.replace(/^(?:on|for|at)\s+/i,'')).trim()||text;
+  const category=/lunch|dinner|breakfast|coffee|groceries|grocery|food|snack|pizza|restaurant|cafe|café/i.test(text)?'Food':/uber|taxi|bus|train|fuel|petrol|parking|transport/i.test(text)?'Transport':'Other';
+  set('expense','Has an amount and a spending word','high');
+  out.values.amount=String(Number(String(amt[1]).replace(',','.')));
+  out.values.category=category;
+  out.values.title=captureTitleCase(title);
+  return out;
+ }
+ if(problemM)set('problem','Starts with "problem:"','high');
+ else if(stuckM)set('problem','Starts with "stuck"','high');
+ else if(avoidM)set('problem','Sounds like something you keep putting off','medium',['task']);
+ else if(reminderM)set('reminder','Starts with "remind me"','high');
+ else if(rememberToM)set('reminder','Starts with "remember to"','medium',['task','note']);
+ else if(blockM){const n=Number(blockM[1]);set('block','Starts with "block" and a duration','high');out.values.duration=String(/^h/i.test(blockM[2])?n*60:n)}
+ else if(noteM)set('note','Starts with "note" or "remember that"','high');
+ if(out.intent!=='note'&&out.intent!=='problem'){
+  const inM=cut(/\bin\s+(\d+)\s*(minutes?|mins?|hours?|hrs?)\b/i);
+  if(inM){const at=new Date(when.getTime()+Number(inM[1])*(/^h/i.test(inM[2])?3600000:60000));out.values.due=captureIso(at);out.values.time=`${String(at.getHours()).padStart(2,'0')}:${String(at.getMinutes()).padStart(2,'0')}`;out.reasons.push(`In ${inM[1]} ${inM[2]}`)}
+  const dM=!inM&&cut(/\b(?:(?:on|by)\s+)?(today|tonight|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i);
+  if(dM){out.values.due=captureDateFromWord(dM[1],when);out.reasons.push(`Date: ${dM[1]}`)}
+  const isoM=!inM&&cut(/\b(\d{4}-\d{2}-\d{2})\b/);
+  if(isoM){out.values.due=isoM[1];out.reasons.push(`Date: ${isoM[1]}`)}
+  const ampmM=!inM&&cut(/\b(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+  const atM=!inM&&!ampmM&&cut(/\bat\s+(\d{1,2})(?::(\d{2}))?\b/i);
+  const tm=ampmM||atM;
+  if(tm){const t=captureTime(tm[1],tm[2],ampmM?tm[3]:null);if(t){out.values.time=t.hhmm;out.reasons.push(`Time: ${t.hhmm}${t.assumed?' (assumed evening, say am to change)':''}`)}}
+ }
+ const changed=rest!==text;
+ const clean=rest.replace(/^(?:to|about|on|at|for|that)\s+/i,'').replace(/\s+(?:on|at|by|for)$/i,'').replace(/\s+/g,' ').trim();
+ if(out.intent==='note'){out.values.content=clean||text;out.values.title=captureTitleCase((clean||text).slice(0,60))}
+ else if(out.intent==='problem'){out.values.title=captureTitleCase(clean)||text}
+ else out.values.title=changed?(captureTitleCase(clean)||text):text;
+ if(!changed&&out.intent==='task')out.reasons.push('No keyword, so saved as a task');
+ return out;
+}
+function captureGather(){
+ const f=document.getElementById('capture-form');if(!f)return null;
+ const keep=Object.assign({title:'',due:'',time:'',amount:'',category:'',duration:'',step:'',why:'',content:''},window.__captureValues||{});
+ ['title','due','time','amount','category','duration','step','why','content'].forEach(n=>{const el=f.elements.namedItem(n);if(el)keep[n]=String(el.value||'').trim()});
+ window.__captureValues=keep;
+ return Object.assign({},keep);
+}
+function focusCaptureTitle(){requestAnimationFrame(()=>{const el=document.getElementById('cap-title');if(el)el.focus()})}
+function captureCardModal(p){
+ p=p||parseCapture('');
+ const k=p.intent||'task';
+ const v=Object.assign({title:'',due:'',time:'',amount:'',category:'',duration:'',step:'',why:'',content:''},p.values||{});
+ if(k==='reminder'&&!v.due)v.due=today;
+ const intents=['task','reminder','expense','note','block','problem'];
+ const sw=intents.map(x=>`<button type="button" class="tab ${x===k?'active':''}" aria-pressed="${x===k}" onclick="captureSwitch('${x}')">${captureLabel(x)}</button>`).join('');
+ const why=(p.reasons||[]).length?`<div class="quiet" style="margin-top:6px">Why: ${esc(p.reasons.join(' · '))}</div>`:'';
+ const alt=(p.alternatives||[]).filter(x=>x!==k).map(x=>`<button type="button" class="btn mini" onclick="captureSwitch('${x}')">Save as ${esc(captureLabel(x).toLowerCase())} instead</button>`).join(' ');
+ const fields=[`<div class="field"><label for="cap-title">Title</label><input id="cap-title" name="title" required maxlength="160" value="${esc(v.title)}" autofocus></div>`];
+ if(k==='task')fields.push(`<div class="field"><label for="cap-due">Due date (optional)</label><input id="cap-due" type="date" name="due" value="${esc(v.due)}"></div>`);
+ if(k==='reminder')fields.push(`<div class="grid grid-2"><div class="field"><label for="cap-due">Date</label><input id="cap-due" type="date" name="due" required value="${esc(v.due)}"></div><div class="field"><label for="cap-time">Time</label><input id="cap-time" type="time" name="time" required value="${esc(v.time)}"></div></div>`);
+ if(k==='expense'){const cats=[...new Set([...state.budgets.map(b=>b.name),'Food','Transport','Other'])];const cur=v.category||'Other';fields.push(`<div class="grid grid-2"><div class="field"><label for="cap-amount">Amount</label><input id="cap-amount" type="number" name="amount" min="0.01" step="0.01" required value="${esc(v.amount)}"></div><div class="field"><label for="cap-cat">Category</label><select id="cap-cat" name="category">${cats.map(c=>`<option ${c===cur?'selected':''}>${esc(c)}</option>`).join('')}</select></div></div>`)}
+ if(k==='note')fields.push(`<div class="field"><label for="cap-content">Note</label><textarea id="cap-content" name="content" required>${esc(v.content||v.title)}</textarea></div>`);
+ if(k==='block'){const dur=Number(v.duration)||45;const time=v.time||openSlot(dur)||'';fields.push(`<div class="grid grid-2"><div class="field"><label for="cap-time">Start</label><input id="cap-time" type="time" name="time" required value="${esc(time)}"></div><div class="field"><label for="cap-dur">Length</label><select id="cap-dur" name="duration">${[15,30,45,60,90].map(n=>`<option value="${n}" ${n===dur?'selected':''}>${n} min</option>`).join('')}</select></div></div>`)}
+ if(k==='problem'){fields.push(`<div class="field"><label for="cap-why">Why it matters (optional)</label><input id="cap-why" name="why" maxlength="200" value="${esc(v.why)}"></div>`);fields.push(`<div class="field"><label for="cap-step">First step</label><input id="cap-step" name="step" required maxlength="160" value="${esc(v.step)}" placeholder="The next small action"></div>`)}
+ return `<div class="modal-inner capture-card"><div class="split"><div><div class="eyebrow">Check before saving</div><h2 id="modal-title" style="margin:4px 0">Save as ${esc(captureLabel(k))}?</h2>${why}</div><button class="btn icon-btn" type="button" onclick="closeModal()" aria-label="Close">×</button></div><div class="tabs" role="group" aria-label="Kind" style="margin-top:14px;flex-wrap:wrap;overflow:visible">${sw}</div><form id="capture-form" class="form" data-intent="${k}" onsubmit="saveCapture(event)" style="margin-top:14px">${fields.join('')}<div id="capture-error" role="alert" class="muted-line" style="min-height:1.2em"></div><div class="form-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" type="submit">Save ${esc(captureLabel(k))}</button></div></form>${alt?`<div class="quiet" style="margin-top:10px">Not sure? ${alt}</div>`:''}</div>`;
+}
+function captureSwitch(k){const v=captureGather()||{};if(k==='note'&&!v.content)v.content=v.title;openModal(captureCardModal,{intent:k,reasons:['Changed by you'],alternatives:[],values:v});focusCaptureTitle()}
+function saveCapture(e){
+ e.preventDefault();
+ const k=e.target.dataset.intent||'task';const v=captureGather();
+ const err=m=>{const el=document.getElementById('capture-error');if(el)el.textContent=m;return false};
+ if(!v||!v.title)return err('Add a title first.');
+ if(k==='reminder'&&(!v.due||!v.time))return err('Reminders need a date and a time.');
+ if(k==='reminder'&&isNaN(new Date(`${v.due}T${v.time}`).getTime()))return err('That date or time is not valid.');
+ if(k==='expense'&&!(Number(v.amount)>0))return err('Enter an amount above zero.');
+ if(k==='note'&&!v.content)return err('Add the note text.');
+ if(k==='block'&&!v.time)return err('Pick a start time for the block.');
+ if(k==='problem'&&!v.step)return err('Name a first step.');
+ captureCreate(k,v);window.__captureValues=null;closeModal();persist();render();toast(`Saved as ${captureLabel(k)}`);
+}
+function captureCreate(k,v){
+ const now=Date.now();
+ if(k==='task'){state.tasks.unshift({id:uid('tsk'),title:v.title.slice(0,160),desc:'',priority:'Medium',energy:'Light',due:v.due||null,status:'Inbox',important:false,urgent:false,scheduled:false,goalId:null,tags:[],timeSpent:0,subtasks:[],images:[],repeat:'none'});state.events.push({type:'TASK_CREATED',at:now});return}
+ if(k==='reminder'){state.reminders.push({id:uid('rem'),title:v.title.slice(0,160),note:'',dueAt:new Date(`${v.due}T${v.time}`).toISOString(),snoozedUntil:null,status:'scheduled',lastNotified:0,createdAt:now});return}
+ if(k==='expense'){const amount=Number(v.amount);const category=v.category||'Other';state.transactions.unshift({id:uid('tx'),title:v.title.slice(0,160),amount,category,date:today});const b=state.budgets.find(x=>x.name===category);if(b)b.spent+=amount;state.events.push({type:'TRANSACTION_CREATED',at:now});return}
+ if(k==='note'){state.notes.unshift({id:uid('note'),title:v.title.slice(0,160),content:v.content.slice(0,4000),tags:[],created:today});state.events.push({type:'NOTE_CREATED',at:now});return}
+ if(k==='block'){state.planner.push({id:uid('p'),title:v.title.slice(0,160),time:v.time,duration:Number(v.duration)||45,type:'focus',taskId:null,fixed:false});state.events.push({type:'PLANNER_CREATED',at:now});return}
+ if(k==='problem'){state.goals.unshift({id:uid('goal'),kind:'problem',status:'active',title:v.title.slice(0,160),why:(v.why||'').slice(0,200),progress:0,lastMovedAt:now,steps:[{id:uid('step'),title:v.step.slice(0,160),type:'task',done:false}]});state.events.push({type:'PROBLEM_CREATED',at:now});window.goalFilter='problems'}
+}
+function quickCapture(e){
+ e.preventDefault();const i=e.target.querySelector('input[name=qc]');const title=String(i.value||'').trim();
+ if(!title){toast('Type something first');return}
+ const p=parseCapture(title);
+ if(p.intent==='task'&&!p.alternatives.length&&!p.values.due&&!p.values.time){state.tasks.unshift({id:uid('tsk'),title,desc:'',priority:'Medium',energy:'Light',due:null,status:'Inbox',important:false,urgent:false,scheduled:false,goalId:null,tags:[],timeSpent:0,subtasks:[],images:[],repeat:'none'});state.events.push({type:'TASK_CREATED',at:Date.now()});persist();render();toast('Captured to Inbox');return}
+ window.__captureValues=null;
+ openModal(captureCardModal,p);focusCaptureTitle();
+}
 function completeTask(id){const t=taskById(id);if(!t)return;t.status='Completed';t.completedAt=Date.now();spawnNextRecurrence(t);dropBlocks(t);if(state.focus.active&&state.focus.taskId===id)stopFocus();closeDrawer();state.events.push({type:'TASK_COMPLETED',entityId:id,at:Date.now()});state.xp+=20;celebrate();persist();render();toast('Done! +20 XP 🎉')}
 function startFocus(id){const t=taskById(id);if(!t)return;if(state.focus.active){if(state.focus.taskId===id){closeDrawer();return setNav('focus')}stopFocus()}closeDrawer();state.focus.active=true;state.focus.paused=false;state.focus.taskId=id;const LEN=(state.focus.len||25)*60;const nowMs=Date.now();state.focus.seconds=LEN;state.focus.initial=LEN;state.focus.startedAt=nowMs;state.focus.endsAt=nowMs+LEN*1000;state.focus.category='Deep Work';state.events.push({type:'FOCUS_STARTED',entityId:id,at:Date.now()});persist();render();setNav('focus')}
 function syncFocusClock(){if(!state.focus.active)return state.focus.seconds;const nowMs=Date.now();if(!state.focus.endsAt&&state.focus.startedAt)state.focus.endsAt=state.focus.startedAt+state.focus.seconds*1000;state.focus.seconds=Math.max(0,Math.ceil(((state.focus.endsAt||nowMs)-nowMs)/1000));return state.focus.seconds}
@@ -2233,7 +2368,7 @@ async function applyEncryptedRestore(){
  }catch(e){toast('Could not restore encrypted backup')}
 }
 
-Object.assign(window,{switchMinimalMode,minimalStartEdit,minimalCancelEdit,minimalSaveEdit,minimalSnooze,minimalSetPinned,minimalPostText,minimalOpenDrawing,minimalCloseDrawing,minimalClearDrawing,minimalPostDrawing,minimalPin,minimalDelete,minimalToggleTheme,splitViewRoute,splitGroupModal,splitSaveGroup,splitDeleteGroup,splitAddPeople,splitRemovePerson,splitExpenseModal,splitPreview,splitSaveExpense,splitDeleteExpense,splitMarkPaid,splitMarkAll,splitUndoPayment,handleMinimalReturnPending,nextDue,quickCapture,restoreFromTrash,purgeFromTrash,undoLastRestore,restoreAutoSnapshot,applyEncryptedRestore,demoState,normalizeWorkspace,load,persist,resetDemo,toast,nav,setNav,formatDay,dateShort,taskById,facts,daysSince,startFreshWorkspace,openUpcoming,setSetting,toggleHideAmounts,setAmbientEffect,setAmbientStrength,setFocusSound,setFocusSoundVolume,toggleFocusSound,dismissRecommendation,openModal,taskModal,activeProblems,problemRuleCandidates,actionForRec,parkProblem,reopenProblem,resolveProblem,promoteTaskToProblem,problemModal,saveProblem,setProblemMovedForTest,setTaskReschedulesForTest,deleteAllLocalData,legalSummaryModal,toggleBetaContinue,
+Object.assign(window,{switchMinimalMode,minimalStartEdit,minimalCancelEdit,minimalSaveEdit,minimalSnooze,minimalSetPinned,minimalPostText,minimalOpenDrawing,minimalCloseDrawing,minimalClearDrawing,minimalPostDrawing,minimalPin,minimalDelete,minimalToggleTheme,splitViewRoute,splitGroupModal,splitSaveGroup,splitDeleteGroup,splitAddPeople,splitRemovePerson,splitExpenseModal,splitPreview,splitSaveExpense,splitDeleteExpense,splitMarkPaid,splitMarkAll,splitUndoPayment,handleMinimalReturnPending,nextDue,quickCapture,restoreFromTrash,purgeFromTrash,undoLastRestore,restoreAutoSnapshot,applyEncryptedRestore,demoState,normalizeWorkspace,load,persist,resetDemo,toast,nav,setNav,formatDay,dateShort,taskById,facts,daysSince,startFreshWorkspace,openUpcoming,setSetting,toggleHideAmounts,setAmbientEffect,setAmbientStrength,setFocusSound,setFocusSoundVolume,toggleFocusSound,dismissRecommendation,parseCapture,captureCardModal,captureSwitch,saveCapture,openModal,taskModal,activeProblems,problemRuleCandidates,actionForRec,parkProblem,reopenProblem,resolveProblem,promoteTaskToProblem,problemModal,saveProblem,setProblemMovedForTest,setTaskReschedulesForTest,deleteAllLocalData,legalSummaryModal,toggleBetaContinue,
   recommendation,actionForRec,completeTask,startFocus,scheduleTask,stopFocus,resumeFocus,pauseFocus,tick,renderFocusTimerOnly,
   openModal,closeModal,openDrawer,closeDrawer,taskModal,saveTask,noteModal,saveNote,expenseModal,saveExpense,decisionModal,openDecision,reconcile,
   createGoalModal,saveGoal,globalCreate,inspect,viewToday,viewWork,viewFocus,viewPlan,viewGoals,executeStep,viewLife,toggleHabit,
