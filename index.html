@@ -679,6 +679,18 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
  .task-card-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px}
  .task-card-actions .btn{min-height:44px;width:100%;justify-content:center}
 }
+
+/* Focus mode overlay */
+.focus-overlay{position:fixed;inset:auto 12px 12px auto;z-index:70;max-width:calc(100vw - 24px)}
+.focus-overlay[hidden]{display:none}
+.focus-overlay-card{width:min(360px,calc(100vw - 24px));padding:18px 20px;border-radius:18px;background:radial-gradient(circle at top right,color-mix(in srgb,var(--accent) 14%,transparent),transparent 55%),#15121d;border:1px solid #34303f;box-shadow:0 18px 48px rgba(0,0,0,.45);display:grid;gap:10px;text-align:center;justify-items:center}
+.focus-overlay-title{margin:0;font-size:17px;line-height:1.3;overflow-wrap:anywhere;max-width:100%}
+.focus-overlay-timer{font-size:clamp(40px,9vw,56px);line-height:1;letter-spacing:-.05em;font-variant-numeric:tabular-nums;color:var(--accent)}
+.focus-overlay-bar{width:min(280px,90%)}
+.focus-overlay-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.focus-overlay-actions .btn{min-height:40px}
+@media (max-width:620px){.focus-overlay{inset:auto 8px 84px 8px}.focus-overlay-card{width:100%}}
+@media (max-width:980px) and (min-width:621px){.focus-overlay{inset:auto 20px 20px auto}}
 </style>
 </head>
 <body>
@@ -1146,15 +1158,42 @@ function quickCapture(e){
  openModal(captureCardModal,p);focusCaptureTitle();
 }
 function completeTask(id){const t=taskById(id);if(!t)return;t.status='Completed';t.completedAt=Date.now();spawnNextRecurrence(t);dropBlocks(t);if(state.focus.active&&state.focus.taskId===id)stopFocus();closeDrawer();state.events.push({type:'TASK_COMPLETED',entityId:id,at:Date.now()});state.xp+=20;celebrate();persist();render();toast('Done! +20 XP 🎉')}
-function startFocus(id){const t=taskById(id);if(!t)return;if(state.focus.active){if(state.focus.taskId===id){closeDrawer();return setNav('focus')}stopFocus()}closeDrawer();state.focus.active=true;state.focus.paused=false;state.focus.taskId=id;const LEN=(state.focus.len||25)*60;const nowMs=Date.now();state.focus.seconds=LEN;state.focus.initial=LEN;state.focus.startedAt=nowMs;state.focus.endsAt=nowMs+LEN*1000;state.focus.category='Deep Work';state.events.push({type:'FOCUS_STARTED',entityId:id,at:Date.now()});persist();render();setNav('focus');if(state.settings.focusSound===CALM_SCORE_TYPE&&!focusSoundPlaying())startFocusSound()}
+/* ===== Focus mode overlay: floating timer card with music toggle, shown outside the Focus page ===== */
+let __focusOverlayHidden=false;
+function focusMusicOn(){return state.settings.focusMusic!==false}
+function focusSessionTitle(){const t=taskById(state.focus.taskId);return t?t.title:'Focus session'}
+function renderFocusOverlay(){
+ let el=document.getElementById('focus-overlay');
+ if(!el){el=document.createElement('div');el.id='focus-overlay';el.className='focus-overlay';el.setAttribute('role','dialog');el.setAttribute('aria-label','Focus mode');document.body.appendChild(el)}
+ const live=state.focus.active||state.focus.paused;
+ el.hidden=!live||__focusOverlayHidden||nav()==='focus';
+ if(!live)return;
+ const initial=state.focus.initial||1500,pct=Math.max(0,Math.min(100,(initial-state.focus.seconds)/initial*100));
+ const on=focusMusicOn();
+ el.innerHTML=`<div class="focus-overlay-card"><div class="eyebrow">Focus mode · ${state.focus.paused?'paused':'running'}</div><h2 class="focus-overlay-title">${esc(focusSessionTitle())}</h2><div id="overlay-timer" class="focus-overlay-timer">${fmtClock(state.focus.seconds)}</div><div class="bar focus-overlay-bar"><i id="overlay-bar" style="width:${pct}%"></i></div><div class="focus-overlay-actions"><button class="btn mini" onclick="toggleFocusPause()">${state.focus.active?'Pause':'Resume'}</button><button class="btn mini" onclick="resetFocusTimer()">Reset</button><button class="btn mini ${on?'primary':''}" aria-pressed="${on}" onclick="toggleFocusMusic()">Music ${on?'on':'off'}</button><button class="btn mini" onclick="hideFocusOverlay()">Close</button></div></div>`;
+}
+function renderFocusOverlayTick(){const el=document.getElementById('overlay-timer');if(!el)return;el.textContent=fmtClock(state.focus.seconds);const b=document.getElementById('overlay-bar');if(b&&state.focus.initial)b.style.width=((state.focus.initial-state.focus.seconds)/state.focus.initial*100)+'%'}
+window.addEventListener('hashchange',()=>renderFocusOverlay());
+function hideFocusOverlay(){__focusOverlayHidden=true;renderFocusOverlay()}
+function toggleFocusPause(){if(state.focus.active)pauseFocus();else if(state.focus.paused)resumeFocus()}
+function resetFocusTimer(){if(!state.focus.active&&!state.focus.paused)return;const LEN=state.focus.initial||(state.focus.len||25)*60;state.focus.seconds=LEN;state.focus.initial=LEN;if(state.focus.active){state.focus.startedAt=Date.now();state.focus.endsAt=state.focus.startedAt+LEN*1000}persist();renderFocusOverlay();renderFocusTimerOnly();toast('Timer reset')}
+async function toggleFocusMusic(){
+ state.settings.focusMusic=!focusMusicOn();persist();
+ if(focusMusicOn()){if(state.focus.active||state.focus.paused){if(!focusSoundPlaying()&&state.focus.active)await startFocusSound(CALM_SCORE_TYPE)}}
+ else if(__focusAudio.type===CALM_SCORE_TYPE)stopFocusSound(true);
+ renderFocusOverlay();
+}
+function openMinimalFocus(){if(state.focus.active||state.focus.paused){__focusOverlayHidden=false;renderFocusOverlay();return}startFreeFocus()}
+function startFreeFocus(){const LEN=(state.focus.len||25)*60,now=Date.now();state.focus.active=true;state.focus.paused=false;state.focus.taskId=null;state.focus.seconds=LEN;state.focus.initial=LEN;state.focus.startedAt=now;state.focus.endsAt=now+LEN*1000;state.focus.category='Deep Work';__focusOverlayHidden=false;persist();render();renderFocusOverlay();if(focusMusicOn()&&!focusSoundPlaying())startFocusSound(CALM_SCORE_TYPE)}
+function startFocus(id){const t=taskById(id);if(!t)return;if(state.focus.active){if(state.focus.taskId===id){closeDrawer();return setNav('focus')}stopFocus()}closeDrawer();state.focus.active=true;state.focus.paused=false;state.focus.taskId=id;const LEN=(state.focus.len||25)*60;const nowMs=Date.now();state.focus.seconds=LEN;state.focus.initial=LEN;state.focus.startedAt=nowMs;state.focus.endsAt=nowMs+LEN*1000;state.focus.category='Deep Work';state.events.push({type:'FOCUS_STARTED',entityId:id,at:Date.now()});persist();__focusOverlayHidden=false;render();setNav('focus');renderFocusOverlay();if(focusMusicOn()&&!focusSoundPlaying())startFocusSound(CALM_SCORE_TYPE)}
 function syncFocusClock(){if(!state.focus.active)return state.focus.seconds;const nowMs=Date.now();if(!state.focus.endsAt&&state.focus.startedAt)state.focus.endsAt=state.focus.startedAt+state.focus.seconds*1000;state.focus.seconds=Math.max(0,Math.ceil(((state.focus.endsAt||nowMs)-nowMs)/1000));return state.focus.seconds}
-function pauseFocus(){if(!state.focus.active)return;syncFocusClock();state.focus.active=false;state.focus.paused=true;state.focus.startedAt=null;state.focus.endsAt=null;state.events.push({type:'FOCUS_PAUSED',entityId:state.focus.taskId,at:Date.now()});persist();render();toast('Focus paused');if(state.settings.focusSound===CALM_SCORE_TYPE)stopFocusSound(true)}
-function resumeFocus(){if(state.focus.active||!state.focus.taskId)return;state.focus.active=true;state.focus.paused=false;state.focus.startedAt=Date.now();state.focus.endsAt=state.focus.startedAt+state.focus.seconds*1000;state.events.push({type:'FOCUS_RESUMED',entityId:state.focus.taskId,at:Date.now()});persist();render();setNav('focus');if(state.settings.focusSound===CALM_SCORE_TYPE&&!focusSoundPlaying())startFocusSound()}
+function pauseFocus(){if(!state.focus.active)return;syncFocusClock();state.focus.active=false;state.focus.paused=true;state.focus.startedAt=null;state.focus.endsAt=null;state.events.push({type:'FOCUS_PAUSED',entityId:state.focus.taskId,at:Date.now()});persist();render();toast('Focus paused');if(__focusAudio.type===CALM_SCORE_TYPE)stopFocusSound(true);renderFocusOverlay()}
+function resumeFocus(){if(state.focus.active||!state.focus.taskId)return;state.focus.active=true;state.focus.paused=false;state.focus.startedAt=Date.now();state.focus.endsAt=state.focus.startedAt+state.focus.seconds*1000;state.events.push({type:'FOCUS_RESUMED',entityId:state.focus.taskId,at:Date.now()});persist();__focusOverlayHidden=false;render();setNav('focus');renderFocusOverlay();if(focusMusicOn()&&!focusSoundPlaying())startFocusSound(CALM_SCORE_TYPE)}
 function scheduleTask(id){const t=taskById(id);if(!t||t.scheduled)return;const at=openSlot(45);if(!at){toast('No open 45-minute window today');return}t.scheduled=true;state.planner.push({id:uid('p'),title:t.title,time:at,duration:45,type:'focus',taskId:id,fixed:false});state.events.push({type:'PLANNER_CREATED',entityId:id,at:Date.now()});closeDrawer();persist();render();toast('Scheduled at '+at)}
-function stopFocus(){if(state.focus.active)syncFocusClock();if(!state.focus.active&&!state.focus.paused)return;const spent=Math.max(0,state.focus.initial-state.focus.seconds);const t=taskById(state.focus.taskId);if(t)t.timeSpent+=(spent/60);state.focus.active=false;state.focus.paused=false;state.focus.seconds=state.focus.initial;state.events.push({type:'FOCUS_COMPLETED',entityId:state.focus.taskId,seconds:spent,at:Date.now()});state.xp+=Math.round(spent/60);persist();render();toast('Focus saved');if(state.settings.focusSound===CALM_SCORE_TYPE)stopFocusSound(true)}
+function stopFocus(){if(state.focus.active)syncFocusClock();if(!state.focus.active&&!state.focus.paused)return;const spent=Math.max(0,state.focus.initial-state.focus.seconds);const t=taskById(state.focus.taskId);if(t)t.timeSpent+=(spent/60);state.focus.active=false;state.focus.paused=false;state.focus.seconds=state.focus.initial;state.events.push({type:'FOCUS_COMPLETED',entityId:state.focus.taskId,seconds:spent,at:Date.now()});state.xp+=Math.round(spent/60);persist();render();toast('Focus saved');if(__focusAudio.type===CALM_SCORE_TYPE)stopFocusSound(true);renderFocusOverlay()}
 let timerHandle=null;
-function tick(){if(isMinimalMode()||window.__minimalSwitching||!state.focus.active)return;syncFocusClock();if(state.focus.seconds===0)stopFocus();else renderFocusTimerOnly()}
-function renderFocusTimerOnly(){const el=document.getElementById('focus-timer');if(el)el.textContent=fmtClock(state.focus.seconds);const b=document.getElementById('focus-bar');if(b)b.style.width=((state.focus.initial-state.focus.seconds)/state.focus.initial*100)+'%';if(state.focus.active)document.title=fmtClock(state.focus.seconds)+' · Focus'}
+function tick(){if(window.__minimalSwitching||!state.focus.active)return;syncFocusClock();if(state.focus.seconds===0)stopFocus();else renderFocusTimerOnly()}
+function renderFocusTimerOnly(){const el=document.getElementById('focus-timer');if(el)el.textContent=fmtClock(state.focus.seconds);const b=document.getElementById('focus-bar');if(b)b.style.width=((state.focus.initial-state.focus.seconds)/state.focus.initial*100)+'%';if(state.focus.active)document.title=fmtClock(state.focus.seconds)+' · Focus';renderFocusOverlayTick()}
 function openModal(view,data,opts){document.getElementById('backdrop').classList.add('open');const m=document.getElementById('modal');m.style.display='block';m.innerHTML=view(data,opts)||'';requestAnimationFrame(()=>m.classList.add('open'));}
 function closeModal(){pendImgs=[];document.getElementById('backdrop').classList.remove('open');const m=document.getElementById('modal');m.style.display='none';m.classList.remove('open','search-sheet')}
 function openDrawer(html){document.getElementById('drawer-content').innerHTML=html;document.getElementById('drawer-backdrop').classList.add('open');document.getElementById('drawer').classList.add('open')}
@@ -1344,8 +1383,8 @@ function startCalmScore(ctx,out){
   while(nextBell<horizon){if(Math.random()<.75)bell(nextBell);nextBell+=2.6+Math.random()*3.2}},1000);
  return{stop(){if(!alive)return;alive=false;clearInterval(timer);try{const now=ctx.currentTime;master.gain.cancelScheduledValues(now);master.gain.setValueAtTime(master.gain.value,now);master.gain.linearRampToValueAtTime(0,now+.6);setTimeout(()=>{try{master.disconnect();padBus.disconnect();verb.disconnect();wet.disconnect()}catch(e){}},1500)}catch(e){}},disconnect(){}};
 }
-async function startFocusSound(){
- const type=AMBIENT_SOUND_TYPES.includes(state.settings.focusSound)?state.settings.focusSound:'Off';if(type==='Off'){toast('Choose a focus sound first');return}
+async function startFocusSound(forced){
+ const type=forced||(AMBIENT_SOUND_TYPES.includes(state.settings.focusSound)?state.settings.focusSound:'Off');if(type==='Off'){toast('Choose a focus sound first');return}
  try{
   const AudioCtx=window.AudioContext||window.webkitAudioContext;if(!AudioCtx){toast('Focus sound is unavailable in this browser');return}
   if(!__focusAudio.ctx)__focusAudio.ctx=new AudioCtx();
@@ -2007,7 +2046,7 @@ function setMinimalDocumentTheme(theme){
  document.body.style.removeProperty('background-color');
  document.body.style.backgroundImage='none';
 }
-function minimalSwitchUI(){return `<div class="minimal-mode-row"><div><div>minimal mode</div><div class="minimal-mode-label">separate local scribbles · normal data stays untouched</div></div><button type="button" class="btn mini" onclick="switchMinimalMode('normal')">switch to normal</button></div>`}
+function minimalSwitchUI(){return `<div class="minimal-mode-row"><div><div>minimal mode</div><div class="minimal-mode-label">separate local scribbles · normal data stays untouched</div></div><button type="button" class="btn mini" onclick="openMinimalFocus()">focus</button> <button type="button" class="btn mini" onclick="switchMinimalMode('normal')">switch to normal</button></div>`}
 function minTopOrder(data){return data.items.reduce((m,i)=>Math.min(m,Number.isFinite(i.order)?i.order:0),0)-1}
 function minimalItemHtml(item){
  const editing=__minimalEditingId===item.id,color=minColor(item.color),drawing=item.kind==='drawing',timed=item.expiresAt!==null;
@@ -2417,7 +2456,7 @@ Object.assign(window,{switchMinimalMode,minimalStartEdit,minimalCancelEdit,minim
   createGoalModal,saveGoal,globalCreate,inspect,viewToday,viewWork,viewFocus,viewPlan,viewGoals,executeStep,viewLife,toggleHabit,
   logWorkout,viewMoney,viewMemory,convertNote,vaultDrawer,viewVault,toggleLock,backupWorkspace,createCheckpoint,compareCheckpoint,
   fileRestore,shiftCalendar,resetCalendar,viewProgress,viewRules,viewSettings,downloadState,viewLegal,viewCalendar,viewReminders,viewTimer,startStandaloneTimer,
-  stopStandalone,resetStandaloneTimer,setStandaloneMinutes,copyTodaySummary,snoozeReminderTomorrow,exportTasksIcs,viewConvert,setConvert,setConvertValue,swapConvert,viewPrompts,generatePrompt,copyPrompt,openDecisionReview,saveDecisionReview,repeatLastWorkout,startStopwatch,pauseStopwatch,lapStopwatch,resetStopwatch,editIncomeBaseline,renameBudget,removeBudget,editItem,addHabit,renameHabit,removeHabit,delWorkout,renameWorkout,renameGoal,removeGoal,setAccent,setWall,pickWall,setAmbientEffect,setAmbientStrength,setAmbientOpacity,showImg,hideImg,pickImgs,dropImgs,rmImg,addSub,toggleSub,editSub,delSub,addItem,toggleItem,delItem,addBudget,setPassphrase,unlockVault,restoreCheckpoint,acceptBeta,showBeta,setFocusLen,deleteTask,deleteNote,editNote,doneStep,executeStep,removeBlock,restorePreview,applyRestore,openSlot,dropBlocks,fmtClock,recommendationRaw,search,globalSearch,drawSearchResults,searchOpen,navItems,renderShell,moreIndex,render,bootAstral,exportRecoveryNoImages,morningWizard,saveMorningWizard,weeklyReviewModal,saveReview,addReminder,addQuickReminder,saveReminder,editReminder,snoozeReminder,doneReminder,deleteReminder,requestNotifications,installPWA,setPassphrase,unlockVault,toggleLock,recoveryImport,backupWorkspace,encryptedBackup,editWorkout,saveWorkout,workoutModal,logWorkout,viewLife,viewProgress,viewVault,viewReminders,viewSettings});
+  stopStandalone,resetStandaloneTimer,setStandaloneMinutes,copyTodaySummary,snoozeReminderTomorrow,exportTasksIcs,viewConvert,setConvert,setConvertValue,swapConvert,viewPrompts,generatePrompt,copyPrompt,openDecisionReview,saveDecisionReview,repeatLastWorkout,startStopwatch,pauseStopwatch,lapStopwatch,resetStopwatch,editIncomeBaseline,renameBudget,removeBudget,editItem,addHabit,renameHabit,removeHabit,delWorkout,renameWorkout,renameGoal,removeGoal,setAccent,setWall,pickWall,setAmbientEffect,setAmbientStrength,setAmbientOpacity,showImg,hideImg,pickImgs,dropImgs,rmImg,addSub,toggleSub,editSub,delSub,addItem,toggleItem,delItem,addBudget,setPassphrase,unlockVault,restoreCheckpoint,acceptBeta,showBeta,setFocusLen,toggleFocusPause,resetFocusTimer,toggleFocusMusic,hideFocusOverlay,openMinimalFocus,deleteTask,deleteNote,editNote,doneStep,executeStep,removeBlock,restorePreview,applyRestore,openSlot,dropBlocks,fmtClock,recommendationRaw,search,globalSearch,drawSearchResults,searchOpen,navItems,renderShell,moreIndex,render,bootAstral,exportRecoveryNoImages,morningWizard,saveMorningWizard,weeklyReviewModal,saveReview,addReminder,addQuickReminder,saveReminder,editReminder,snoozeReminder,doneReminder,deleteReminder,requestNotifications,installPWA,setPassphrase,unlockVault,toggleLock,recoveryImport,backupWorkspace,encryptedBackup,editWorkout,saveWorkout,workoutModal,logWorkout,viewLife,viewProgress,viewVault,viewReminders,viewSettings});
 
 setInterval(tickClock,1000);bootAstral();
 })();
