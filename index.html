@@ -662,6 +662,23 @@ html[data-palette] .chip{background:var(--bg);border-color:var(--line);color:var
 html[data-palette] .field input,html[data-palette] .field textarea,html[data-palette] .field select,html[data-palette] .search input,html[data-palette] input[type=search]{background:var(--bg);color:var(--text);border-color:var(--line)}
 html[data-palette] .mobile-nav{background:var(--panel);border-color:var(--line)}
 html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table td{border-color:var(--line)}
+
+/* Work list rhythm: clear gaps between cards, touch-sized actions on phones */
+.list:has(> .task-card){gap:12px;padding:12px}
+.task-card{padding:18px 20px;gap:14px;border-radius:16px}
+.task-card-main{gap:10px}
+.task-card .row-meta{margin-top:0;line-height:1.5}
+.task-card .chips{margin-top:0!important;gap:8px}
+.task-card-actions{gap:8px;padding-top:2px}
+.task-card-actions .btn{min-height:40px;padding:9px 14px;border-radius:12px}
+@media (min-width:621px) and (max-width:980px){.task-card{padding:20px 22px}}
+@media (max-width:620px){
+ .list:has(> .task-card){gap:12px;padding:10px}
+ .task-card{padding:16px 16px 14px;gap:14px}
+ .task-card-title{font-size:16px;line-height:1.45}
+ .task-card-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px}
+ .task-card-actions .btn{min-height:44px;width:100%;justify-content:center}
+}
 </style>
 </head>
 <body>
@@ -1129,12 +1146,12 @@ function quickCapture(e){
  openModal(captureCardModal,p);focusCaptureTitle();
 }
 function completeTask(id){const t=taskById(id);if(!t)return;t.status='Completed';t.completedAt=Date.now();spawnNextRecurrence(t);dropBlocks(t);if(state.focus.active&&state.focus.taskId===id)stopFocus();closeDrawer();state.events.push({type:'TASK_COMPLETED',entityId:id,at:Date.now()});state.xp+=20;celebrate();persist();render();toast('Done! +20 XP 🎉')}
-function startFocus(id){const t=taskById(id);if(!t)return;if(state.focus.active){if(state.focus.taskId===id){closeDrawer();return setNav('focus')}stopFocus()}closeDrawer();state.focus.active=true;state.focus.paused=false;state.focus.taskId=id;const LEN=(state.focus.len||25)*60;const nowMs=Date.now();state.focus.seconds=LEN;state.focus.initial=LEN;state.focus.startedAt=nowMs;state.focus.endsAt=nowMs+LEN*1000;state.focus.category='Deep Work';state.events.push({type:'FOCUS_STARTED',entityId:id,at:Date.now()});persist();render();setNav('focus')}
+function startFocus(id){const t=taskById(id);if(!t)return;if(state.focus.active){if(state.focus.taskId===id){closeDrawer();return setNav('focus')}stopFocus()}closeDrawer();state.focus.active=true;state.focus.paused=false;state.focus.taskId=id;const LEN=(state.focus.len||25)*60;const nowMs=Date.now();state.focus.seconds=LEN;state.focus.initial=LEN;state.focus.startedAt=nowMs;state.focus.endsAt=nowMs+LEN*1000;state.focus.category='Deep Work';state.events.push({type:'FOCUS_STARTED',entityId:id,at:Date.now()});persist();render();setNav('focus');if(state.settings.focusSound===CALM_SCORE_TYPE&&!focusSoundPlaying())startFocusSound()}
 function syncFocusClock(){if(!state.focus.active)return state.focus.seconds;const nowMs=Date.now();if(!state.focus.endsAt&&state.focus.startedAt)state.focus.endsAt=state.focus.startedAt+state.focus.seconds*1000;state.focus.seconds=Math.max(0,Math.ceil(((state.focus.endsAt||nowMs)-nowMs)/1000));return state.focus.seconds}
-function pauseFocus(){if(!state.focus.active)return;syncFocusClock();state.focus.active=false;state.focus.paused=true;state.focus.startedAt=null;state.focus.endsAt=null;state.events.push({type:'FOCUS_PAUSED',entityId:state.focus.taskId,at:Date.now()});persist();render();toast('Focus paused')}
-function resumeFocus(){if(state.focus.active||!state.focus.taskId)return;state.focus.active=true;state.focus.paused=false;state.focus.startedAt=Date.now();state.focus.endsAt=state.focus.startedAt+state.focus.seconds*1000;state.events.push({type:'FOCUS_RESUMED',entityId:state.focus.taskId,at:Date.now()});persist();render();setNav('focus')}
+function pauseFocus(){if(!state.focus.active)return;syncFocusClock();state.focus.active=false;state.focus.paused=true;state.focus.startedAt=null;state.focus.endsAt=null;state.events.push({type:'FOCUS_PAUSED',entityId:state.focus.taskId,at:Date.now()});persist();render();toast('Focus paused');if(state.settings.focusSound===CALM_SCORE_TYPE)stopFocusSound(true)}
+function resumeFocus(){if(state.focus.active||!state.focus.taskId)return;state.focus.active=true;state.focus.paused=false;state.focus.startedAt=Date.now();state.focus.endsAt=state.focus.startedAt+state.focus.seconds*1000;state.events.push({type:'FOCUS_RESUMED',entityId:state.focus.taskId,at:Date.now()});persist();render();setNav('focus');if(state.settings.focusSound===CALM_SCORE_TYPE&&!focusSoundPlaying())startFocusSound()}
 function scheduleTask(id){const t=taskById(id);if(!t||t.scheduled)return;const at=openSlot(45);if(!at){toast('No open 45-minute window today');return}t.scheduled=true;state.planner.push({id:uid('p'),title:t.title,time:at,duration:45,type:'focus',taskId:id,fixed:false});state.events.push({type:'PLANNER_CREATED',entityId:id,at:Date.now()});closeDrawer();persist();render();toast('Scheduled at '+at)}
-function stopFocus(){if(state.focus.active)syncFocusClock();if(!state.focus.active&&!state.focus.paused)return;const spent=Math.max(0,state.focus.initial-state.focus.seconds);const t=taskById(state.focus.taskId);if(t)t.timeSpent+=(spent/60);state.focus.active=false;state.focus.paused=false;state.focus.seconds=state.focus.initial;state.events.push({type:'FOCUS_COMPLETED',entityId:state.focus.taskId,seconds:spent,at:Date.now()});state.xp+=Math.round(spent/60);persist();render();toast('Focus saved')}
+function stopFocus(){if(state.focus.active)syncFocusClock();if(!state.focus.active&&!state.focus.paused)return;const spent=Math.max(0,state.focus.initial-state.focus.seconds);const t=taskById(state.focus.taskId);if(t)t.timeSpent+=(spent/60);state.focus.active=false;state.focus.paused=false;state.focus.seconds=state.focus.initial;state.events.push({type:'FOCUS_COMPLETED',entityId:state.focus.taskId,seconds:spent,at:Date.now()});state.xp+=Math.round(spent/60);persist();render();toast('Focus saved');if(state.settings.focusSound===CALM_SCORE_TYPE)stopFocusSound(true)}
 let timerHandle=null;
 function tick(){if(isMinimalMode()||window.__minimalSwitching||!state.focus.active)return;syncFocusClock();if(state.focus.seconds===0)stopFocus();else renderFocusTimerOnly()}
 function renderFocusTimerOnly(){const el=document.getElementById('focus-timer');if(el)el.textContent=fmtClock(state.focus.seconds);const b=document.getElementById('focus-bar');if(b)b.style.width=((state.focus.initial-state.focus.seconds)/state.focus.initial*100)+'%';if(state.focus.active)document.title=fmtClock(state.focus.seconds)+' · Focus'}
@@ -1287,7 +1304,7 @@ window.addEventListener('orientationchange',()=>setTimeout(ambientSetup,250));
 window.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(__ambientRaf);__ambientRaf=0;stopFocusSound()}else ambientSetup()});
 
 /* ===== Local concentration noise ===== */
-const AMBIENT_SOUND_TYPES=['Off','White noise','Pink noise','Brown noise'];
+const AMBIENT_SOUND_TYPES=['Off','White noise','Pink noise','Brown noise','Calm score'];
 let __focusAudio={ctx:null,gain:null,source:null,playing:false,type:'Off'};
 function focusSoundPlaying(){return !!__focusAudio.playing}
 function makeNoiseBuffer(ctx,type,seconds=3){
@@ -1300,6 +1317,33 @@ function makeNoiseBuffer(ctx,type,seconds=3){
  }
  return buffer;
 }
+const CALM_SCORE_TYPE='Calm score';
+function makeReverbImpulse(ctx,seconds,decay){const len=Math.max(1,Math.floor(ctx.sampleRate*seconds)),buffer=ctx.createBuffer(2,len,ctx.sampleRate);for(let c=0;c<2;c++){const d=buffer.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay)}return buffer}
+function startNoise(ctx,out,type){const source=ctx.createBufferSource();source.buffer=makeNoiseBuffer(ctx,type,3);source.loop=true;source.connect(out);source.start();return source}
+/* Original procedural score: slow minor-key pads and sparse bell notes washed in reverb. No recorded or copied music is used. */
+function startCalmScore(ctx,out){
+ const mtof=m=>440*Math.pow(2,(m-69)/12),t0=ctx.currentTime,CHORD_LEN=10;
+ const master=ctx.createGain();master.gain.setValueAtTime(0,t0);master.gain.linearRampToValueAtTime(1,t0+4);master.connect(out);
+ const verb=ctx.createConvolver();verb.buffer=makeReverbImpulse(ctx,7,2.6);const wet=ctx.createGain();wet.gain.value=.7;master.connect(verb);verb.connect(wet);wet.connect(out);
+ const padBus=ctx.createBiquadFilter();padBus.type='lowpass';padBus.frequency.value=1100;padBus.Q.value=.2;padBus.connect(master);
+ const chords=[[57,60,64],[53,57,60],[55,59,62],[52,55,59]],bellNotes=[69,72,74,76,79,81,84];
+ let chordIndex=0,nextChord=t0+1,nextBell=t0+2.5,alive=true;
+ function pad(t,chord){chord.forEach(m=>{[-5,5].forEach(cents=>{
+  const o=ctx.createOscillator();o.type='triangle';o.frequency.value=mtof(m);o.detune.value=cents;
+  const g=ctx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.06,t+4);g.gain.setValueAtTime(.06,t+CHORD_LEN-1.5);g.gain.linearRampToValueAtTime(0,t+CHORD_LEN+3);
+  o.connect(g);g.connect(padBus);o.start(t);o.stop(t+CHORD_LEN+3.2);
+ })})}
+ function bell(t){const m=bellNotes[Math.floor(Math.random()*bellNotes.length)];
+  const o=ctx.createOscillator();o.type='sine';o.frequency.value=mtof(m);
+  const o2=ctx.createOscillator();o2.type='sine';o2.frequency.value=mtof(m)*2.01;
+  const g=ctx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.4,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+4.5);
+  const g2=ctx.createGain();g2.gain.value=.12;o.connect(g);o2.connect(g2);g2.connect(g);g.connect(master);
+  o.start(t);o2.start(t);o.stop(t+4.6);o2.stop(t+4.6);}
+ const timer=setInterval(()=>{if(!alive)return;const horizon=ctx.currentTime+6;
+  while(nextChord<horizon){pad(nextChord,chords[chordIndex%chords.length]);chordIndex++;nextChord+=CHORD_LEN}
+  while(nextBell<horizon){if(Math.random()<.75)bell(nextBell);nextBell+=2.6+Math.random()*3.2}},1000);
+ return{stop(){if(!alive)return;alive=false;clearInterval(timer);try{const now=ctx.currentTime;master.gain.cancelScheduledValues(now);master.gain.setValueAtTime(master.gain.value,now);master.gain.linearRampToValueAtTime(0,now+.6);setTimeout(()=>{try{master.disconnect();padBus.disconnect();verb.disconnect();wet.disconnect()}catch(e){}},1500)}catch(e){}},disconnect(){}};
+}
 async function startFocusSound(){
  const type=AMBIENT_SOUND_TYPES.includes(state.settings.focusSound)?state.settings.focusSound:'Off';if(type==='Off'){toast('Choose a focus sound first');return}
  try{
@@ -1307,9 +1351,8 @@ async function startFocusSound(){
   if(!__focusAudio.ctx)__focusAudio.ctx=new AudioCtx();
   const ctx=__focusAudio.ctx;if(ctx.state==='suspended')await ctx.resume();
   stopFocusSound(true);
-  const source=ctx.createBufferSource();source.buffer=makeNoiseBuffer(ctx,type,3);source.loop=true;
   const gain=ctx.createGain();const target=Math.max(.001,Math.min(.25,Number(state.settings.focusSoundVolume||10)/100));const now=ctx.currentTime;gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(target,now+0.03);
-  source.connect(gain);gain.connect(ctx.destination);source.start();__focusAudio.source=source;__focusAudio.gain=gain;__focusAudio.playing=true;__focusAudio.type=type;render();toast(type+' started');
+  gain.connect(ctx.destination);const source=type===CALM_SCORE_TYPE?startCalmScore(ctx,gain):startNoise(ctx,gain,type);__focusAudio.source=source;__focusAudio.gain=gain;__focusAudio.playing=true;__focusAudio.type=type;render();toast(type+' started');
  }catch(e){__focusAudio.playing=false;toast('Could not start focus sound')}
 }
 function stopFocusSound(silent=false){const src=__focusAudio.source,gain=__focusAudio.gain,ctx=__focusAudio.ctx;if(gain&&ctx){try{const now=ctx.currentTime;gain.gain.cancelScheduledValues(now);gain.gain.setValueAtTime(gain.gain.value,now);gain.gain.linearRampToValueAtTime(0,now+0.03)}catch(e){}}if(src){try{setTimeout(()=>{try{src.stop()}catch(e){}try{src.disconnect()}catch(e){}},40)}catch(e){try{src.stop()}catch(e){}try{src.disconnect()}catch(e){}}}__focusAudio.source=null;__focusAudio.gain=null;__focusAudio.playing=false;if(!silent&&document.querySelector('.focus-sound-controls'))render()}
