@@ -1179,18 +1179,18 @@ function toggleFocusPause(){if(state.focus.active)pauseFocus();else if(state.foc
 function resetFocusTimer(){if(!state.focus.active&&!state.focus.paused)return;const LEN=state.focus.initial||(state.focus.len||25)*60;state.focus.seconds=LEN;state.focus.initial=LEN;if(state.focus.active){state.focus.startedAt=Date.now();state.focus.endsAt=state.focus.startedAt+LEN*1000}persist();renderFocusOverlay();renderFocusTimerOnly();toast('Timer reset')}
 async function toggleFocusMusic(){
  state.settings.focusMusic=!focusMusicOn();persist();
- if(focusMusicOn()){if(state.focus.active||state.focus.paused){if(!focusSoundPlaying()&&state.focus.active)await startFocusSound(CALM_SCORE_TYPE)}}
- else if(__focusAudio.type===CALM_SCORE_TYPE)stopFocusSound(true);
+ if(focusMusicOn()){if(state.focus.active||state.focus.paused){if(!focusSoundPlaying()&&state.focus.active)await startFocusSound(focusMusicStyle())}}
+ else if(CALM_TYPES.includes(__focusAudio.type))stopFocusSound(true);
  renderFocusOverlay();
 }
 function openMinimalFocus(){if(state.focus.active||state.focus.paused){__focusOverlayHidden=false;renderFocusOverlay();return}startFreeFocus()}
-function startFreeFocus(){const LEN=(state.focus.len||25)*60,now=Date.now();state.focus.active=true;state.focus.paused=false;state.focus.taskId=null;state.focus.seconds=LEN;state.focus.initial=LEN;state.focus.startedAt=now;state.focus.endsAt=now+LEN*1000;state.focus.category='Deep Work';__focusOverlayHidden=false;persist();render();renderFocusOverlay();if(focusMusicOn()&&!focusSoundPlaying())startFocusSound(CALM_SCORE_TYPE)}
-function startFocus(id){const t=taskById(id);if(!t)return;if(state.focus.active){if(state.focus.taskId===id){closeDrawer();return setNav('focus')}stopFocus()}closeDrawer();state.focus.active=true;state.focus.paused=false;state.focus.taskId=id;const LEN=(state.focus.len||25)*60;const nowMs=Date.now();state.focus.seconds=LEN;state.focus.initial=LEN;state.focus.startedAt=nowMs;state.focus.endsAt=nowMs+LEN*1000;state.focus.category='Deep Work';state.events.push({type:'FOCUS_STARTED',entityId:id,at:Date.now()});persist();__focusOverlayHidden=false;render();setNav('focus');renderFocusOverlay();if(focusMusicOn()&&!focusSoundPlaying())startFocusSound(CALM_SCORE_TYPE)}
+function startFreeFocus(){const LEN=(state.focus.len||25)*60,now=Date.now();state.focus.active=true;state.focus.paused=false;state.focus.taskId=null;state.focus.seconds=LEN;state.focus.initial=LEN;state.focus.startedAt=now;state.focus.endsAt=now+LEN*1000;state.focus.category='Deep Work';__focusOverlayHidden=false;persist();render();renderFocusOverlay();if(focusMusicOn()&&!focusSoundPlaying())startFocusSound(focusMusicStyle())}
+function startFocus(id){const t=taskById(id);if(!t)return;if(state.focus.active){if(state.focus.taskId===id){closeDrawer();return setNav('focus')}stopFocus()}closeDrawer();state.focus.active=true;state.focus.paused=false;state.focus.taskId=id;const LEN=(state.focus.len||25)*60;const nowMs=Date.now();state.focus.seconds=LEN;state.focus.initial=LEN;state.focus.startedAt=nowMs;state.focus.endsAt=nowMs+LEN*1000;state.focus.category='Deep Work';state.events.push({type:'FOCUS_STARTED',entityId:id,at:Date.now()});persist();__focusOverlayHidden=false;render();setNav('focus');renderFocusOverlay();if(focusMusicOn()&&!focusSoundPlaying())startFocusSound(focusMusicStyle())}
 function syncFocusClock(){if(!state.focus.active)return state.focus.seconds;const nowMs=Date.now();if(!state.focus.endsAt&&state.focus.startedAt)state.focus.endsAt=state.focus.startedAt+state.focus.seconds*1000;state.focus.seconds=Math.max(0,Math.ceil(((state.focus.endsAt||nowMs)-nowMs)/1000));return state.focus.seconds}
-function pauseFocus(){if(!state.focus.active)return;syncFocusClock();state.focus.active=false;state.focus.paused=true;state.focus.startedAt=null;state.focus.endsAt=null;state.events.push({type:'FOCUS_PAUSED',entityId:state.focus.taskId,at:Date.now()});persist();render();toast('Focus paused');if(__focusAudio.type===CALM_SCORE_TYPE)stopFocusSound(true);renderFocusOverlay()}
-function resumeFocus(){if(state.focus.active||!state.focus.taskId)return;state.focus.active=true;state.focus.paused=false;state.focus.startedAt=Date.now();state.focus.endsAt=state.focus.startedAt+state.focus.seconds*1000;state.events.push({type:'FOCUS_RESUMED',entityId:state.focus.taskId,at:Date.now()});persist();__focusOverlayHidden=false;render();setNav('focus');renderFocusOverlay();if(focusMusicOn()&&!focusSoundPlaying())startFocusSound(CALM_SCORE_TYPE)}
+function pauseFocus(){if(!state.focus.active)return;syncFocusClock();state.focus.active=false;state.focus.paused=true;state.focus.startedAt=null;state.focus.endsAt=null;state.events.push({type:'FOCUS_PAUSED',entityId:state.focus.taskId,at:Date.now()});persist();render();toast('Focus paused');if(CALM_TYPES.includes(__focusAudio.type))stopFocusSound(true);renderFocusOverlay()}
+function resumeFocus(){if(state.focus.active||!state.focus.taskId)return;state.focus.active=true;state.focus.paused=false;state.focus.startedAt=Date.now();state.focus.endsAt=state.focus.startedAt+state.focus.seconds*1000;state.events.push({type:'FOCUS_RESUMED',entityId:state.focus.taskId,at:Date.now()});persist();__focusOverlayHidden=false;render();setNav('focus');renderFocusOverlay();if(focusMusicOn()&&!focusSoundPlaying())startFocusSound(focusMusicStyle())}
 function scheduleTask(id){const t=taskById(id);if(!t||t.scheduled)return;const at=openSlot(45);if(!at){toast('No open 45-minute window today');return}t.scheduled=true;state.planner.push({id:uid('p'),title:t.title,time:at,duration:45,type:'focus',taskId:id,fixed:false});state.events.push({type:'PLANNER_CREATED',entityId:id,at:Date.now()});closeDrawer();persist();render();toast('Scheduled at '+at)}
-function stopFocus(){if(state.focus.active)syncFocusClock();if(!state.focus.active&&!state.focus.paused)return;const spent=Math.max(0,state.focus.initial-state.focus.seconds);const t=taskById(state.focus.taskId);if(t)t.timeSpent+=(spent/60);state.focus.active=false;state.focus.paused=false;state.focus.seconds=state.focus.initial;state.events.push({type:'FOCUS_COMPLETED',entityId:state.focus.taskId,seconds:spent,at:Date.now()});state.xp+=Math.round(spent/60);persist();render();toast('Focus saved');if(__focusAudio.type===CALM_SCORE_TYPE)stopFocusSound(true);renderFocusOverlay()}
+function stopFocus(){if(state.focus.active)syncFocusClock();if(!state.focus.active&&!state.focus.paused)return;const spent=Math.max(0,state.focus.initial-state.focus.seconds);const t=taskById(state.focus.taskId);if(t)t.timeSpent+=(spent/60);state.focus.active=false;state.focus.paused=false;state.focus.seconds=state.focus.initial;state.events.push({type:'FOCUS_COMPLETED',entityId:state.focus.taskId,seconds:spent,at:Date.now()});state.xp+=Math.round(spent/60);persist();render();toast('Focus saved');if(CALM_TYPES.includes(__focusAudio.type))stopFocusSound(true);renderFocusOverlay()}
 let timerHandle=null;
 function tick(){if(window.__minimalSwitching||!state.focus.active)return;syncFocusClock();if(state.focus.seconds===0)stopFocus();else renderFocusTimerOnly()}
 function renderFocusTimerOnly(){const el=document.getElementById('focus-timer');if(el)el.textContent=fmtClock(state.focus.seconds);const b=document.getElementById('focus-bar');if(b)b.style.width=((state.focus.initial-state.focus.seconds)/state.focus.initial*100)+'%';if(state.focus.active)document.title=fmtClock(state.focus.seconds)+' · Focus';renderFocusOverlayTick()}
@@ -1343,7 +1343,7 @@ window.addEventListener('orientationchange',()=>setTimeout(ambientSetup,250));
 window.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(__ambientRaf);__ambientRaf=0;stopFocusSound()}else ambientSetup()});
 
 /* ===== Local concentration noise ===== */
-const AMBIENT_SOUND_TYPES=['Off','White noise','Pink noise','Brown noise','Calm score'];
+const AMBIENT_SOUND_TYPES=['Off','White noise','Pink noise','Brown noise','Calm score','Dusk drone','Glass bells','Rain & pads'];
 let __focusAudio={ctx:null,gain:null,source:null,playing:false,type:'Off'};
 function focusSoundPlaying(){return !!__focusAudio.playing}
 function makeNoiseBuffer(ctx,type,seconds=3){
@@ -1359,29 +1359,39 @@ function makeNoiseBuffer(ctx,type,seconds=3){
 const CALM_SCORE_TYPE='Calm score';
 function makeReverbImpulse(ctx,seconds,decay){const len=Math.max(1,Math.floor(ctx.sampleRate*seconds)),buffer=ctx.createBuffer(2,len,ctx.sampleRate);for(let c=0;c<2;c++){const d=buffer.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay)}return buffer}
 function startNoise(ctx,out,type){const source=ctx.createBufferSource();source.buffer=makeNoiseBuffer(ctx,type,3);source.loop=true;source.connect(out);source.start();return source}
-/* Original procedural score: slow minor-key pads and sparse bell notes washed in reverb. No recorded or copied music is used. */
-function startCalmScore(ctx,out){
- const mtof=m=>440*Math.pow(2,(m-69)/12),t0=ctx.currentTime,CHORD_LEN=10;
+const CALM_PRESETS={
+ 'Calm score':{chords:[[57,60,64],[53,57,60],[55,59,62],[52,55,59]],chordLen:10,padGain:.06,cutoff:1100,bellProb:.75,gap:[2.6,3.2],bells:[69,72,74,76,79,81,84],rain:false},
+ 'Dusk drone':{chords:[[45,52,57],[41,48,53],[43,50,55],[40,47,52]],chordLen:14,padGain:.075,cutoff:650,bellProb:.35,gap:[4,6],bells:[69,72,76,79],rain:false},
+ 'Glass bells':{chords:[[62,65,69],[58,62,65],[60,64,67],[57,60,64]],chordLen:9,padGain:.035,cutoff:1800,bellProb:.95,gap:[1.4,2.4],bells:[74,77,79,81,84,86,89],rain:false},
+ 'Rain & pads':{chords:[[57,60,64],[53,57,60],[55,59,62],[52,55,59]],chordLen:10,padGain:.06,cutoff:1000,bellProb:.5,gap:[3,4.5],bells:[69,72,74,76,79,81,84],rain:true}
+};
+const CALM_TYPES=Object.keys(CALM_PRESETS);
+function focusMusicStyle(){const s=state.settings.focusSound;return CALM_TYPES.includes(s)?s:CALM_SCORE_TYPE}
+/* Original procedural scores: slow minor-key pads and sparse bell notes washed in reverb. No recorded or copied music is used. */
+function startCalmScore(ctx,out,type=CALM_SCORE_TYPE){
+ const P=CALM_PRESETS[type]||CALM_PRESETS[CALM_SCORE_TYPE];
+ const mtof=m=>440*Math.pow(2,(m-69)/12),t0=ctx.currentTime,CHORD_LEN=P.chordLen;
  const master=ctx.createGain();master.gain.setValueAtTime(0,t0);master.gain.linearRampToValueAtTime(1,t0+4);master.connect(out);
  const verb=ctx.createConvolver();verb.buffer=makeReverbImpulse(ctx,7,2.6);const wet=ctx.createGain();wet.gain.value=.7;master.connect(verb);verb.connect(wet);wet.connect(out);
- const padBus=ctx.createBiquadFilter();padBus.type='lowpass';padBus.frequency.value=1100;padBus.Q.value=.2;padBus.connect(master);
- const chords=[[57,60,64],[53,57,60],[55,59,62],[52,55,59]],bellNotes=[69,72,74,76,79,81,84];
+ const padBus=ctx.createBiquadFilter();padBus.type='lowpass';padBus.frequency.value=P.cutoff;padBus.Q.value=.2;padBus.connect(master);
+ let rainSrc=null;
+ if(P.rain){rainSrc=ctx.createBufferSource();rainSrc.buffer=makeNoiseBuffer(ctx,'Brown noise',3);rainSrc.loop=true;const rl=ctx.createBiquadFilter();rl.type='lowpass';rl.frequency.value=1400;const rg=ctx.createGain();rg.gain.value=.5;rainSrc.connect(rl);rl.connect(rg);rg.connect(master);rainSrc.start()}
  let chordIndex=0,nextChord=t0+1,nextBell=t0+2.5,alive=true;
  function pad(t,chord){chord.forEach(m=>{[-5,5].forEach(cents=>{
   const o=ctx.createOscillator();o.type='triangle';o.frequency.value=mtof(m);o.detune.value=cents;
-  const g=ctx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.06,t+4);g.gain.setValueAtTime(.06,t+CHORD_LEN-1.5);g.gain.linearRampToValueAtTime(0,t+CHORD_LEN+3);
+  const g=ctx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(P.padGain,t+4);g.gain.setValueAtTime(P.padGain,t+CHORD_LEN-1.5);g.gain.linearRampToValueAtTime(0,t+CHORD_LEN+3);
   o.connect(g);g.connect(padBus);o.start(t);o.stop(t+CHORD_LEN+3.2);
  })})}
- function bell(t){const m=bellNotes[Math.floor(Math.random()*bellNotes.length)];
+ function bell(t){const m=P.bells[Math.floor(Math.random()*P.bells.length)];
   const o=ctx.createOscillator();o.type='sine';o.frequency.value=mtof(m);
   const o2=ctx.createOscillator();o2.type='sine';o2.frequency.value=mtof(m)*2.01;
   const g=ctx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.4,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+4.5);
   const g2=ctx.createGain();g2.gain.value=.12;o.connect(g);o2.connect(g2);g2.connect(g);g.connect(master);
   o.start(t);o2.start(t);o.stop(t+4.6);o2.stop(t+4.6);}
  const timer=setInterval(()=>{if(!alive)return;const horizon=ctx.currentTime+6;
-  while(nextChord<horizon){pad(nextChord,chords[chordIndex%chords.length]);chordIndex++;nextChord+=CHORD_LEN}
-  while(nextBell<horizon){if(Math.random()<.75)bell(nextBell);nextBell+=2.6+Math.random()*3.2}},1000);
- return{stop(){if(!alive)return;alive=false;clearInterval(timer);try{const now=ctx.currentTime;master.gain.cancelScheduledValues(now);master.gain.setValueAtTime(master.gain.value,now);master.gain.linearRampToValueAtTime(0,now+.6);setTimeout(()=>{try{master.disconnect();padBus.disconnect();verb.disconnect();wet.disconnect()}catch(e){}},1500)}catch(e){}},disconnect(){}};
+  while(nextChord<horizon){pad(nextChord,P.chords[chordIndex%P.chords.length]);chordIndex++;nextChord+=CHORD_LEN}
+  while(nextBell<horizon){if(Math.random()<P.bellProb)bell(nextBell);nextBell+=P.gap[0]+Math.random()*(P.gap[1]-P.gap[0])}},1000);
+ return{stop(){if(!alive)return;alive=false;clearInterval(timer);if(rainSrc){try{rainSrc.stop()}catch(e){}}try{const now=ctx.currentTime;master.gain.cancelScheduledValues(now);master.gain.setValueAtTime(master.gain.value,now);master.gain.linearRampToValueAtTime(0,now+.6);setTimeout(()=>{try{master.disconnect();padBus.disconnect();verb.disconnect();wet.disconnect()}catch(e){}},1500)}catch(e){}},disconnect(){}};
 }
 async function startFocusSound(forced){
  const type=forced||(AMBIENT_SOUND_TYPES.includes(state.settings.focusSound)?state.settings.focusSound:'Off');if(type==='Off'){toast('Choose a focus sound first');return}
@@ -1391,7 +1401,7 @@ async function startFocusSound(forced){
   const ctx=__focusAudio.ctx;if(ctx.state==='suspended')await ctx.resume();
   stopFocusSound(true);
   const gain=ctx.createGain();const target=Math.max(.001,Math.min(.25,Number(state.settings.focusSoundVolume||10)/100));const now=ctx.currentTime;gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(target,now+0.03);
-  gain.connect(ctx.destination);const source=type===CALM_SCORE_TYPE?startCalmScore(ctx,gain):startNoise(ctx,gain,type);__focusAudio.source=source;__focusAudio.gain=gain;__focusAudio.playing=true;__focusAudio.type=type;render();toast(type+' started');
+  gain.connect(ctx.destination);const source=CALM_TYPES.includes(type)?startCalmScore(ctx,gain,type):startNoise(ctx,gain,type);__focusAudio.source=source;__focusAudio.gain=gain;__focusAudio.playing=true;__focusAudio.type=type;render();toast(type+' started');
  }catch(e){__focusAudio.playing=false;toast('Could not start focus sound')}
 }
 function stopFocusSound(silent=false){const src=__focusAudio.source,gain=__focusAudio.gain,ctx=__focusAudio.ctx;if(gain&&ctx){try{const now=ctx.currentTime;gain.gain.cancelScheduledValues(now);gain.gain.setValueAtTime(gain.gain.value,now);gain.gain.linearRampToValueAtTime(0,now+0.03)}catch(e){}}if(src){try{setTimeout(()=>{try{src.stop()}catch(e){}try{src.disconnect()}catch(e){}},40)}catch(e){try{src.stop()}catch(e){}try{src.disconnect()}catch(e){}}}__focusAudio.source=null;__focusAudio.gain=null;__focusAudio.playing=false;if(!silent&&document.querySelector('.focus-sound-controls'))render()}
