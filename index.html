@@ -1395,7 +1395,16 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     switch (name) {
       case 'tab': if (TABS.some(function (t) { return t[0] === val; })) ui.tab = val; break;
       case 'env': if (FILTERS.indexOf(val) >= 0 || val === 'all') ui.env = val; break;
-      case 'open': ui.open = IDX[val] ? val : null; break;
+      case 'open':
+        ui.open = IDX[val] ? val : null;
+        // The detail renders below the whole grid, so bring it into view after the re-render.
+        if (ui.open && typeof requestAnimationFrame === 'function' && typeof document !== 'undefined') {
+          requestAnimationFrame(function () {
+            var target = document.querySelector('.dog-steps');
+            if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        }
+        break;
       case 'closeItem': ui.open = null; break;
       case 'toggleDone': changed = toggleDone(d, val, now); break;
       case 'task': changed = setDailyTask(d, val, now); break;
