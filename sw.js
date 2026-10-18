@@ -1,4 +1,4 @@
-const CACHE_NAME = 'astralsurge-os-v5.48';
+const CACHE_NAME = 'astralsurge-os-v5.49';
 const APP_SHELL = [
     new URL('./', self.location.href).href,
     new URL('./index.html', self.location.href).href,
@@ -11,7 +11,12 @@ const CACHEABLE_URLS = new Set(APP_SHELL);
 const OFFLINE_PAGE = new URL('./index.html', self.location.href).href;
 
 self.addEventListener('install', event => {
-    event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
+    // Cache each file on its own so one missing file cannot stop the whole worker from installing.
+    event.waitUntil((async () => {
+        const cache = await caches.open(CACHE_NAME);
+        await Promise.all(APP_SHELL.map(url => cache.add(url).catch(() => {})));
+        await self.skipWaiting();
+    })());
 });
 
 self.addEventListener('activate', event => {
@@ -20,6 +25,7 @@ self.addEventListener('activate', event => {
         await Promise.all(keys
             .filter(key => (key.startsWith('astralsurge-os-') || key.startsWith('aether-os-')) && key !== CACHE_NAME)
             .map(key => caches.delete(key)));
+        await self.clients.claim();
     })());
 });
 
