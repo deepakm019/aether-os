@@ -42,6 +42,7 @@ def test_workspace_choice_is_mutually_exclusive(app_server):
         page.evaluate("() => setNav('settings')")
         page.click("button:has-text('Dog training companion')")
         page.wait_for_timeout(300)
+        assert errors == [], errors
         assert pressed(page, "Dog training companion") == "true"
         assert pressed(page, "Existing setup") == "false"
 
@@ -85,7 +86,7 @@ def test_dog_page_shows_all_skills_and_logs_events(app_server):
         page.wait_for_timeout(200)
         page.evaluate("() => setNav('dog')")
         page.wait_for_timeout(300)
-
+        assert errors == [], errors
         assert page.locator(".dog-card").count() == 55
         # Outdoor filter shows outdoor and both-environment skills only.
         page.click("button[data-dog-val='outdoor']")
