@@ -514,12 +514,12 @@ a.row{color:inherit;text-decoration:none}
 html.minimal-mode-active,html.minimal-mode-active body{background:#fff!important;color:#171a1f!important;color-scheme:light}
 html.minimal-mode-active[data-minimal-theme="dark"],html.minimal-mode-active[data-minimal-theme="dark"] body{background:#000!important;color:#fff!important;color-scheme:dark}
 html.minimal-mode-active #app{min-height:100vh;background:inherit;color:inherit}
-.minimal-app{--min-bg:#fff;--min-fg:#171a1f;--min-line:#e3e6eb;--min-muted:#6b7480;--min-surface:#f6f7f9;box-sizing:border-box;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;width:100%;margin:0;background:var(--min-bg);color:var(--min-fg);font:inherit;padding:15vh max(clamp(20px,6vw,40px),env(safe-area-inset-right)) calc(15vh + env(safe-area-inset-bottom)) max(clamp(20px,6vw,40px),env(safe-area-inset-left));padding-top:15dvh;padding-bottom:calc(15dvh + env(safe-area-inset-bottom))}
+.minimal-app{--min-bg:#fff;--min-fg:#171a1f;--min-line:#e3e6eb;--min-muted:#6b7480;--min-surface:#f6f7f9;box-sizing:border-box;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;width:100%;margin:0;position:relative;z-index:1;background:transparent;color:var(--min-fg);font:inherit;padding:15vh max(clamp(20px,6vw,40px),env(safe-area-inset-right)) calc(15vh + env(safe-area-inset-bottom)) max(clamp(20px,6vw,40px),env(safe-area-inset-left));padding-top:15dvh;padding-bottom:calc(15dvh + env(safe-area-inset-bottom))}
 .minimal-app[data-min-theme="dark"]{--min-bg:#000;--min-fg:#f4f4f5;--min-line:#2a2b30;--min-muted:#9096a0;--min-surface:#0d0e11}
 .minimal-app *{box-sizing:border-box}
 .minimal-wrap{flex:1 0 auto;display:flex;flex-direction:column;width:100%;max-width:680px;margin:0 auto;min-width:0}
 .minimal-head{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:0 0 22px;border-bottom:1px solid var(--min-line);flex-wrap:wrap}
-.minimal-brand{font-size:clamp(22px,6vw,30px);font-weight:700;line-height:1.15;letter-spacing:-.035em}
+.minimal-brand{font-size:clamp(22px,6vw,30px);font-weight:700;line-height:1.15;letter-spacing:-.035em;background:linear-gradient(90deg,var(--accent,#9d88ff),var(--accent2,#5fc2b1));-webkit-background-clip:text;background-clip:text;color:transparent}.minimal-brandrow{display:flex;align-items:center;gap:12px}
 .minimal-sub{font-size:13px;color:var(--min-muted);margin-top:8px;line-height:1.5}
 .minimal-controls{display:flex;gap:8px;flex-wrap:wrap}
 .minimal-app button{max-width:100%}
@@ -583,7 +583,7 @@ html .minimal-app .minimal-control:focus,html .minimal-app .minimal-control:focu
 .top3-row .row-title{white-space:normal;overflow-wrap:anywhere;line-height:1.35}
 .top3-row .btn{white-space:nowrap;min-width:118px;justify-content:center}
 @media(max-width:620px){.top3-row{grid-template-columns:minmax(0,1fr) auto;gap:10px}.top3-row .btn{min-width:108px;padding-left:12px;padding-right:12px}}
-html.minimal-mode-active #ambient-canvas{display:none!important}
+html.minimal-mode-active #ambient-canvas{display:block!important;z-index:0}
 html.minimal-mode-active .toast{bottom:auto;top:max(18px,env(safe-area-inset-top));transform:translate(-50%,-8px)}
 html.minimal-mode-active .toast.show{transform:translate(-50%,0)}
 .drawer:not(.open){box-shadow:none}
@@ -2091,7 +2091,7 @@ function renderMinimalUi(data,seq){
  __minimalDataCache=data;setMinimalDocumentTheme(data.theme);
  if(__minimalEditingId&&!data.items.some(x=>x.id===__minimalEditingId))__minimalEditingId=null;
  const feed=data.items.slice().sort((a,b)=>(Number(b.pinned)-Number(a.pinned))||(a.order-b.order));
- const content=`<div class="minimal-app" data-min-theme="${data.theme}"><div class="minimal-wrap"><header class="minimal-head"><div><div class="minimal-brand">astralsurge / scribbles</div><div class="minimal-sub">quick thoughts. no dashboard. local only. your full workspace is stored separately and is not shown here.</div></div><div class="minimal-controls"><button type="button" class="btn mini" onclick="minimalToggleTheme()">${data.theme==='dark'?'light mode':'dark mode'}</button></div></header>${minimalSwitchUI()}<section class="minimal-compose"><label class="minimal-label" for="minimal-note">write a quick note</label><textarea class="minimal-control" id="minimal-note" maxlength="2000" placeholder="something on your mind…"></textarea><div class="minimal-compose-row"><select class="minimal-control" id="minimal-duration" aria-label="How long the note lasts">${Object.keys(MIN_DURATIONS).map(k=>`<option value="${k}"${k==='24h'?' selected':''}>${esc(MIN_DURATION_LABELS[k])}</option>`).join('')}</select><button type="button" class="btn mini primary" onclick="minimalPostText()">post</button><button type="button" class="btn mini" onclick="minimalOpenDrawing()">draw</button><span class="minimal-stamp" id="minimal-char-count">0 / 2000</span></div></section>${__minimalDrawingOpen?minimalDrawingUi(data.theme):''}<div class="minimal-count">${feed.length} / ${MIN_MAX_ITEMS} scribbles</div><section class="minimal-feed" aria-label="scribble feed">${feed.map(minimalItemHtml).join('')||'<div class="minimal-empty">nothing here. yet.</div>'}</section><footer class="minimal-footer">no network · no normal workspace access · expires are removed automatically</footer></div></div>`;
+ const content=`<div class="minimal-app" data-min-theme="${data.theme}"><div class="minimal-wrap"><header class="minimal-head"><div><div class="minimal-brandrow"><span class="brand-mark" aria-hidden="true">AS</span><div class="minimal-brand">astralsurge / scribbles</div></div><div class="minimal-sub">quick thoughts. no dashboard. local only. your full workspace is stored separately and is not shown here.</div></div><div class="minimal-controls"><button type="button" class="btn mini" onclick="minimalToggleTheme()">${data.theme==='dark'?'light mode':'dark mode'}</button></div></header>${minimalSwitchUI()}<section class="minimal-compose"><label class="minimal-label" for="minimal-note">write a quick note</label><textarea class="minimal-control" id="minimal-note" maxlength="2000" placeholder="something on your mind…"></textarea><div class="minimal-compose-row"><select class="minimal-control" id="minimal-duration" aria-label="How long the note lasts">${Object.keys(MIN_DURATIONS).map(k=>`<option value="${k}"${k==='24h'?' selected':''}>${esc(MIN_DURATION_LABELS[k])}</option>`).join('')}</select><button type="button" class="btn mini primary" onclick="minimalPostText()">post</button><button type="button" class="btn mini" onclick="minimalOpenDrawing()">draw</button><span class="minimal-stamp" id="minimal-char-count">0 / 2000</span></div></section>${__minimalDrawingOpen?minimalDrawingUi(data.theme):''}<div class="minimal-count">${feed.length} / ${MIN_MAX_ITEMS} scribbles</div><section class="minimal-feed" aria-label="scribble feed">${feed.map(minimalItemHtml).join('')||'<div class="minimal-empty">nothing here. yet.</div>'}</section><footer class="minimal-footer">no network · no normal workspace access · expires are removed automatically</footer></div></div>`;
  document.getElementById('app').innerHTML=!betaAck()?betaScreen():content;
  if(betaAck()){
   const t=document.getElementById('minimal-note'),counter=document.getElementById('minimal-char-count');if(t&&counter)t.addEventListener('input',()=>counter.textContent=`${t.value.length} / 2000`);
@@ -2108,6 +2108,7 @@ async function renderMinimal(){
  let data=await minReadSafe();const now=Date.now(),before=data.items.length;data.items=data.items.filter(x=>x.expiresAt===null||x.expiresAt>now);
  if(data.items.length!==before)await minWriteSafe(data);
  renderMinimalUi(data,seq);
+try{ambientSetup()}catch(e){}
 }
 function startMinimalExpiryTimer(){if(__minimalTimer)return;__minimalTimer=setInterval(minimalTick,1000)}
 function minimalTick(){
