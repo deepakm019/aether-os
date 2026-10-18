@@ -50,6 +50,12 @@ The live site is deployed from the repository root with GitHub Pages, on the cus
 - **Import validation**: malformed files, files from a newer app version, and files with wrong list types are rejected with a clear message, and existing data is left alone.
 - **Older backups import cleanly**: bare state files from earlier versions are upgraded. Running timers in imported backups are restored paused, never running.
 
+### Workspaces (Settings)
+- **Existing setup** (default) or **Dog training companion**. The two are mutually exclusive: choosing one turns the other off. Switching does not delete either set of data.
+- The dog companion adds a **Dog training** tile under More. It has 55 skills ordered by importance, each with cartoon step cards, daily care and training XP, potty and meal timing, health records and vaccines, hourly to yearly timelines, a calendar, comparisons, and an auto planner.
+- Dog data is part of the encrypted vault and is included in backups.
+- Dog health records are not veterinary advice.
+
 ### Standalone local-storage mode
 - `standalone.html` wraps the app in a frame with `?storage=local`. That mode keeps its data in localStorage, separate from the main IndexedDB vault, and shows a notice about the browser's storage limits. Use it when IndexedDB is not available to you.
 

@@ -25,6 +25,8 @@ jobs:
           node-version: 22
       - name: Run static checks
         run: npm run check
+      - name: Run unit tests
+        run: npm run test:unit
 
   browser-tests:
     name: Browser tests (Playwright)

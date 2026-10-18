@@ -6,7 +6,8 @@
   "scripts": {
     "check": "node scripts/check.mjs",
     "test": "python -m pytest",
-    "verify": "npm run check && npm run test"
+    "verify": "npm run check && npm run test:unit && npm run test",
+    "test:unit": "node --test \"tests/unit/*.test.js\""
   },
   "engines": {
     "node": ">=20"
