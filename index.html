@@ -692,6 +692,19 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
 @media (max-width:620px){.focus-overlay{inset:auto 8px 84px 8px}.focus-overlay-card{width:100%}}
 @media (max-width:980px) and (min-width:621px){.focus-overlay{inset:auto 20px 20px auto}}
 .dog-card{display:flex;flex-direction:column;gap:8px;text-align:left;color:inherit;font:inherit;cursor:pointer;width:100%}.dog-block{display:block;font-weight:800}.dog-art{width:100%;max-width:200px;height:auto;display:block;margin:0 auto}.dog-svg{width:100%;height:auto;display:block}.dog-steps{margin:6px 0 0 20px;padding:0}.dog-steps li{margin-bottom:6px}.dog-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.dog-day{min-height:52px;padding:6px 2px;font-size:13px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:inherit;cursor:pointer;font:inherit}.dog-day.sel{box-shadow:inset 0 0 0 2px var(--accent2)}.dog-dots{display:flex;gap:3px;justify-content:center;margin-top:4px}.dog-dots i{display:block;width:6px;height:6px;border-radius:50%}.dog-key{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px}.note-box{padding:10px 12px;border-left:3px solid var(--amber,#e0a94a);background:var(--panel);border-radius:10px;font-size:13px;color:var(--muted)}.table-wrap{overflow-x:auto;max-width:100%}
+.dog-log{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
+.dog-log:last-child{border-bottom:0}
+.dog-log .row-main{min-width:0}
+.dog-log .row-title{overflow-wrap:anywhere}
+.dog-note{margin-top:4px;white-space:pre-wrap;overflow-wrap:anywhere;opacity:.9}
+.dog-rowbtns{display:flex;gap:8px;flex-wrap:wrap}
+.dog-log-edit{padding:12px;border:1px solid var(--line);border-radius:12px}
+.dog-edit{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+.dog-edit .field{min-width:0}
+.dog-edit .wide{grid-column:1/-1}
+.dog-edit input,.dog-edit select{width:100%;min-width:0;box-sizing:border-box}
+.dog-edit-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+
 </style>
 </head>
 <body>
@@ -794,7 +807,7 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     ['Yearly or per vet', 'Booster schedule, weight and dental check'],
     ['Ongoing', 'Flea, tick and heartworm prevention (ask your vet)']
   ];
-  var LIMITS = { potty: 2000, meals: 2000, weights: 1000, vax: 300, notes: 500, noteLen: 500, nameLen: 40, vaxLen: 80 };
+  var LIMITS = { potty: 2000, meals: 2000, weights: 1000, vax: 300, notes: 500, noteLen: 500, nameLen: 40, vaxLen: 80, logNote: 200 };
   var PET_TYPES = ['pee', 'poop', 'accident'];
   var FILTERS = ['both', 'indoor', 'outdoor'];
 
@@ -861,20 +874,20 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     out.potty = sortByTime(list(src.potty).filter(function (p) {
       return plainObj(p) && isFinite(Number(p.t)) && Number(p.t) > 0 && PET_TYPES.indexOf(p.type) >= 0;
     }).map(function (p) {
-      return { id: typeof p.id === 'string' && p.id.length <= 40 ? p.id : uid('p'), t: Number(p.t), type: p.type };
+      return { id: typeof p.id === 'string' && p.id.length <= 40 ? p.id : uid('p'), t: Number(p.t), type: p.type, note: cleanText(p.note, LIMITS.logNote) };
     })).slice(-LIMITS.potty);
     out.meals = sortByTime(list(src.meals).filter(function (m) {
       return plainObj(m) && isFinite(Number(m.t)) && Number(m.t) > 0;
-    }).map(function (m) { return { t: Number(m.t) }; })).slice(-LIMITS.meals);
+    }).map(function (m) { return { id: typeof m.id === 'string' && m.id.length <= 40 ? m.id : uid('m'), t: Number(m.t), note: cleanText(m.note, LIMITS.logNote) }; })).slice(-LIMITS.meals);
     out.weights = list(src.weights).filter(function (w) {
       return plainObj(w) && isKey(w.d) && Number(w.kg) > 0 && Number(w.kg) < 500;
     }).map(function (w) {
-      return { id: typeof w.id === 'string' && w.id.length <= 40 ? w.id : uid('w'), d: w.d, kg: Math.round(Number(w.kg) * 10) / 10 };
+      return { id: typeof w.id === 'string' && w.id.length <= 40 ? w.id : uid('w'), d: w.d, kg: Math.round(Number(w.kg) * 10) / 10, note: cleanText(w.note, LIMITS.logNote) };
     }).slice(-LIMITS.weights);
     out.vax = list(src.vax).filter(function (v) {
       return plainObj(v) && isKey(v.d) && cleanText(v.name, LIMITS.vaxLen).length > 0;
     }).map(function (v) {
-      return { id: typeof v.id === 'string' && v.id.length <= 40 ? v.id : uid('v'), d: v.d, name: cleanText(v.name, LIMITS.vaxLen) };
+      return { id: typeof v.id === 'string' && v.id.length <= 40 ? v.id : uid('v'), d: v.d, name: cleanText(v.name, LIMITS.vaxLen), note: cleanText(v.note, LIMITS.logNote) };
     }).slice(-LIMITS.vax);
     out.notes = list(src.notes).filter(function (n) {
       return plainObj(n) && isKey(n.d) && cleanText(n.text, LIMITS.noteLen).length > 0;
@@ -936,17 +949,67 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
   }
 
   /* ---------- potty, meals, timelines ---------- */
-  function logPotty(dog, type, now) {
+  function logPotty(dog, type, now, note) {
     if (PET_TYPES.indexOf(type) < 0) return false;
-    dog.potty.push({ id: uid('p'), t: now.getTime(), type: type });
+    dog.potty.push({ id: uid('p'), t: now.getTime(), type: type, note: cleanText(note, LIMITS.logNote) });
     if (dog.potty.length > LIMITS.potty) dog.potty.splice(0, dog.potty.length - LIMITS.potty);
     reconcileBonus(dog, now);
     return true;
   }
-  function logMeal(dog, now) {
-    dog.meals.push({ t: now.getTime() });
+  function logMeal(dog, now, note) {
+    dog.meals.push({ id: uid('m'), t: now.getTime(), note: cleanText(note, LIMITS.logNote) });
     if (dog.meals.length > LIMITS.meals) dog.meals.splice(0, dog.meals.length - LIMITS.meals);
     return true;
+  }
+  var LOG_LISTS = ['potty', 'meals', 'weights', 'vax', 'notes'];
+  var LOG_LABEL = { pee: 'Pee', poop: 'Poop', accident: 'Accident' };
+  // Local date and time in the format a datetime-local input expects.
+  function localInput(t) {
+    var d = new Date(t), p = function (n) { return n < 10 ? '0' + n : String(n); };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  function parseLogTime(v, now) {
+    if (typeof v !== 'string' || !v) return null;
+    var t = new Date(v).getTime();
+    if (!isFinite(t) || t > now.getTime() + 60000) return null;
+    return t;
+  }
+  // Edit one logged entry from its form fields. Returns { ok: true } or { error: message }.
+  function updateLog(dog, list, id, f, now) {
+    if (LOG_LISTS.indexOf(list) < 0) return { error: 'Unknown log' };
+    var rec = dog[list].filter(function (r) { return r.id === id; })[0];
+    if (!rec) return { error: 'That entry no longer exists' };
+    var note = cleanText(f.note, LIMITS.logNote);
+    if (list === 'potty' || list === 'meals') {
+      var t = parseLogTime(f.time, now);
+      if (t === null) return { error: 'Enter a date and time that is not in the future' };
+      if (list === 'potty') {
+        if (PET_TYPES.indexOf(f.type) < 0) return { error: 'Choose pee, poop or accident' };
+        rec.type = f.type;
+      }
+      rec.t = t;
+      rec.note = note;
+      sortByTime(dog[list]);
+    } else if (list === 'weights') {
+      var kg = Number(f.kg);
+      if (!isKey(f.d) || !(kg > 0 && kg < 500)) return { error: 'Enter a date and a weight between 0 and 500 kg' };
+      rec.d = f.d; rec.kg = Math.round(kg * 10) / 10; rec.note = note;
+    } else if (list === 'vax') {
+      var name = cleanText(f.name, LIMITS.vaxLen);
+      if (!isKey(f.d) || !name) return { error: 'Enter a date and a name' };
+      rec.d = f.d; rec.name = name; rec.note = note;
+    } else {
+      var text = cleanText(f.text, LIMITS.noteLen);
+      if (!isKey(f.d) || !text) return { error: 'Enter a date and a note' };
+      rec.d = f.d; rec.text = text;
+    }
+    return { ok: true };
+  }
+  function removeLog(dog, list, id) {
+    if (LOG_LISTS.indexOf(list) < 0) return false;
+    var before = dog[list].length;
+    dog[list] = dog[list].filter(function (r) { return r.id !== id; });
+    return dog[list].length !== before;
   }
   // Estimate of the next toilet break from the average gap across recent breaks (accidents excluded).
   function nextPotty(dog, now) {
@@ -1185,40 +1248,73 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
       '<span class="chip">' + (s.all ? 'Full-day bonus earned today (+25 XP)' : 'Full-day bonus needs all four items') + '</span></div></div></section>';
   }
 
+  function fieldHtml(id, label, inner, cls) {
+    return '<div class="field' + (cls ? ' ' + cls : '') + '"><label for="' + id + '">' + label + '</label>' + inner + '</div>';
+  }
+  // One log entry, shown with Edit and Remove. The entry being edited turns into a form.
+  function logRow(list, rec, title, meta, body) {
+    var key = esc(list) + ':' + esc(rec.id);
+    if (ui.edit && ui.edit.list === list && ui.edit.id === rec.id) return '<div class="dog-log dog-log-edit">' + editForm(list, rec) + '</div>';
+    return '<div class="dog-log"><div class="row-main"><div class="row-title">' + esc(String(title)) + '</div><div class="row-meta">' + esc(String(meta)) + '</div>' +
+      (body ? '<div class="dog-note">' + esc(body) + '</div>' : '') + '</div>' +
+      '<div class="dog-rowbtns"><button class="btn mini" data-dog-act="edit" data-dog-val="' + key + '">Edit</button>' +
+      '<button class="btn mini" data-dog-act="delete" data-dog-val="' + key + '">Remove</button></div></div>';
+  }
+  function editForm(list, rec) {
+    var key = esc(list) + ':' + esc(rec.id), f = '';
+    if (list === 'potty') {
+      f += fieldHtml('dogEdTime', 'When', '<input type="datetime-local" id="dogEdTime" value="' + localInput(rec.t) + '">');
+      f += fieldHtml('dogEdType', 'Type', '<select id="dogEdType">' + PET_TYPES.map(function (t) {
+        return '<option value="' + t + '"' + (t === rec.type ? ' selected' : '') + '>' + LOG_LABEL[t] + '</option>';
+      }).join('') + '</select>');
+    } else if (list === 'meals') {
+      f += fieldHtml('dogEdTime', 'When', '<input type="datetime-local" id="dogEdTime" value="' + localInput(rec.t) + '">');
+    } else if (list === 'weights') {
+      f += fieldHtml('dogEdDate', 'Date', '<input type="date" id="dogEdDate" value="' + esc(String(rec.d)) + '">');
+      f += fieldHtml('dogEdKg', 'Kg', '<input type="number" step="0.1" min="0" id="dogEdKg" value="' + esc(String(rec.kg)) + '">');
+    } else if (list === 'vax') {
+      f += fieldHtml('dogEdDate', 'Date', '<input type="date" id="dogEdDate" value="' + esc(String(rec.d)) + '">');
+      f += fieldHtml('dogEdName', 'Vaccine or visit', '<input type="text" id="dogEdName" maxlength="' + LIMITS.vaxLen + '" value="' + esc(rec.name) + '">', 'wide');
+    } else {
+      f += fieldHtml('dogEdDate', 'Date', '<input type="date" id="dogEdDate" value="' + esc(String(rec.d)) + '">');
+      f += fieldHtml('dogEdText', 'Note', '<input type="text" id="dogEdText" maxlength="' + LIMITS.noteLen + '" value="' + esc(rec.text) + '">', 'wide');
+    }
+    if (list !== 'notes') {
+      f += fieldHtml('dogEdNote', 'Comment', '<input type="text" id="dogEdNote" maxlength="' + LIMITS.logNote + '" placeholder="Optional" value="' + esc(rec.note || '') + '">', 'wide');
+    }
+    return '<div class="dog-edit">' + f + '<div class="dog-edit-actions">' +
+      '<button class="btn primary" data-dog-act="saveEdit" data-dog-val="' + key + '">Save</button>' +
+      '<button class="btn" data-dog-act="cancelEdit">Cancel</button></div></div>';
+  }
+
   function viewCare(dog, now) {
     var next = nextPotty(dog, now);
     var nextText = next ? (next.dueNow ? 'Next break is due now (average gap ' + next.gapMin + ' min).' : 'Next break around ' + new Date(next.due).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) + ' (average gap ' + next.gapMin + ' min).') : 'Log a few breaks to estimate the next one.';
-    var recentPotty = dog.potty.slice(-8).reverse().map(function (p) {
-      return '<div class="row"><div class="row-main"><div class="row-title">' + esc(p.type) + '</div><div class="row-meta">' + esc(fmtStamp(p.t)) + '</div></div></div>';
+    var potty = dog.potty.slice(-12).reverse().map(function (p) {
+      return logRow('potty', p, LOG_LABEL[p.type] || p.type, fmtStamp(p.t), p.note);
     }).join('') || '<div class="empty"><strong>Nothing logged yet</strong>Tap Pee, Poop or Accident above.</div>';
-    var recentMeals = dog.meals.slice(-8).reverse().map(function (m) {
-      return '<div class="row"><div class="row-main"><div class="row-title">Meal</div><div class="row-meta">' + esc(fmtStamp(m.t)) + '</div></div></div>';
+    var meals = dog.meals.slice(-12).reverse().map(function (m) {
+      return logRow('meals', m, 'Meal', fmtStamp(m.t), m.note);
     }).join('') || '<div class="empty"><strong>No meals logged yet</strong></div>';
-    return '<section class="section grid grid-2">' +
+    return '<section class="section">' +
+      '<div class="panel pad"><div class="field"><label for="dogLogNote">Comment for the next entry (optional)</label>' +
+      '<input type="text" id="dogLogNote" maxlength="' + LIMITS.logNote + '" placeholder="e.g. after a long walk, ate grass"></div></div>' +
+      '<div class="grid grid-2 section">' +
       '<div class="panel pad"><h2>Potty log</h2><div class="actions" style="margin-top:0">' +
       '<button class="btn primary" data-dog-act="potty" data-dog-val="pee">Pee</button>' +
       '<button class="btn primary" data-dog-act="potty" data-dog-val="poop">Poop</button>' +
       '<button class="btn" data-dog-act="potty" data-dog-val="accident">Accident</button></div>' +
-      '<p class="muted-line" style="margin-top:12px">' + esc(nextText) + '</p><div class="list" style="margin-top:12px">' + recentPotty + '</div></div>' +
+      '<p class="muted-line" style="margin-top:12px">' + esc(nextText) + '</p><div class="list" style="margin-top:12px">' + potty + '</div></div>' +
       '<div class="panel pad"><h2>Meals</h2><p class="muted-line">Scheduled at 07:00, 12:00 and 18:00. Adjust these to your vet’s advice.</p>' +
       '<div class="actions" style="margin-top:0"><button class="btn primary" data-dog-act="meal">Log a meal now</button></div>' +
       '<p class="muted-line" style="margin-top:12px">Next scheduled meal at ' + esc(new Date(nextMeal(now)).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' })) + '.</p>' +
-      '<div class="list" style="margin-top:12px">' + recentMeals + '</div></div></section>';
+      '<div class="list" style="margin-top:12px">' + meals + '</div></div></div></section>';
   }
 
   function viewHealth(dog) {
-    var weights = dog.weights.slice().reverse().map(function (w) {
-      return '<div class="row"><div class="row-main"><div class="row-title">' + w.kg + ' kg</div><div class="row-meta">' + esc(fmtDay(w.d)) + '</div></div>' +
-        '<button class="btn mini" data-dog-act="delete" data-dog-val="weights:' + esc(w.id) + '">Remove</button></div>';
-    }).join('') || '<div class="empty"><strong>No weights yet</strong></div>';
-    var vax = dog.vax.slice().sort(function (a, b) { return a.d < b.d ? 1 : -1; }).map(function (v) {
-      return '<div class="row"><div class="row-main"><div class="row-title">' + esc(v.name) + '</div><div class="row-meta">' + esc(fmtDay(v.d)) + '</div></div>' +
-        '<button class="btn mini" data-dog-act="delete" data-dog-val="vax:' + esc(v.id) + '">Remove</button></div>';
-    }).join('') || '<div class="empty"><strong>No vaccines or visits yet</strong></div>';
-    var notes = dog.notes.slice().reverse().map(function (n) {
-      return '<div class="row"><div class="row-main"><div class="row-title">' + esc(n.text) + '</div><div class="row-meta">' + esc(fmtDay(n.d)) + '</div></div>' +
-        '<button class="btn mini" data-dog-act="delete" data-dog-val="notes:' + esc(n.id) + '">Remove</button></div>';
-    }).join('') || '<div class="empty"><strong>No notes yet</strong></div>';
+    var weights = dog.weights.slice().reverse().map(function (w) { return logRow('weights', w, w.kg + ' kg', fmtDay(w.d), w.note); }).join('') || '<div class="empty"><strong>No weights yet</strong></div>';
+    var vax = dog.vax.slice().sort(function (a, b) { return a.d < b.d ? 1 : -1; }).map(function (v) { return logRow('vax', v, v.name, fmtDay(v.d), v.note); }).join('') || '<div class="empty"><strong>No vaccines or visits yet</strong></div>';
+    var notes = dog.notes.slice().reverse().map(function (n) { return logRow('notes', n, n.text, fmtDay(n.d), ''); }).join('') || '<div class="empty"><strong>No notes yet</strong></div>';
     var today = dateKey(new Date());
     return '<section class="section"><div class="note-box">This page keeps records only. It is not veterinary advice. Confirm every vaccine and medicine with your vet.</div>' +
       '<div class="grid grid-2 section">' +
@@ -1345,7 +1441,7 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
   /* ---------- view and controller ---------- */
   var ui = {
     tab: 'train', env: 'all', open: null, range: 'hour', cmp: 'week',
-    month: null, day: null, plan: null, plEnv: 'both', plMin: 20, plDays: 7, armReset: false
+    month: null, day: null, plan: null, plEnv: 'both', plMin: 20, plDays: 7, armReset: false, edit: null
   };
   ui.month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
@@ -1417,6 +1513,14 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     }
   }
 
+  function logNoteInput() {
+    var el = document.getElementById('dogLogNote');
+    return el ? el.value : '';
+  }
+  function readLogFields() {
+    var g = function (id) { var el = document.getElementById(id); return el ? el.value : ''; };
+    return { time: g('dogEdTime'), type: g('dogEdType'), note: g('dogEdNote'), d: g('dogEdDate'), kg: g('dogEdKg'), name: g('dogEdName'), text: g('dogEdText') };
+  }
   function act(name, val) {
     var d = dog(), now = new Date();
     var changed = false, invalid = null;
@@ -1427,8 +1531,8 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
       case 'closeItem': ui.open = null; hideSkill(); break;
       case 'toggleDone': changed = toggleDone(d, val, now); break;
       case 'task': changed = setDailyTask(d, val, now); break;
-      case 'potty': changed = logPotty(d, val, now); break;
-      case 'meal': changed = logMeal(d, now); break;
+      case 'potty': changed = logPotty(d, val, now, logNoteInput()); break;
+      case 'meal': changed = logMeal(d, now, logNoteInput()); break;
       case 'addWeight': {
         var wd = document.getElementById('dogWDate').value || dateKey(now);
         var kg = parseFloat(document.getElementById('dogWKg').value);
@@ -1455,14 +1559,21 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
         document.getElementById('dogNText').value = '';
         changed = true; break;
       }
+      case 'edit': {
+        var se = String(val).indexOf(':');
+        if (se > 0 && LOG_LISTS.indexOf(String(val).slice(0, se)) >= 0) ui.edit = { list: String(val).slice(0, se), id: String(val).slice(se + 1) };
+        break;
+      }
+      case 'cancelEdit': ui.edit = null; break;
+      case 'saveEdit': {
+        var sv = String(val).indexOf(':');
+        var res = updateLog(d, String(val).slice(0, sv), String(val).slice(sv + 1), readLogFields(), now);
+        if (res.error) invalid = res.error; else { ui.edit = null; changed = true; }
+        break;
+      }
       case 'delete': {
-        var sep = String(val).indexOf(':');
-        var list = String(val).slice(0, sep), id = String(val).slice(sep + 1);
-        if (['weights', 'vax', 'notes'].indexOf(list) >= 0 && sep > 0) {
-          var before = d[list].length;
-          d[list] = d[list].filter(function (r) { return r.id !== id; });
-          changed = d[list].length !== before;
-        }
+        var sd = String(val).indexOf(':');
+        if (sd > 0) changed = removeLog(d, String(val).slice(0, sd), String(val).slice(sd + 1));
         break;
       }
       case 'range': if (['hour', 'day', 'month', 'year'].indexOf(val) >= 0) ui.range = val; break;
@@ -1520,6 +1631,7 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     toggleDone: toggleDone, setDailyTask: setDailyTask, streak: streak, logPotty: logPotty, logMeal: logMeal,
     nextPotty: nextPotty, nextMeal: nextMeal, timeline: timeline, weekCompare: weekCompare, envCompare: envCompare,
     pottyBreakdown: pottyBreakdown, makePlan: makePlan, dateKey: dateKey, addDays: addDays, esc: esc, art: art,
+    updateLog: updateLog, removeLog: removeLog, localInput: localInput, parseLogTime: parseLogTime, LOG_LISTS: LOG_LISTS,
     view: view, init: init, _ui: ui, _act: act
   };
 

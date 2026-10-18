@@ -425,3 +425,85 @@ test('the training view renders every skill when all environments are shown', ()
   const html = D.view();
   assert.equal((html.match(/class="panel pad dog-card"/g) || []).length, 55);
 });
+
+/* ---------- logs: comments, edits, removal ---------- */
+
+test('potty and meal logs keep an optional comment, trimmed and capped', () => {
+  const dog = D.normalizeDog(null);
+  const now = at(2026, 10, 18, 9, 0);
+  D.logPotty(dog, 'pee', now, '  after a long walk  ');
+  D.logMeal(dog, now, 'ate it all');
+  D.logPotty(dog, 'poop', now);
+  assert.equal(dog.potty[0].note, 'after a long walk');
+  assert.equal(dog.meals[0].note, 'ate it all');
+  assert.equal(dog.potty[1].note, '');
+  assert.ok(dog.meals[0].id && dog.potty[0].id, 'every log entry gets an id');
+  D.logPotty(dog, 'pee', now, 'x'.repeat(500));
+  assert.equal(dog.potty[2].note.length, D.LIMITS.logNote);
+});
+
+test('normalizeDog keeps comments and gives old meal records an id', () => {
+  const dog = D.normalizeDog({
+    meals: [{ t: at(2026, 10, 18, 7, 0).getTime() }],
+    weights: [{ id: 'w1', d: '2026-10-01', kg: 12.34, note: 'after diet change' }],
+    vax: [{ id: 'v1', d: '2026-09-01', name: 'DHPP', note: 'booster' }],
+    potty: [{ id: 'p1', t: at(2026, 10, 18, 8, 0).getTime(), type: 'pee', note: 'in the garden' }],
+  });
+  assert.equal(typeof dog.meals[0].id, 'string');
+  assert.equal(dog.meals[0].note, '');
+  assert.equal(dog.weights[0].note, 'after diet change');
+  assert.equal(dog.vax[0].note, 'booster');
+  assert.equal(dog.potty[0].note, 'in the garden');
+});
+
+test('an existing potty entry can be edited for time, type and comment', () => {
+  const dog = D.normalizeDog(null);
+  D.logPotty(dog, 'pee', at(2026, 10, 18, 8, 0));
+  const id = dog.potty[0].id;
+  const now = at(2026, 10, 18, 20, 0);
+  const res = D.updateLog(dog, 'potty', id, { time: '2026-10-18T07:30', type: 'poop', note: 'soft' }, now);
+  assert.deepEqual(res, { ok: true });
+  assert.equal(dog.potty[0].type, 'poop');
+  assert.equal(dog.potty[0].note, 'soft');
+  assert.equal(D.localInput(dog.potty[0].t), '2026-10-18T07:30');
+});
+
+test('edits reject future times, unknown types and missing entries', () => {
+  const dog = D.normalizeDog(null);
+  D.logPotty(dog, 'pee', at(2026, 10, 18, 8, 0));
+  const id = dog.potty[0].id;
+  const now = at(2026, 10, 18, 9, 0);
+  assert.match(D.updateLog(dog, 'potty', id, { time: '2026-10-19T08:00', type: 'pee' }, now).error, /not in the future/);
+  assert.match(D.updateLog(dog, 'potty', id, { time: '2026-10-18T08:00', type: 'surprise' }, now).error, /pee, poop or accident/);
+  assert.match(D.updateLog(dog, 'potty', 'nope', { time: '2026-10-18T08:00', type: 'pee' }, now).error, /no longer exists/);
+  assert.match(D.updateLog(dog, 'bogus', id, {}, now).error, /Unknown log/);
+  assert.equal(dog.potty[0].type, 'pee', 'a rejected edit changes nothing');
+});
+
+test('weights and vaccines can be edited, with validation', () => {
+  const dog = D.normalizeDog(null);
+  dog.weights.push({ id: 'w1', d: '2026-10-01', kg: 12, note: '' });
+  dog.vax.push({ id: 'v1', d: '2026-09-01', name: 'DHPP', note: '' });
+  const now = at(2026, 10, 18, 9, 0);
+  assert.deepEqual(D.updateLog(dog, 'weights', 'w1', { d: '2026-10-02', kg: '12.36', note: 'lost fur' }, now), { ok: true });
+  assert.deepEqual([dog.weights[0].d, dog.weights[0].kg, dog.weights[0].note], ['2026-10-02', 12.4, 'lost fur']);
+  assert.match(D.updateLog(dog, 'weights', 'w1', { d: '2026-10-02', kg: '0' }, now).error, /between 0 and 500/);
+  assert.deepEqual(D.updateLog(dog, 'vax', 'v1', { d: '2026-09-05', name: 'Rabies', note: '' }, now), { ok: true });
+  assert.equal(dog.vax[0].name, 'Rabies');
+  assert.match(D.updateLog(dog, 'vax', 'v1', { d: '2026-09-05', name: '   ' }, now).error, /name/);
+});
+
+test('removeLog deletes one entry by id from any log and ignores unknown lists', () => {
+  const dog = D.normalizeDog(null);
+  const now = at(2026, 10, 18, 9, 0);
+  D.logPotty(dog, 'pee', now);
+  D.logPotty(dog, 'poop', now);
+  D.logMeal(dog, now);
+  const first = dog.potty[0].id;
+  assert.equal(D.removeLog(dog, 'potty', first), true);
+  assert.deepEqual(dog.potty.map(p => p.type), ['poop']);
+  assert.equal(D.removeLog(dog, 'potty', first), false);
+  assert.equal(D.removeLog(dog, 'meals', dog.meals[0].id), true);
+  assert.equal(dog.meals.length, 0);
+  assert.equal(D.removeLog(dog, 'settings', 'x'), false);
+});
