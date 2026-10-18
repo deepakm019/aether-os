@@ -113,3 +113,44 @@ def test_dog_page_shows_all_skills_and_logs_events(app_server):
 
         assert errors == [], errors
         browser.close()
+
+
+def test_skill_opens_in_a_modal_and_closes(app_server):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
+        ctx, page, errors = open_app(browser, app_server)
+        page.evaluate("() => setNav('settings')")
+        page.wait_for_timeout(200)
+        page.click("button:has-text('Dog training companion')")
+        page.wait_for_timeout(200)
+        page.evaluate("() => setNav('dog')")
+        page.wait_for_timeout(300)
+        page.click("button[data-dog-act='tab'][data-dog-val='train']")
+        page.wait_for_timeout(200)
+
+        # The 20th card opens a dialog in the modal layer, not a section below the grid.
+        page.locator(".dog-card").nth(20).click()
+        page.wait_for_timeout(300)
+        assert page.locator("#modal[data-dog-skill] [role='dialog']").count() == 1
+        assert page.locator("#modal").is_visible()
+        assert page.locator("#app section.panel .dog-steps").count() == 0
+
+        # Marking mastered updates the open modal in place.
+        page.click("#modal button[data-dog-act='toggleDone']")
+        page.wait_for_timeout(200)
+        assert page.locator("#modal button[data-dog-act='toggleDone']").inner_text().startswith("Undo")
+
+        # Escape closes it.
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(200)
+        assert not page.locator("#modal").is_visible()
+
+        # Reopen and close with the close button.
+        page.locator(".dog-card").nth(3).click()
+        page.wait_for_timeout(200)
+        page.click("#modal button[aria-label='Close']")
+        page.wait_for_timeout(200)
+        assert not page.locator("#modal").is_visible()
+
+        assert errors == [], errors
+        browser.close()

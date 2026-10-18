@@ -1156,22 +1156,11 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
         '<span class="row">' + envChip(it.env) + '<span class="chip">' + it.min + ' min</span><span class="chip">' + it.xp + ' XP</span></span>' +
         '</button>';
     }).join('');
-    var detail = '';
-    var d = IDX[ui.open];
-    if (d) {
-      detail = '<section class="panel pad section"><div class="grid grid-2"><div>' + art(d.prop, d.n) + '</div><div style="min-width:0">' +
-        '<div class="row" style="margin-bottom:6px">' + envChip(d.env) + '<span class="chip">Step ' + d.i + ' of ' + ITEMS.length + '</span><span class="chip">' + d.min + ' min</span></div>' +
-        '<h2>' + esc(d.n) + '</h2><p><strong>You need:</strong> ' + esc(d.req) + '</p>' +
-        '<h3 style="margin-top:12px">Step by step</h3><ol class="dog-steps">' + d.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>' +
-        '<div class="actions"><button class="btn' + (dog.done[d.id] ? '' : ' primary') + '" data-dog-act="toggleDone" data-dog-val="' + d.id + '">' +
-        (dog.done[d.id] ? 'Undo mastered' : 'Mark mastered (+' + d.xp + ' XP)') + '</button>' +
-        '<button class="btn" data-dog-act="closeItem">Close</button></div></div></div></section>';
-    }
     return '<section class="section"><div class="row" style="justify-content:space-between;margin-bottom:10px">' +
       seg([['all', 'All'], ['indoor', 'Indoor'], ['outdoor', 'Outdoor']], ui.env, 'env') +
       '<span class="muted-line">' + Object.keys(dog.done).length + ' of ' + ITEMS.length + ' mastered</span></div>' +
       '<p class="muted-line">Ordered from most important to fun extras. Start at the top and move down once each skill is steady.</p>' +
-      '<div class="grid grid-3 section">' + cards + '</div>' + detail + '</section>';
+      '<div class="grid grid-3 section">' + cards + '</div></section>';
   }
 
   function viewDaily(dog, now) {
@@ -1389,23 +1378,53 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
       '<section class="section">' + tabBar(ui.tab) + '</section>' + body + '</div>';
   }
 
+  function skillModalHtml(dog) {
+    var d = IDX[ui.open];
+    if (!d) return '';
+    return '<div class="modal-inner" role="dialog" aria-modal="true" aria-labelledby="dog-skill-title">' +
+      '<div class="split"><div class="row">' + envChip(d.env) + '<span class="chip">Step ' + d.i + ' of ' + ITEMS.length + '</span><span class="chip">' + d.min + ' min</span></div>' +
+      '<button class="btn icon-btn" data-dog-act="closeItem" aria-label="Close">×</button></div>' +
+      '<div class="grid grid-2" style="margin-top:12px"><div>' + art(d.prop, d.n) + '</div><div style="min-width:0">' +
+      '<h2 id="dog-skill-title" style="margin:4px 0 8px">' + esc(d.n) + '</h2><p><strong>You need:</strong> ' + esc(d.req) + '</p>' +
+      '<h3 style="margin-top:12px">Step by step</h3><ol class="dog-steps">' + d.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>' +
+      '<div class="actions"><button class="btn' + (dog.done[d.id] ? '' : ' primary') + '" data-dog-act="toggleDone" data-dog-val="' + d.id + '">' +
+      (dog.done[d.id] ? 'Undo mastered' : 'Mark mastered (+' + d.xp + ' XP)') + '</button>' +
+      '<button class="btn" data-dog-act="closeItem">Close</button></div></div></div></div>';
+  }
+
+  function showSkill() {
+    if (!ctx || !ctx.openModal || !ui.open) return;
+    ctx.openModal(function () { return skillModalHtml(dog()); });
+    var m = modalEl();
+    if (m) m.setAttribute('data-dog-skill', ui.open);
+  }
+
+  function modalEl() {
+    return typeof document !== 'undefined' ? document.getElementById('modal') : null;
+  }
+
+  function refreshSkill() {
+    var m = modalEl();
+    if (!m || !ui.open || m.style.display !== 'block' || m.getAttribute('data-dog-skill') !== ui.open) return;
+    m.innerHTML = skillModalHtml(dog());
+  }
+
+  function hideSkill() {
+    var m = modalEl();
+    if (m && m.getAttribute('data-dog-skill')) {
+      m.removeAttribute('data-dog-skill');
+      if (ctx && ctx.closeModal) ctx.closeModal();
+    }
+  }
+
   function act(name, val) {
     var d = dog(), now = new Date();
     var changed = false, invalid = null;
     switch (name) {
       case 'tab': if (TABS.some(function (t) { return t[0] === val; })) ui.tab = val; break;
       case 'env': if (FILTERS.indexOf(val) >= 0 || val === 'all') ui.env = val; break;
-      case 'open':
-        ui.open = IDX[val] ? val : null;
-        // The detail renders below the whole grid, so bring it into view after the re-render.
-        if (ui.open && typeof requestAnimationFrame === 'function' && typeof document !== 'undefined') {
-          requestAnimationFrame(function () {
-            var target = document.querySelector('.dog-steps');
-            if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          });
-        }
-        break;
-      case 'closeItem': ui.open = null; break;
+      case 'open': ui.open = IDX[val] ? val : null; if (ui.open) showSkill(); break;
+      case 'closeItem': ui.open = null; hideSkill(); break;
       case 'toggleDone': changed = toggleDone(d, val, now); break;
       case 'task': changed = setDailyTask(d, val, now); break;
       case 'potty': changed = logPotty(d, val, now); break;
@@ -1470,6 +1489,7 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
       default: break;
     }
     if (invalid && ctx.toast) ctx.toast(invalid);
+    refreshSkill();
     if (changed) { reconcileBonus(d, now); ctx.commit(); }
     else ctx.refresh();
   }
@@ -1486,6 +1506,10 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     ctx.getState().dog = normalizeDog(ctx.getState().dog);
     if (!init.bound && typeof document !== 'undefined') {
       document.addEventListener('click', onClick);
+      document.addEventListener('keydown', function (e) {
+        var m = modalEl();
+        if (e.key === 'Escape' && m && m.getAttribute('data-dog-skill')) act('closeItem');
+      });
       init.bound = true;
     }
   }
@@ -3256,7 +3280,7 @@ function bindDelegatedInteractions(){
  document.addEventListener('click',e=>{const el=e.target.closest?.('[data-action]');if(!el)return;const a=el.dataset.action;if(a==='delete-sub')delSub(el.dataset.id,el.dataset.subId);else if(a==='search-open'){recordSearchUsage(el.dataset.type,el.dataset.id);searchOpen(el.dataset.type,el.dataset.id)}else if(a==='search-shortcut')runSearchShortcut(el.dataset.id)});
  document.addEventListener('change',e=>{const el=e.target.closest?.('[data-action]');if(!el)return;if(el.dataset.action==='toggle-sub')toggleSub(el.dataset.id,el.dataset.subId)});
 }
-function workspaceChoice(){return state.settings&&state.settings.workspace==='dog'?'dog':'existing'}function workspaceTiles(){return workspaceChoice()==='dog'?[['dog','Dog training','Care, training, health']]:[]}function workspacePanel(){const on=workspaceChoice();return `<section class="section panel pad" aria-labelledby="workspace-title"><div class="panel-header" style="padding:0 0 12px;border:0"><h2 id="workspace-title">Workspace</h2><small>only one is active</small></div><div class="row"><button class="btn ${on==='existing'?'primary':''}" aria-pressed="${on==='existing'}" onclick="setWorkspace('existing')">Existing setup</button><button class="btn ${on==='dog'?'primary':''}" aria-pressed="${on==='dog'}" onclick="setWorkspace('dog')">Dog training companion</button></div><p class="muted-line" style="margin-top:10px">Choosing one turns the other off. Data for both is kept.</p>${on==='dog'?'<div class="actions"><button class="btn primary" onclick="openDogTraining()">Open dog training</button></div>':''}</section>`}function setWorkspace(v){if(v!=='existing'&&v!=='dog')return;try{state.settings.workspace=v;persist();if(v==='existing'&&nav()==='dog')setNav('settings');render()}catch(e){console.error('setWorkspace failed',e);toast('Could not switch workspace')}}function openDogTraining(){setNav('dog')}function viewDog(){if(workspaceChoice()!=='dog')return `<div class="page"><div class="eyebrow">Dog training</div><div class="h1">Dog training is off.</div><div class="lead">Existing setup is active. Turn dog training on to use it. Your dog data is kept.</div><div class="actions"><button class="btn primary" onclick="setWorkspace('dog')">Turn on dog training</button><button class="btn" onclick="setNav('settings')">Open settings</button></div></div>`;if(!window.DogCompanion)return '<div class="page"><div class="lead">The dog training module did not load.</div></div>';try{return window.DogCompanion.view()}catch(e){console.error('dog view failed',e);return '<div class="page"><div class="eyebrow">Dog training</div><div class="h1">This page could not be shown.</div><div class="lead">Switch to Existing setup in Settings, or reload the page. Details are in the browser console.</div></div>'}}function initDogCompanion(){if(window.DogCompanion)window.DogCompanion.init({getState:()=>state,commit:()=>{persist();render()},refresh:()=>render(),toast:toast,isActive:()=>workspaceChoice()==='dog'})}function render(){if(isMinimalMode()){renderMinimal();return}applyTypographyAndTimezone();applyTheme();const n=nav();const y=lastRoute===n?window.scrollY:0;let c='';if(n==='today')c=viewToday();else if(n==='work')c=viewWork();else if(n==='focus')c=viewFocus();else if(n==='plan')c=viewPlan();else if(n==='more')c=moreIndex();else if(n==='goals')c=viewGoals();else if(n==='life')c=viewLife();else if(n==='money')c=viewMoney();else if(n==='memory')c=viewMemory();else if(n==='progress')c=viewProgress();else if(n==='rules')c=viewRules();else if(n==='vault')c=viewVault();else if(n==='calendar')c=viewCalendar();else if(n==='reminders')c=viewReminders();else if(n==='timer')c=viewTimer();else if(n==='convert')c=viewConvert();else if(n==='prompts')c=viewPrompts();else if(n==='dog')c=viewDog();else if(n==='split'||n.startsWith('split/'))c=splitViewRoute(n);else if(n==='settings')c=viewSettings();else if(n==='legal')c=viewLegal();else c=viewToday();document.getElementById('app').innerHTML=!betaAck()?betaScreen():state.vault.locked?lockScreen():renderShell(c);bindDelegatedInteractions();if(!state.focus.active)document.title='AstralSurge OS';lastRoute=n;window.scrollTo(0,y);tickClock();if(document.querySelectorAll)document.querySelectorAll('.heat-wrap').forEach(e=>e.scrollLeft=e.scrollWidth);if(timerHandle)clearInterval(timerHandle);if(state.focus.active)timerHandle=setInterval(tick,1000);refreshStorageHealth()}
+function workspaceChoice(){return state.settings&&state.settings.workspace==='dog'?'dog':'existing'}function workspaceTiles(){return workspaceChoice()==='dog'?[['dog','Dog training','Care, training, health']]:[]}function workspacePanel(){const on=workspaceChoice();return `<section class="section panel pad" aria-labelledby="workspace-title"><div class="panel-header" style="padding:0 0 12px;border:0"><h2 id="workspace-title">Workspace</h2><small>only one is active</small></div><div class="row"><button class="btn ${on==='existing'?'primary':''}" aria-pressed="${on==='existing'}" onclick="setWorkspace('existing')">Existing setup</button><button class="btn ${on==='dog'?'primary':''}" aria-pressed="${on==='dog'}" onclick="setWorkspace('dog')">Dog training companion</button></div><p class="muted-line" style="margin-top:10px">Choosing one turns the other off. Data for both is kept.</p>${on==='dog'?'<div class="actions"><button class="btn primary" onclick="openDogTraining()">Open dog training</button></div>':''}</section>`}function setWorkspace(v){if(v!=='existing'&&v!=='dog')return;try{state.settings.workspace=v;persist();if(v==='existing'&&nav()==='dog')setNav('settings');render()}catch(e){console.error('setWorkspace failed',e);toast('Could not switch workspace')}}function openDogTraining(){setNav('dog')}function viewDog(){if(workspaceChoice()!=='dog')return `<div class="page"><div class="eyebrow">Dog training</div><div class="h1">Dog training is off.</div><div class="lead">Existing setup is active. Turn dog training on to use it. Your dog data is kept.</div><div class="actions"><button class="btn primary" onclick="setWorkspace('dog')">Turn on dog training</button><button class="btn" onclick="setNav('settings')">Open settings</button></div></div>`;if(!window.DogCompanion)return '<div class="page"><div class="lead">The dog training module did not load.</div></div>';try{return window.DogCompanion.view()}catch(e){console.error('dog view failed',e);return '<div class="page"><div class="eyebrow">Dog training</div><div class="h1">This page could not be shown.</div><div class="lead">Switch to Existing setup in Settings, or reload the page. Details are in the browser console.</div></div>'}}function initDogCompanion(){if(window.DogCompanion)window.DogCompanion.init({getState:()=>state,commit:()=>{persist();render()},refresh:()=>render(),toast:toast,isActive:()=>workspaceChoice()==='dog',openModal:openModal,closeModal:closeModal})}function render(){if(isMinimalMode()){renderMinimal();return}applyTypographyAndTimezone();applyTheme();const n=nav();const y=lastRoute===n?window.scrollY:0;let c='';if(n==='today')c=viewToday();else if(n==='work')c=viewWork();else if(n==='focus')c=viewFocus();else if(n==='plan')c=viewPlan();else if(n==='more')c=moreIndex();else if(n==='goals')c=viewGoals();else if(n==='life')c=viewLife();else if(n==='money')c=viewMoney();else if(n==='memory')c=viewMemory();else if(n==='progress')c=viewProgress();else if(n==='rules')c=viewRules();else if(n==='vault')c=viewVault();else if(n==='calendar')c=viewCalendar();else if(n==='reminders')c=viewReminders();else if(n==='timer')c=viewTimer();else if(n==='convert')c=viewConvert();else if(n==='prompts')c=viewPrompts();else if(n==='dog')c=viewDog();else if(n==='split'||n.startsWith('split/'))c=splitViewRoute(n);else if(n==='settings')c=viewSettings();else if(n==='legal')c=viewLegal();else c=viewToday();document.getElementById('app').innerHTML=!betaAck()?betaScreen():state.vault.locked?lockScreen():renderShell(c);bindDelegatedInteractions();if(!state.focus.active)document.title='AstralSurge OS';lastRoute=n;window.scrollTo(0,y);tickClock();if(document.querySelectorAll)document.querySelectorAll('.heat-wrap').forEach(e=>e.scrollLeft=e.scrollWidth);if(timerHandle)clearInterval(timerHandle);if(state.focus.active)timerHandle=setInterval(tick,1000);refreshStorageHealth()}
 
 
 // Preserve legacy restore UI but support encrypted backups.
