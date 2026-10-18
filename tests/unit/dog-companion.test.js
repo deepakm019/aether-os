@@ -1,7 +1,21 @@
-// Unit tests for dog-companion.js. Run with: npm run test:unit
+// Unit tests for the dog training module. Run with: npm run test:unit
+// The module lives inline in index.html (<script id="dog-companion">), so the tests read it from there.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const D = require('../../dog-companion.js');
+const fs = require('node:fs');
+const path = require('node:path');
+
+function loadDogModule() {
+  const html = fs.readFileSync(path.join(__dirname, '..', '..', 'index.html'), 'utf8');
+  const m = html.match(/<script id="dog-companion">([\s\S]*?)<\/script>/);
+  if (!m) throw new Error('dog-companion script block not found in index.html');
+  // Same realm as the tests, so deepStrictEqual compares plain objects and arrays correctly.
+  const win = {};
+  const mod = { exports: {} };
+  new Function('window', 'module', 'globalThis', m[1])(win, mod, win);
+  return win.DogCompanion || mod.exports;
+}
+const D = loadDogModule();
 
 const at = (y, m, d, h = 12, min = 0) => new Date(y, m - 1, d, h, min, 0, 0);
 const key = (y, m, d) => D.dateKey(new Date(y, m - 1, d));

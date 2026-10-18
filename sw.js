@@ -1,11 +1,10 @@
-const CACHE_NAME = 'astralsurge-os-v5.49';
+const CACHE_NAME = 'astralsurge-os-v5.50';
 const APP_SHELL = [
     new URL('./', self.location.href).href,
     new URL('./index.html', self.location.href).href,
     new URL('./index.html?storage=local', self.location.href).href,
     new URL('./standalone.html', self.location.href).href,
-    new URL('./manifest.json', self.location.href).href,
-    new URL('./dog-companion.js', self.location.href).href
+    new URL('./manifest.json', self.location.href).href
 ];
 const CACHEABLE_URLS = new Set(APP_SHELL);
 const OFFLINE_PAGE = new URL('./index.html', self.location.href).href;
