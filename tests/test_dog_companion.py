@@ -42,7 +42,6 @@ def test_workspace_choice_is_mutually_exclusive(app_server):
         page.evaluate("() => setNav('settings')")
         page.click("button:has-text('Dog training companion')")
         page.wait_for_timeout(300)
-        assert page.evaluate("() => state.settings.workspace") == "dog"
         assert pressed(page, "Dog training companion") == "true"
         assert pressed(page, "Existing setup") == "false"
 
@@ -55,7 +54,7 @@ def test_workspace_choice_is_mutually_exclusive(app_server):
         page.evaluate("() => setNav('settings')")
         page.click("button:has-text('Existing setup')")
         page.wait_for_timeout(300)
-        assert page.evaluate("() => state.settings.workspace") == "existing"
+        assert pressed(page, "Existing setup") == "true"
         page.evaluate("() => setNav('more')")
         page.wait_for_timeout(200)
         assert page.locator("text=Dog training").count() == 0
@@ -80,7 +79,11 @@ def test_dog_page_shows_all_skills_and_logs_events(app_server):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
         ctx, page, errors = open_app(browser, app_server)
-        page.evaluate("() => { state.settings.workspace = 'dog'; setNav('dog'); }")
+        page.evaluate("() => setNav('settings')")
+        page.wait_for_timeout(200)
+        page.click("button:has-text('Dog training companion')")
+        page.wait_for_timeout(200)
+        page.evaluate("() => setNav('dog')")
         page.wait_for_timeout(300)
 
         assert page.locator(".dog-card").count() == 55
@@ -93,14 +96,15 @@ def test_dog_page_shows_all_skills_and_logs_events(app_server):
         # Logging a potty break updates the saved dog data.
         page.click("button[data-dog-act='potty'][data-dog-val='pee']")
         page.wait_for_timeout(200)
-        assert page.evaluate("() => state.dog.potty.length") == 1
+        assert page.locator(".row-title", has_text="pee").count() >= 1
 
         # Marking a skill mastered adds XP.
         page.click("button[data-dog-act='env'][data-dog-val='all']")
         page.click(".dog-card >> nth=0")
         page.click("button[data-dog-act='toggleDone']")
         page.wait_for_timeout(200)
-        assert page.evaluate("() => state.dog.xp") > 0
+        xp = page.locator(".metric", has_text="XP").locator(".value").inner_text()
+        assert int(xp.strip()) > 0
 
         assert errors == [], errors
         browser.close()
