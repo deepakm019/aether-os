@@ -94,12 +94,16 @@ def test_dog_page_shows_all_skills_and_logs_events(app_server):
         count = page.locator(".dog-card").count()
         assert 0 < count < 55
 
-        # Logging a potty break updates the saved dog data.
+        # Logging a potty break updates the saved dog data (potty buttons live on the Care tab).
+        page.click("button[data-dog-act='tab'][data-dog-val='care']")
+        page.wait_for_timeout(200)
         page.click("button[data-dog-act='potty'][data-dog-val='pee']")
         page.wait_for_timeout(200)
         assert page.locator(".row-title", has_text="pee").count() >= 1
 
-        # Marking a skill mastered adds XP.
+        # Marking a skill mastered adds XP (skill cards live on the Train tab).
+        page.click("button[data-dog-act='tab'][data-dog-val='train']")
+        page.wait_for_timeout(200)
         page.click("button[data-dog-act='env'][data-dog-val='all']")
         page.click(".dog-card >> nth=0")
         page.click("button[data-dog-act='toggleDone']")
