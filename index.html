@@ -711,14 +711,16 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
 @media (max-width:980px) and (min-width:621px){.focus-overlay{inset:auto 20px 20px auto}}
 .dog-card{display:flex;flex-direction:column;gap:8px;text-align:left;color:inherit;font:inherit;cursor:pointer;width:100%}.dog-block{display:block;font-weight:800}.dog-art{width:100%;max-width:200px;height:auto;display:block;margin:0 auto}.dog-svg{width:100%;height:auto;display:block}.dog-steps{margin:6px 0 0 20px;padding:0}.dog-steps li{margin-bottom:6px}.dog-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.dog-day{min-height:52px;padding:6px 2px;font-size:13px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:inherit;cursor:pointer;font:inherit}.dog-day.sel{box-shadow:inset 0 0 0 2px var(--accent2)}.dog-dots{display:flex;gap:3px;justify-content:center;margin-top:4px}.dog-dots i{display:block;width:6px;height:6px;border-radius:50%}.dog-key{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px}.note-box{padding:10px 12px;border-left:3px solid var(--amber,#e0a94a);background:var(--panel);border-radius:10px;font-size:13px;color:var(--muted)}.table-wrap{overflow-x:auto;max-width:100%}
 .dog-train-layout{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
-.dog-train-layout>.grid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));margin-top:0}
+.dog-train-layout>.grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));margin-top:0}
 @media (min-width:981px){.dog-train-layout{grid-template-columns:minmax(0,1fr) 300px;align-items:start}.dog-archive{position:sticky;top:12px}}
 .dog-archive-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);min-width:0}
 .dog-archive-open{flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;overflow-wrap:anywhere}
 .dog-list,.wish-list{padding:0 18px 8px}
-.dog-form-row{flex-wrap:wrap;align-items:flex-end;gap:12px;padding:12px 18px 4px;border:0}
+.dog-body{padding:14px 18px 18px}
+.dog-form-row{flex-wrap:wrap;align-items:flex-end;gap:12px;padding:0 0 4px;border:0}
 .dog-list .row,.wish-list .row{padding:12px 0;border-bottom:1px solid var(--line)}
-.dog-form-row .field{flex:1 1 140px;min-width:0}
+.dog-form-row .field{flex:1 1 130px;min-width:0}
+.dog-form-row input,.dog-form-row select{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
 .dog-form-row .btn{flex:0 0 auto}
 .dog-log{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
 .dog-log:last-child{border-bottom:0}
@@ -1380,15 +1382,15 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
       '<div class="panel pad"><div class="field"><label for="dogLogNote">Comment for the next entry (optional)</label>' +
       '<input type="text" id="dogLogNote" maxlength="' + LIMITS.logNote + '" placeholder="e.g. after a long walk, ate grass"></div></div>' +
       '<div class="grid grid-2 section">' +
-      '<div class="panel pad"><h2>Potty log</h2><div class="actions" style="margin-top:0">' +
+      '<div class="panel"><div class="panel-header"><h2>Potty log</h2></div><div class="dog-body"><div class="actions" style="margin-top:0">' +
       '<button class="btn primary" data-dog-act="potty" data-dog-val="pee">Pee</button>' +
       '<button class="btn primary" data-dog-act="potty" data-dog-val="poop">Poop</button>' +
       '<button class="btn" data-dog-act="potty" data-dog-val="accident">Accident</button></div>' +
-      '<p class="muted-line" style="margin-top:12px">' + esc(nextText) + '</p><div class="list" style="margin-top:12px">' + potty + '</div></div>' +
-      '<div class="panel pad"><h2>Meals, water and treats</h2><p class="muted-line">Meals are scheduled at 07:00, 12:00 and 18:00. Adjust these to your vet’s advice.</p>' +
+      '<p class="muted-line" style="margin-top:12px">' + esc(nextText) + '</p><div class="list" style="margin-top:12px">' + potty + '</div></div></div>' +
+      '<div class="panel"><div class="panel-header"><h2>Meals, water and treats</h2></div><div class="dog-body"><p class="muted-line">Meals are scheduled at 07:00, 12:00 and 18:00. Adjust these to your vet’s advice.</p>' +
       '<div class="actions" style="margin-top:0"><button class="btn primary" data-dog-act="meal">Log a meal now</button><button class="btn" data-dog-act="drink">Log water</button><button class="btn" data-dog-act="treat">Log a treat</button></div>' +
       '<p class="muted-line" style="margin-top:12px">Next scheduled meal at ' + esc(new Date(nextMeal(now)).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' })) + '.</p>' +
-      '<div class="list" style="margin-top:12px">' + meals + '</div></div></div></section>';
+      '<div class="list" style="margin-top:12px">' + meals + '</div></div></div></div></section>';
   }
 
   function viewHealth(dog) {
@@ -1398,15 +1400,15 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     var today = dateKey(new Date());
     return '<section class="section"><div class="note-box">This page keeps records only. It is not veterinary advice. Confirm every vaccine and medicine with your vet.</div>' +
       '<div class="grid grid-2 section">' +
-      '<div class="panel"><div class="panel-header"><h2>Weight</h2></div><div class="pad">' +
+      '<div class="panel"><div class="panel-header"><h2>Weight</h2></div><div class="dog-body">' +
       '<div class="row dog-form-row"><div class="field"><label for="dogWDate">Date</label><input type="date" id="dogWDate" value="' + today + '"></div>' +
       '<div class="field"><label for="dogWKg">Kg</label><input type="number" step="0.1" min="0" id="dogWKg" placeholder="kg"></div>' +
       '<button class="btn primary" data-dog-act="addWeight">Add weight</button></div></div><div class="list dog-list">' + weights + '</div></div>' +
-      '<div class="panel"><div class="panel-header"><h2>Vaccines and vet visits</h2></div><div class="pad">' +
+      '<div class="panel"><div class="panel-header"><h2>Vaccines and vet visits</h2></div><div class="dog-body">' +
       '<div class="row dog-form-row"><div class="field"><label for="dogVDate">Date</label><input type="date" id="dogVDate" value="' + today + '"></div>' +
       '<div class="field" style="flex:1;min-width:140px"><label for="dogVName">Name</label><input type="text" id="dogVName" maxlength="80" placeholder="e.g. DHPP booster"></div>' +
       '<button class="btn primary" data-dog-act="addVax">Add</button></div></div><div class="list dog-list">' + vax + '</div></div>' +
-      '<div class="panel" style="grid-column:1/-1"><div class="panel-header"><h2>Health notes</h2></div><div class="pad">' +
+      '<div class="panel" style="grid-column:1/-1"><div class="panel-header"><h2>Health notes</h2></div><div class="dog-body">' +
       '<div class="row dog-form-row"><div class="field"><label for="dogNDate">Date</label><input type="date" id="dogNDate" value="' + today + '"></div>' +
       '<div class="field" style="flex:1;min-width:160px"><label for="dogNText">Note</label><input type="text" id="dogNText" maxlength="500" placeholder="Symptom, appetite, energy, medicine given"></div>' +
       '<button class="btn primary" data-dog-act="addNote">Add note</button></div></div><div class="list dog-list">' + notes + '</div></div>' +
