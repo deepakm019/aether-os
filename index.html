@@ -701,11 +701,20 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
 .focus-overlay-title{margin:0;font-size:17px;line-height:1.3;overflow-wrap:anywhere;max-width:100%}
 .focus-overlay-timer{font-size:clamp(40px,9vw,56px);line-height:1;letter-spacing:-.05em;font-variant-numeric:tabular-nums;color:var(--accent)}
 .focus-overlay-bar{width:min(280px,90%)}
+.focus-overlay-grip{display:block;width:100%;height:22px;margin:-10px 0 -4px;padding:0;border:0;background:none;color:inherit;cursor:grab;touch-action:none;user-select:none}
+.focus-overlay-grip::before{content:"";display:block;width:44px;height:5px;margin:0 auto;border-radius:3px;background:var(--line)}
+.focus-overlay-grip:active{cursor:grabbing}
+.focus-overlay-grip:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 .focus-overlay-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .focus-overlay-actions .btn{min-height:40px}
 @media (max-width:620px){.focus-overlay{inset:auto 8px 84px 8px}.focus-overlay-card{width:100%}}
 @media (max-width:980px) and (min-width:621px){.focus-overlay{inset:auto 20px 20px auto}}
 .dog-card{display:flex;flex-direction:column;gap:8px;text-align:left;color:inherit;font:inherit;cursor:pointer;width:100%}.dog-block{display:block;font-weight:800}.dog-art{width:100%;max-width:200px;height:auto;display:block;margin:0 auto}.dog-svg{width:100%;height:auto;display:block}.dog-steps{margin:6px 0 0 20px;padding:0}.dog-steps li{margin-bottom:6px}.dog-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.dog-day{min-height:52px;padding:6px 2px;font-size:13px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:inherit;cursor:pointer;font:inherit}.dog-day.sel{box-shadow:inset 0 0 0 2px var(--accent2)}.dog-dots{display:flex;gap:3px;justify-content:center;margin-top:4px}.dog-dots i{display:block;width:6px;height:6px;border-radius:50%}.dog-key{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px}.note-box{padding:10px 12px;border-left:3px solid var(--amber,#e0a94a);background:var(--panel);border-radius:10px;font-size:13px;color:var(--muted)}.table-wrap{overflow-x:auto;max-width:100%}
+.dog-train-layout{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+.dog-train-layout>.grid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));margin-top:0}
+@media (min-width:981px){.dog-train-layout{grid-template-columns:minmax(0,1fr) 300px;align-items:start}.dog-archive{position:sticky;top:12px}}
+.dog-archive-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);min-width:0}
+.dog-archive-open{flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;overflow-wrap:anywhere}
 .dog-log{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
 .dog-log:last-child{border-bottom:0}
 .dog-log .row-main{min-width:0}
@@ -740,61 +749,61 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
 
   // 55 skills, most important first. Fields: id, name, environment, cartoon prop, minutes, items needed, steps (separated by |).
   var ROWS = [
-    ['name', 'Name recognition', 'both', 'treat', 5, 'Small soft treats; quiet room', 'Say the name once in a bright voice|Mark and treat when he looks at you|Repeat 10 times, 3 sessions a day'],
-    ['look', 'Look at me (eye contact)', 'both', 'treat', 5, 'Treats; clear floor', 'Hold a treat by your eye|Say "Look" and mark when he meets your gaze|Slowly add 2 seconds of gaze'],
-    ['sit', 'Sit', 'both', 'treat', 5, 'Treats', 'Lure nose up and back with a treat|Say "Sit" when his bottom touches down|Mark, treat, repeat; fade the lure'],
+    ['name', 'Name recognition', 'both', 'tag', 5, 'Small soft treats; quiet room', 'Say the name once in a bright voice|Mark and treat when he looks at you|Repeat 10 times, 3 sessions a day'],
+    ['look', 'Look at me (eye contact)', 'both', 'eye', 5, 'Treats; clear floor', 'Hold a treat by your eye|Say "Look" and mark when he meets your gaze|Slowly add 2 seconds of gaze'],
+    ['sit', 'Sit', 'both', 'stool', 5, 'Treats', 'Lure nose up and back with a treat|Say "Sit" when his bottom touches down|Mark, treat, repeat; fade the lure'],
     ['come', 'Come (recall) indoors', 'indoor', 'ball', 5, 'Treats; long leash optional', 'Crouch, cheerful voice, say "Come"|Reward generously when he arrives|Practice from different rooms'],
     ['leave', 'Leave it', 'both', 'treat', 5, 'Low-value and high-value treats', 'Close hand on low-value treat, say "Leave it"|Reward when he backs off|Progress to uncovered treat on floor'],
     ['drop', 'Drop it', 'both', 'ball', 5, 'Two toys, one better than the other', 'Offer a trade: toy for a better treat|Say "Drop" and treat when he releases|Practice with toy in hand'],
-    ['stay', 'Stay (short)', 'both', 'mat', 5, 'Treats; mat or spot', 'Ask Sit, say "Stay", open palm|Wait 2 seconds, return and reward|Add distance one step at a time'],
+    ['stay', 'Stay (short)', 'both', 'pause', 5, 'Treats; mat or spot', 'Ask Sit, say "Stay", open palm|Wait 2 seconds, return and reward|Add distance one step at a time'],
     ['down', 'Down', 'both', 'mat', 5, 'Treats; mat', 'Lure nose to floor, then slide forward|Say "Down" when elbows touch floor|Mark, treat, repeat'],
     ['loose_in', 'Loose-leash walking (indoor)', 'indoor', 'leash', 8, 'Leash, harness, treats', 'Walk a hallway; stop when leash tightens|Reward when slack, keep reward at your side|Add turns and distractions slowly'],
-    ['wait_door', 'Wait at doors', 'indoor', 'mat', 5, 'Treats; door', 'Ask Sit, open door a crack|Close if he moves; open when he waits|Build to full opening'],
-    ['settle', 'Settle on bed', 'indoor', 'mat', 10, 'Bed or mat; chew toy', 'Toss a treat onto the bed|Say "Settle" and reward calm lying|Lengthen time; add noise gradually'],
+    ['wait_door', 'Wait at doors', 'indoor', 'door', 5, 'Treats; door', 'Ask Sit, open door a crack|Close if he moves; open when he waits|Build to full opening'],
+    ['settle', 'Settle on bed', 'indoor', 'bed', 10, 'Bed or mat; chew toy', 'Toss a treat onto the bed|Say "Settle" and reward calm lying|Lengthen time; add noise gradually'],
     ['crate', 'Crate comfort', 'indoor', 'crate', 10, 'Crate with soft bed; treats', 'Feed meals near the open crate|Close for seconds, reward, open|Build duration slowly'],
     ['heel', 'Heel (position)', 'outdoor', 'leash', 8, 'Leash, treats', 'Keep his shoulder at your knee|Step off and mark when in position|Add turns and pace changes'],
-    ['touch', 'Touch (hand target)', 'both', 'treat', 5, 'Treats; open palm', 'Present palm; mark when nose touches it|Say "Touch" before presenting|Move hand to new places'],
+    ['touch', 'Touch (hand target)', 'both', 'hand', 5, 'Treats; open palm', 'Present palm; mark when nose touches it|Say "Touch" before presenting|Move hand to new places'],
     ['gentle', 'Gentle treat take', 'both', 'treat', 5, 'Flat treats', 'Hold treat in closed fist|Reward gentle sniff or lick|Open hand only when he is calm'],
-    ['paws', 'Paw handling', 'both', 'treat', 5, 'Treats', 'Touch a paw briefly, then treat|Hold a second longer each time|Practice before nail trims'],
-    ['ears', 'Ear handling', 'both', 'treat', 5, 'Treats; cotton ball', 'Touch ear base lightly, treat|Lift and check gently|Add cleaning slowly'],
-    ['teeth', 'Teeth and mouth handling', 'both', 'treat', 5, 'Finger brush or wet gauze; treats', 'Touch lips, treat|Lift lip for one second|Add a brushing motion'],
+    ['paws', 'Paw handling', 'both', 'paw', 5, 'Treats', 'Touch a paw briefly, then treat|Hold a second longer each time|Practice before nail trims'],
+    ['ears', 'Ear handling', 'both', 'ear', 5, 'Treats; cotton ball', 'Touch ear base lightly, treat|Lift and check gently|Add cleaning slowly'],
+    ['teeth', 'Teeth and mouth handling', 'both', 'tooth', 5, 'Finger brush or wet gauze; treats', 'Touch lips, treat|Lift lip for one second|Add a brushing motion'],
     ['brush', 'Brushing and coat handling', 'both', 'brush', 8, 'Soft brush; treats', 'Brush one short stroke, treat|Build strokes over days|Include belly and legs'],
-    ['nails', 'Nail trim acclimation', 'both', 'treat', 5, 'Clipper or file (no cutting yet); treats', 'Show the tool, treat|Touch a paw with the tool|Trim one nail only when relaxed'],
-    ['bath', 'Bath acclimation', 'indoor', 'bowl', 10, 'Tub or sink; lukewarm water; towel; treats', 'Lure into empty tub|Add a little warm water, reward|Build up to a rinse'],
+    ['nails', 'Nail trim acclimation', 'both', 'clipper', 5, 'Clipper or file (no cutting yet); treats', 'Show the tool, treat|Touch a paw with the tool|Trim one nail only when relaxed'],
+    ['bath', 'Bath acclimation', 'indoor', 'bath', 10, 'Tub or sink; lukewarm water; towel; treats', 'Lure into empty tub|Add a little warm water, reward|Build up to a rinse'],
     ['bowl_wait', 'Wait for food', 'indoor', 'bowl', 5, 'Food bowl; treats', 'Hold bowl; wait for sit|Lower bowl when calm|Release with "Okay"'],
-    ['off', 'Off (no jumping)', 'both', 'treat', 5, 'Treats', 'Turn away when paws touch you|Reward four paws down|Ask Sit for greetings'],
-    ['greet', 'Polite greeting', 'both', 'treat', 5, 'Treats; a helper', 'Helper enters, dog sits|Reward sit, ignore jumps|Repeat with new people'],
+    ['off', 'Off (no jumping)', 'both', 'hand', 5, 'Treats', 'Turn away when paws touch you|Reward four paws down|Ask Sit for greetings'],
+    ['greet', 'Polite greeting', 'both', 'hello', 5, 'Treats; a helper', 'Helper enters, dog sits|Reward sit, ignore jumps|Repeat with new people'],
     ['place', 'Go to place (mat)', 'indoor', 'mat', 5, 'Mat or bed; treats', 'Toss a treat onto the mat|Cue "Go to place" and mark when he steps on|Add duration and distance'],
     ['fetch', 'Fetch', 'outdoor', 'ball', 10, 'Ball or toy; open area', 'Toss a short distance|Encourage return; trade for a treat|Lengthen throws slowly'],
     ['recall_out', 'Recall outdoors (long line)', 'outdoor', 'leash', 10, 'Long line 5–10 m; high-value treats', 'Let the line run, call "Come"|Reward at arrival|Add distractions gradually'],
     ['leash_walk', 'Leash walk outdoors', 'outdoor', 'leash', 15, 'Leash, harness, treats', 'Start on a quiet street|Reward loose leash every few steps|Increase distance over weeks'],
-    ['distract', 'Ignore distractions', 'outdoor', 'treat', 10, 'Treats; quiet park', 'Watch the distance from the distraction|Reward attention to you|Move closer slowly'],
-    ['curb', 'Wait at curb', 'outdoor', 'leash', 5, 'Leash; treats', 'Stop at curb, ask Sit|Wait until you say "Okay"|Practice at every crossing'],
-    ['traffic', 'Calm with traffic noise', 'outdoor', 'leash', 8, 'Distance from the road; treats', 'Stand far enough for calm|Reward focus on you|Move closer over sessions'],
-    ['dogs_meet', 'Meet other dogs politely', 'outdoor', 'ball', 10, 'Calm friendly dog; leash; treats', 'Walk parallel at a distance|Reward calm sniffs|End before he gets excited'],
+    ['distract', 'Ignore distractions', 'outdoor', 'bone', 10, 'Treats; quiet park', 'Watch the distance from the distraction|Reward attention to you|Move closer slowly'],
+    ['curb', 'Wait at curb', 'outdoor', 'stop', 5, 'Leash; treats', 'Stop at curb, ask Sit|Wait until you say "Okay"|Practice at every crossing'],
+    ['traffic', 'Calm with traffic noise', 'outdoor', 'cone', 8, 'Distance from the road; treats', 'Stand far enough for calm|Reward focus on you|Move closer over sessions'],
+    ['dogs_meet', 'Meet other dogs politely', 'outdoor', 'paw', 10, 'Calm friendly dog; leash; treats', 'Walk parallel at a distance|Reward calm sniffs|End before he gets excited'],
     ['car', 'Calm car rides', 'outdoor', 'car', 10, 'Parked car; crate or harness; treats', 'Sit in parked car with door open|Reward calm; short trips|Lengthen trips over time'],
-    ['trail', 'Trail manners', 'outdoor', 'leash', 15, 'Leash; water; treats', 'Stay on trail|Check in every few minutes|Reward return to you'],
-    ['recall_hike', 'Recall on a hike', 'outdoor', 'ball', 10, 'Long line; high-value treat', 'Practice on long line first|Call "Come" as he moves away|Reward generously'],
-    ['potty_cue', 'Potty on cue', 'outdoor', 'mat', 10, 'Leash; treats; a cue word', 'Take outside after meals|Say "Go potty" once he sniffs|Reward immediately'],
-    ['swim', 'Water introduction', 'outdoor', 'ball', 10, 'Shallow water; life vest optional; treats', 'Let him step into shallows|Reward calm|Build depth gradually'],
-    ['shake', 'Shake (paw)', 'both', 'treat', 5, 'Treats', 'Hold treat in closed fist|Lift a paw and mark|Add cue "Shake"'],
-    ['roll', 'Roll over', 'both', 'treat', 8, 'Treats', 'Lure nose over shoulder|Continue the roll and mark|Add cue "Roll"'],
-    ['spin', 'Spin', 'both', 'treat', 5, 'Treats', 'Lure in a circle|Mark at full turn|Fade the lure'],
-    ['bow', 'Bow', 'both', 'treat', 5, 'Treats', 'Lure head down and front legs forward|Mark when down|Add a cue'],
-    ['hide_seek', 'Hide and seek', 'both', 'ball', 10, 'Toy; treats', 'Hide a toy in the room|Say "Find it"|Hide in harder spots'],
-    ['scent', 'Scent search (indoor)', 'indoor', 'treat', 10, 'Small treats in a cup', 'Hide a treat in a cup|Say "Search"|Hide in more places'],
-    ['tug', 'Tug (impulse control)', 'both', 'ball', 8, 'Tug toy', 'Start tug; say "Drop" when cued|Resume play after release|Keep rules consistent'],
-    ['find_it', 'Find it', 'both', 'treat', 8, 'Treats', 'Toss a treat|Say "Find it"|Increase distance'],
-    ['target', 'Target stick', 'both', 'treat', 8, 'Target stick or pen; treats', 'Touch nose to stick, mark|Move stick and reward|Add distance'],
-    ['back_up', 'Back up', 'both', 'treat', 5, 'Treats', 'Lure a step back|Mark and reward|Add cue "Back"'],
-    ['jumps', 'Low jumps', 'outdoor', 'ball', 8, 'Low bar or pole; treats', 'Walk over the pole|Lower jump gradually|Reward the finish'],
-    ['balance', 'Balance on wobble board', 'indoor', 'mat', 8, 'Wobble board or cushion', 'Stand on board with treats|Hold four paws|Add gentle movement'],
-    ['stairs', 'Stairs', 'indoor', 'leash', 8, 'Stairs; leash; treats', 'Reward a step onto first stair|Build steps|Practice up and down'],
-    ['crowd', 'Calm in crowds', 'outdoor', 'leash', 10, 'Leash; quiet area; treats', 'Watch crowd from a distance|Reward calm|Move closer slowly'],
-    ['noise', 'Noise desensitization', 'indoor', 'ball', 10, 'Recorded sounds at low volume; treats', 'Play sound quietly|Reward calm|Raise volume slowly'],
-    ['doorbell', 'Doorbell response', 'indoor', 'mat', 10, 'Doorbell audio or helper; treats', 'Ring at low volume; cue to mat|Reward on mat|Build to realistic doorbell'],
-    ['quiet', 'Quiet on cue', 'both', 'treat', 5, 'Treats', 'Let him bark once; say "Quiet" and treat when he stops|Build quiet time|Use the cue sparingly'],
-    ['platform', 'Four feet on platform', 'indoor', 'mat', 8, 'Sturdy box or platform; treats', 'Lure front paws up|Mark when two paws are on|Build to four paws']
+    ['trail', 'Trail manners', 'outdoor', 'tree', 15, 'Leash; water; treats', 'Stay on trail|Check in every few minutes|Reward return to you'],
+    ['recall_hike', 'Recall on a hike', 'outdoor', 'flag', 10, 'Long line; high-value treat', 'Practice on long line first|Call "Come" as he moves away|Reward generously'],
+    ['potty_cue', 'Potty on cue', 'outdoor', 'hydrant', 10, 'Leash; treats; a cue word', 'Take outside after meals|Say "Go potty" once he sniffs|Reward immediately'],
+    ['swim', 'Water introduction', 'outdoor', 'splash', 10, 'Shallow water; life vest optional; treats', 'Let him step into shallows|Reward calm|Build depth gradually'],
+    ['shake', 'Shake (paw)', 'both', 'paw', 5, 'Treats', 'Hold treat in closed fist|Lift a paw and mark|Add cue "Shake"'],
+    ['roll', 'Roll over', 'both', 'roll', 8, 'Treats', 'Lure nose over shoulder|Continue the roll and mark|Add cue "Roll"'],
+    ['spin', 'Spin', 'both', 'spin', 5, 'Treats', 'Lure in a circle|Mark at full turn|Fade the lure'],
+    ['bow', 'Bow', 'both', 'bowtie', 5, 'Treats', 'Lure head down and front legs forward|Mark when down|Add a cue'],
+    ['hide_seek', 'Hide and seek', 'both', 'box', 10, 'Toy; treats', 'Hide a toy in the room|Say "Find it"|Hide in harder spots'],
+    ['scent', 'Scent search (indoor)', 'indoor', 'magnifier', 10, 'Small treats in a cup', 'Hide a treat in a cup|Say "Search"|Hide in more places'],
+    ['tug', 'Tug (impulse control)', 'both', 'rope', 8, 'Tug toy', 'Start tug; say "Drop" when cued|Resume play after release|Keep rules consistent'],
+    ['find_it', 'Find it', 'both', 'magnifier', 8, 'Treats', 'Toss a treat|Say "Find it"|Increase distance'],
+    ['target', 'Target stick', 'both', 'target', 8, 'Target stick or pen; treats', 'Touch nose to stick, mark|Move stick and reward|Add distance'],
+    ['back_up', 'Back up', 'both', 'arrow', 5, 'Treats', 'Lure a step back|Mark and reward|Add cue "Back"'],
+    ['jumps', 'Low jumps', 'outdoor', 'bar', 8, 'Low bar or pole; treats', 'Walk over the pole|Lower jump gradually|Reward the finish'],
+    ['balance', 'Balance on wobble board', 'indoor', 'wobble', 8, 'Wobble board or cushion', 'Stand on board with treats|Hold four paws|Add gentle movement'],
+    ['stairs', 'Stairs', 'indoor', 'stairs', 8, 'Stairs; leash; treats', 'Reward a step onto first stair|Build steps|Practice up and down'],
+    ['crowd', 'Calm in crowds', 'outdoor', 'people', 10, 'Leash; quiet area; treats', 'Watch crowd from a distance|Reward calm|Move closer slowly'],
+    ['noise', 'Noise desensitization', 'indoor', 'sound', 10, 'Recorded sounds at low volume; treats', 'Play sound quietly|Reward calm|Raise volume slowly'],
+    ['doorbell', 'Doorbell response', 'indoor', 'bell', 10, 'Doorbell audio or helper; treats', 'Ring at low volume; cue to mat|Reward on mat|Build to realistic doorbell'],
+    ['quiet', 'Quiet on cue', 'both', 'moon', 5, 'Treats', 'Let him bark once; say "Quiet" and treat when he stops|Build quiet time|Use the cue sparingly'],
+    ['platform', 'Four feet on platform', 'indoor', 'box', 8, 'Sturdy box or platform; treats', 'Lure front paws up|Mark when two paws are on|Build to four paws']
   ];
 
   var ITEMS = ROWS.map(function (r, i) {
@@ -823,6 +832,8 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
   ];
   var LIMITS = { potty: 2000, meals: 2000, weights: 1000, vax: 300, notes: 500, noteLen: 500, nameLen: 40, vaxLen: 80, logNote: 200 };
   var PET_TYPES = ['pee', 'poop', 'accident'];
+  var MEAL_KINDS = ['meal', 'water', 'treat'];
+  var MEAL_LABEL = { meal: 'Meal', water: 'Water', treat: 'Treat' };
   var FILTERS = ['both', 'indoor', 'outdoor'];
 
   /* ---------- small helpers ---------- */
@@ -892,7 +903,7 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     })).slice(-LIMITS.potty);
     out.meals = sortByTime(list(src.meals).filter(function (m) {
       return plainObj(m) && isFinite(Number(m.t)) && Number(m.t) > 0;
-    }).map(function (m) { return { id: typeof m.id === 'string' && m.id.length <= 40 ? m.id : uid('m'), t: Number(m.t), note: cleanText(m.note, LIMITS.logNote) }; })).slice(-LIMITS.meals);
+    }).map(function (m) { return { id: typeof m.id === 'string' && m.id.length <= 40 ? m.id : uid('m'), t: Number(m.t), kind: MEAL_KINDS.indexOf(m.kind) >= 0 ? m.kind : 'meal', note: cleanText(m.note, LIMITS.logNote) }; })).slice(-LIMITS.meals);
     out.weights = list(src.weights).filter(function (w) {
       return plainObj(w) && isKey(w.d) && Number(w.kg) > 0 && Number(w.kg) < 500;
     }).map(function (w) {
@@ -970,8 +981,10 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     reconcileBonus(dog, now);
     return true;
   }
-  function logMeal(dog, now, note) {
-    dog.meals.push({ id: uid('m'), t: now.getTime(), note: cleanText(note, LIMITS.logNote) });
+  function logMeal(dog, now, note, kind) {
+    var k = kind === undefined ? 'meal' : kind;
+    if (MEAL_KINDS.indexOf(k) < 0) return false;
+    dog.meals.push({ id: uid('m'), t: now.getTime(), kind: k, note: cleanText(note, LIMITS.logNote) });
     if (dog.meals.length > LIMITS.meals) dog.meals.splice(0, dog.meals.length - LIMITS.meals);
     return true;
   }
@@ -997,11 +1010,13 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     if (list === 'potty' || list === 'meals') {
       var t = parseLogTime(f.time, now);
       if (t === null) return { error: 'Enter a date and time that is not in the future' };
+      if (list === 'meals' && f.kind !== undefined && MEAL_KINDS.indexOf(f.kind) < 0) return { error: 'Choose meal, water or treat' };
       if (list === 'potty') {
         if (PET_TYPES.indexOf(f.type) < 0) return { error: 'Choose pee, poop or accident' };
         rec.type = f.type;
       }
       rec.t = t;
+      if (list === 'meals' && f.kind !== undefined) rec.kind = f.kind;
       rec.note = note;
       sortByTime(dog[list]);
     } else if (list === 'weights') {
@@ -1091,7 +1106,7 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
       return [
         ['Potty events', pot.length],
         ['Accidents', pot.filter(function (p) { return p.type === 'accident'; }).length],
-        ['Meals', dog.meals.filter(function (m) { return set[dateKey(new Date(m.t))]; }).length],
+        ['Meals', dog.meals.filter(function (m) { return (m.kind || 'meal') === 'meal' && set[dateKey(new Date(m.t))]; }).length],
         ['Skills mastered', Object.keys(dog.done).filter(function (id) { return set[dog.done[id]]; }).length]
       ];
     }
@@ -1143,7 +1158,42 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     bowl: '<path d="M12 84h38q-2 14-19 14T12 84z" fill="var(--accent2)"/>',
     brush: '<rect x="10" y="78" width="34" height="10" rx="3" fill="var(--accent2)"/><path d="M16 88v8M25 88v8M34 88v8" stroke="var(--accent2)" stroke-width="3"/>',
     crate: '<rect x="6" y="60" width="44" height="44" fill="none" stroke="var(--accent2)" stroke-width="3"/><path d="M18 60v44M30 60v44M42 60v44" stroke="var(--accent2)" stroke-width="2"/>',
-    car: '<rect x="4" y="88" width="46" height="18" rx="5" fill="var(--accent2)"/><circle cx="16" cy="108" r="5" fill="var(--fg)"/><circle cx="40" cy="108" r="5" fill="var(--fg)"/>'
+    car: '<rect x="4" y="88" width="46" height="18" rx="5" fill="var(--accent2)"/><circle cx="16" cy="108" r="5" fill="var(--fg)"/><circle cx="40" cy="108" r="5" fill="var(--fg)"/>',
+    tag: '<rect x="12" y="34" width="36" height="52" rx="8" fill="var(--accent)"/><circle cx="30" cy="46" r="4" fill="var(--panel)"/><path d="M20 62h20M20 72h14" stroke="var(--panel)" stroke-width="3" stroke-linecap="round"/>',
+    hello: '<rect x="6" y="34" width="46" height="30" rx="8" fill="var(--accent)"/><path d="M16 64l-4 12 14-12z" fill="var(--accent)"/><text x="29" y="55" text-anchor="middle" font-size="15" font-weight="700" fill="var(--panel)">Hi</text>',
+    eye: '<path d="M4 50q24-30 48 0q-24 30-48 0z" fill="var(--panel)" stroke="var(--accent2)" stroke-width="3"/><circle cx="28" cy="50" r="7" fill="var(--accent2)"/><circle cx="28" cy="50" r="2.5" fill="var(--panel)"/>',
+    paw: '<ellipse cx="30" cy="80" rx="13" ry="11" fill="var(--accent2)"/><ellipse cx="13" cy="62" rx="5" ry="6.5" fill="var(--accent2)"/><ellipse cx="24" cy="50" rx="5" ry="6.5" fill="var(--accent2)"/><ellipse cx="36" cy="50" rx="5" ry="6.5" fill="var(--accent2)"/><ellipse cx="47" cy="62" rx="5" ry="6.5" fill="var(--accent2)"/>',
+    hand: '<rect x="16" y="56" width="28" height="30" rx="10" fill="var(--accent2)"/><rect x="16" y="30" width="6" height="30" rx="3" fill="var(--accent2)"/><rect x="24" y="24" width="6" height="36" rx="3" fill="var(--accent2)"/><rect x="32" y="26" width="6" height="34" rx="3" fill="var(--accent2)"/><rect x="40" y="32" width="6" height="28" rx="3" fill="var(--accent2)"/>',
+    pause: '<circle cx="30" cy="64" r="24" fill="var(--accent)"/><rect x="22" y="52" width="6" height="24" rx="2" fill="var(--panel)"/><rect x="32" y="52" width="6" height="24" rx="2" fill="var(--panel)"/>',
+    stool: '<rect x="10" y="50" width="40" height="8" rx="3" fill="var(--accent2)"/><path d="M16 58l-4 50M44 58l4 50M30 58v50" stroke="var(--accent2)" stroke-width="4" stroke-linecap="round"/>',
+    ear: '<path d="M22 30q-14 10-12 44q2 16 16 22q14-8 12-28q-2-22-16-38z" fill="var(--accent2)"/><path d="M26 44q-6 10-4 28q1 8 6 12" fill="none" stroke="var(--panel)" stroke-width="3" stroke-linecap="round"/>',
+    tooth: '<path d="M18 30h24q8 0 8 14q0 8-4 20l-4 26q-1 6-6 6q-4 0-5-6l-2-14l-2 14q-1 6-5 6q-5 0-6-6l-4-26q-4-12-4-20q0-14 10-14z" fill="var(--panel)" stroke="var(--accent2)" stroke-width="3"/>',
+    clipper: '<path d="M10 40l38 30M10 100l38-30" stroke="var(--accent2)" stroke-width="6" stroke-linecap="round"/><circle cx="10" cy="40" r="6" fill="var(--accent)"/><circle cx="10" cy="100" r="6" fill="var(--accent)"/><rect x="36" y="54" width="18" height="12" rx="3" fill="var(--accent)"/>',
+    bath: '<path d="M6 60h48v20a12 12 0 0 1-12 12H18A12 12 0 0 1 6 80z" fill="var(--accent2)"/><rect x="4" y="54" width="52" height="8" rx="4" fill="var(--accent2)"/><circle cx="16" cy="40" r="4" fill="var(--accent)"/><circle cx="26" cy="30" r="3" fill="var(--accent)"/><circle cx="36" cy="40" r="4" fill="var(--accent)"/>',
+    splash: '<path d="M4 84q8-8 16 0t16 0t16 0t8 0" fill="none" stroke="var(--accent2)" stroke-width="5" stroke-linecap="round"/><path d="M4 102q8-8 16 0t16 0t16 0t8 0" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/><circle cx="30" cy="62" r="4" fill="var(--accent)"/>',
+    stairs: '<path d="M4 108h14V94h14V80h14V66h14V52" fill="none" stroke="var(--accent2)" stroke-width="5" stroke-linejoin="round"/>',
+    bell: '<path d="M30 30q-16 0-16 22v16l-6 8h44l-6-8V52q0-22-16-22z" fill="var(--accent)"/><circle cx="30" cy="84" r="5" fill="var(--accent2)"/><path d="M30 22v-6" stroke="var(--accent2)" stroke-width="3" stroke-linecap="round"/>',
+    cone: '<path d="M30 28l16 66H14z" fill="var(--accent)"/><path d="M22 60h16" stroke="var(--panel)" stroke-width="6"/><rect x="8" y="94" width="44" height="8" rx="3" fill="var(--accent2)"/>',
+    stop: '<path d="M22 24h16l12 12v16L38 64H22L10 52V36z" fill="var(--accent)"/><rect x="28" y="64" width="4" height="44" fill="var(--accent2)"/><text x="30" y="50" text-anchor="middle" font-size="9" font-weight="800" fill="var(--panel)">STOP</text>',
+    people: '<circle cx="16" cy="52" r="6" fill="var(--accent2)"/><circle cx="30" cy="44" r="7" fill="var(--accent)"/><circle cx="46" cy="52" r="6" fill="var(--accent2)"/><rect x="8" y="62" width="16" height="46" rx="8" fill="var(--accent2)"/><rect x="22" y="56" width="18" height="52" rx="9" fill="var(--accent)"/><rect x="38" y="62" width="16" height="46" rx="8" fill="var(--accent2)"/>',
+    sound: '<rect x="8" y="48" width="12" height="24" rx="2" fill="var(--accent2)"/><path d="M20 48l14-12v48L20 72z" fill="var(--accent2)"/><path d="M42 42q6 10 0 20M50 34q10 18 0 36" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>',
+    bar: '<rect x="6" y="50" width="6" height="58" rx="2" fill="var(--accent2)"/><rect x="48" y="50" width="6" height="58" rx="2" fill="var(--accent2)"/><path d="M9 56h45" stroke="var(--accent)" stroke-width="6" stroke-linecap="round"/>',
+    rope: '<path d="M6 60q24-14 48 0" stroke="var(--accent2)" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="6" cy="60" r="7" fill="var(--accent)"/><circle cx="54" cy="60" r="7" fill="var(--accent)"/>',
+    target: '<circle cx="28" cy="66" r="24" fill="var(--panel)" stroke="var(--accent2)" stroke-width="4"/><circle cx="28" cy="66" r="13" fill="var(--accent)"/><circle cx="28" cy="66" r="4" fill="var(--panel)"/>',
+    arrow: '<path d="M10 60h40" stroke="var(--accent2)" stroke-width="6" stroke-linecap="round"/><path d="M22 46L8 60l14 14" fill="none" stroke="var(--accent2)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>',
+    spin: '<path d="M28 42a24 24 0 1 1-24 24" fill="none" stroke="var(--accent2)" stroke-width="6" stroke-linecap="round"/><path d="M4 56l0 10 10-2" fill="none" stroke="var(--accent2)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>',
+    roll: '<circle cx="28" cy="84" r="14" fill="var(--accent)"/><path d="M14 58q14-16 28 0" fill="none" stroke="var(--accent2)" stroke-width="5" stroke-linecap="round"/><path d="M36 54l7 6-9 3" fill="none" stroke="var(--accent2)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>',
+    bowtie: '<path d="M4 58l22 12-22 12zM52 58L30 70l22 12z" fill="var(--accent)"/><circle cx="30" cy="70" r="5" fill="var(--accent2)"/>',
+    box: '<rect x="6" y="66" width="46" height="40" rx="4" fill="var(--accent2)"/><path d="M6 78h46" stroke="var(--panel)" stroke-width="3"/>',
+    magnifier: '<circle cx="28" cy="58" r="18" fill="none" stroke="var(--accent2)" stroke-width="6"/><path d="M42 72l14 14" stroke="var(--accent2)" stroke-width="7" stroke-linecap="round"/>',
+    flag: '<path d="M16 24v86" stroke="var(--accent2)" stroke-width="4" stroke-linecap="round"/><path d="M20 26h30l-8 12 8 12H20z" fill="var(--accent)"/>',
+    tree: '<path d="M28 20l-18 36h10l-12 22h36l-12-22h10z" fill="var(--accent2)"/><rect x="25" y="78" width="6" height="30" fill="#8a6442"/>',
+    hydrant: '<rect x="20" y="52" width="20" height="56" rx="6" fill="var(--accent)"/><rect x="14" y="70" width="32" height="8" rx="3" fill="var(--accent)"/><rect x="8" y="96" width="44" height="8" rx="3" fill="var(--accent2)"/><circle cx="8" cy="66" r="4" fill="var(--accent)"/><circle cx="52" cy="66" r="4" fill="var(--accent)"/><rect x="18" y="36" width="24" height="18" rx="9" fill="var(--accent)"/>',
+    bone: '<path d="M16 60h28" stroke="var(--accent)" stroke-width="10" stroke-linecap="round"/><circle cx="14" cy="54" r="7" fill="var(--accent)"/><circle cx="14" cy="66" r="7" fill="var(--accent)"/><circle cx="46" cy="54" r="7" fill="var(--accent)"/><circle cx="46" cy="66" r="7" fill="var(--accent)"/>',
+    moon: '<path d="M38 26a28 28 0 1 0 0 56a22 22 0 0 1 0-56z" fill="var(--accent)"/>',
+    bed: '<rect x="6" y="84" width="48" height="10" rx="3" fill="var(--accent2)"/><path d="M6 94v14M54 94v14" stroke="var(--accent2)" stroke-width="4"/><rect x="6" y="66" width="10" height="18" rx="3" fill="var(--accent2)"/><ellipse cx="34" cy="78" rx="14" ry="6" fill="var(--accent)"/>',
+    door: '<rect x="10" y="24" width="40" height="84" rx="3" fill="none" stroke="var(--accent2)" stroke-width="4"/><path d="M14 28h32v76H14z" fill="var(--accent2)" opacity=".5"/><circle cx="42" cy="68" r="3" fill="var(--panel)"/>',
+    wobble: '<path d="M6 80q24-10 48 0" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/><ellipse cx="30" cy="92" rx="26" ry="6" fill="var(--accent)"/><rect x="24" y="92" width="12" height="16" fill="var(--accent2)"/>'
   };
   function art(prop, label) {
     return '<svg class="dog-art" viewBox="0 0 160 120" role="img" aria-label="Cartoon dog with ' + esc(label) + '">' +
@@ -1223,21 +1273,28 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
   }
 
   function viewTrain(dog) {
-    var list = ITEMS.filter(function (it) { return envOk(it.env, ui.env); });
-    var cards = list.map(function (it) {
+    var inView = ITEMS.filter(function (it) { return envOk(it.env, ui.env); });
+    var open = inView.filter(function (it) { return !dog.done[it.id]; });
+    var archived = inView.filter(function (it) { return !!dog.done[it.id]; });
+    var cards = open.map(function (it) {
       return '<button class="panel pad dog-card" data-dog-act="open" data-dog-val="' + it.id + '">' +
         art(it.prop, it.n) +
-        '<span class="row" style="justify-content:space-between"><span class="chip">#' + it.i + '</span>' +
-        (dog.done[it.id] ? '<span class="chip good">Mastered</span>' : '') + '</span>' +
+        '<span class="row" style="justify-content:space-between"><span class="chip">#' + it.i + '</span></span>' +
         '<span class="dog-block" style="font-family:var(--serif,inherit);font-weight:800">' + esc(it.n) + '</span>' +
         '<span class="row">' + envChip(it.env) + '<span class="chip">' + it.min + ' min</span><span class="chip">' + it.xp + ' XP</span></span>' +
         '</button>';
-    }).join('');
+    }).join('') || '<div class="empty panel pad"><strong>Every skill in this view is mastered.</strong>They are listed in the archive.</div>';
+    var archive = archived.map(function (it) {
+      return '<div class="dog-archive-row"><button class="dog-archive-open" data-dog-act="open" data-dog-val="' + it.id + '">' + esc(it.n) + '</button>' +
+        '<span class="chip good">' + it.xp + ' XP</span>' +
+        '<button class="btn mini" data-dog-act="toggleDone" data-dog-val="' + it.id + '">Restore</button></div>';
+    }).join('') || '<div class="empty"><strong>Nothing archived yet</strong>Skills you mark as mastered move here.</div>';
     return '<section class="section"><div class="row" style="justify-content:space-between;margin-bottom:10px">' +
       seg([['all', 'All'], ['indoor', 'Indoor'], ['outdoor', 'Outdoor']], ui.env, 'env') +
       '<span class="muted-line">' + Object.keys(dog.done).length + ' of ' + ITEMS.length + ' mastered</span></div>' +
-      '<p class="muted-line">Ordered from most important to fun extras. Start at the top and move down once each skill is steady.</p>' +
-      '<div class="grid grid-3 section">' + cards + '</div></section>';
+      '<p class="muted-line">Ordered from most important to fun extras. Start at the top and move down once each skill is steady.</p></section>' +
+      '<div class="dog-train-layout section"><div class="grid grid-3">' + cards + '</div>' +
+      '<aside class="panel pad dog-archive" aria-labelledby="dog-archive-title"><div class="panel-header"><h2 id="dog-archive-title">Archived</h2><small>' + archived.length + ' mastered</small></div><div class="list">' + archive + '</div></aside></div>';
   }
 
   function viewDaily(dog, now) {
@@ -1283,6 +1340,9 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
       }).join('') + '</select>');
     } else if (list === 'meals') {
       f += fieldHtml('dogEdTime', 'When', '<input type="datetime-local" id="dogEdTime" value="' + localInput(rec.t) + '">');
+      f += fieldHtml('dogEdKind', 'Kind', '<select id="dogEdKind">' + MEAL_KINDS.map(function (k) {
+        return '<option value="' + k + '"' + (k === (rec.kind || 'meal') ? ' selected' : '') + '>' + MEAL_LABEL[k] + '</option>';
+      }).join('') + '</select>');
     } else if (list === 'weights') {
       f += fieldHtml('dogEdDate', 'Date', '<input type="date" id="dogEdDate" value="' + esc(String(rec.d)) + '">');
       f += fieldHtml('dogEdKg', 'Kg', '<input type="number" step="0.1" min="0" id="dogEdKg" value="' + esc(String(rec.kg)) + '">');
@@ -1308,8 +1368,8 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
       return logRow('potty', p, LOG_LABEL[p.type] || p.type, fmtStamp(p.t), p.note);
     }).join('') || '<div class="empty"><strong>Nothing logged yet</strong>Tap Pee, Poop or Accident above.</div>';
     var meals = dog.meals.slice(-12).reverse().map(function (m) {
-      return logRow('meals', m, 'Meal', fmtStamp(m.t), m.note);
-    }).join('') || '<div class="empty"><strong>No meals logged yet</strong></div>';
+      return logRow('meals', m, MEAL_LABEL[m.kind || 'meal'] || 'Meal', fmtStamp(m.t), m.note);
+    }).join('') || '<div class="empty"><strong>Nothing logged yet</strong>Log a meal, some water or a treat above.</div>';
     return '<section class="section">' +
       '<div class="panel pad"><div class="field"><label for="dogLogNote">Comment for the next entry (optional)</label>' +
       '<input type="text" id="dogLogNote" maxlength="' + LIMITS.logNote + '" placeholder="e.g. after a long walk, ate grass"></div></div>' +
@@ -1319,8 +1379,8 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
       '<button class="btn primary" data-dog-act="potty" data-dog-val="poop">Poop</button>' +
       '<button class="btn" data-dog-act="potty" data-dog-val="accident">Accident</button></div>' +
       '<p class="muted-line" style="margin-top:12px">' + esc(nextText) + '</p><div class="list" style="margin-top:12px">' + potty + '</div></div>' +
-      '<div class="panel pad"><h2>Meals</h2><p class="muted-line">Scheduled at 07:00, 12:00 and 18:00. Adjust these to your vet’s advice.</p>' +
-      '<div class="actions" style="margin-top:0"><button class="btn primary" data-dog-act="meal">Log a meal now</button></div>' +
+      '<div class="panel pad"><h2>Meals, water and treats</h2><p class="muted-line">Meals are scheduled at 07:00, 12:00 and 18:00. Adjust these to your vet’s advice.</p>' +
+      '<div class="actions" style="margin-top:0"><button class="btn primary" data-dog-act="meal">Log a meal now</button><button class="btn" data-dog-act="drink">Log water</button><button class="btn" data-dog-act="treat">Log a treat</button></div>' +
       '<p class="muted-line" style="margin-top:12px">Next scheduled meal at ' + esc(new Date(nextMeal(now)).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' })) + '.</p>' +
       '<div class="list" style="margin-top:12px">' + meals + '</div></div></div></section>';
   }
@@ -1533,7 +1593,7 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
   }
   function readLogFields() {
     var g = function (id) { var el = document.getElementById(id); return el ? el.value : ''; };
-    return { time: g('dogEdTime'), type: g('dogEdType'), note: g('dogEdNote'), d: g('dogEdDate'), kg: g('dogEdKg'), name: g('dogEdName'), text: g('dogEdText') };
+    return { time: g('dogEdTime'), type: g('dogEdType'), kind: g('dogEdKind'), note: g('dogEdNote'), d: g('dogEdDate'), kg: g('dogEdKg'), name: g('dogEdName'), text: g('dogEdText') };
   }
   function act(name, val) {
     var d = dog(), now = new Date();
@@ -1546,7 +1606,9 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
       case 'toggleDone': changed = toggleDone(d, val, now); break;
       case 'task': changed = setDailyTask(d, val, now); break;
       case 'potty': changed = logPotty(d, val, now, logNoteInput()); break;
-      case 'meal': changed = logMeal(d, now, logNoteInput()); break;
+      case 'meal': changed = logMeal(d, now, logNoteInput(), 'meal'); break;
+      case 'drink': changed = logMeal(d, now, logNoteInput(), 'water'); break;
+      case 'treat': changed = logMeal(d, now, logNoteInput(), 'treat'); break;
       case 'addWeight': {
         var wd = document.getElementById('dogWDate').value || dateKey(now);
         var kg = parseFloat(document.getElementById('dogWKg').value);
@@ -2124,8 +2186,18 @@ function renderFocusOverlay(){
  if(!live)return;
  const initial=state.focus.initial||1500,pct=Math.max(0,Math.min(100,(initial-state.focus.seconds)/initial*100));
  const on=focusMusicOn();
- el.innerHTML=`<div class="focus-overlay-card"><div class="eyebrow">Focus mode · ${state.focus.paused?'paused':'running'}</div><h2 class="focus-overlay-title">${esc(focusSessionTitle())}</h2><div id="overlay-timer" class="focus-overlay-timer">${fmtClock(state.focus.seconds)}</div><div class="bar focus-overlay-bar"><i id="overlay-bar" style="width:${pct}%"></i></div><div class="focus-overlay-actions"><button class="btn mini" onclick="toggleFocusPause()">${state.focus.active?'Pause':'Resume'}</button><button class="btn mini" onclick="resetFocusTimer()">Reset</button><button class="btn mini ${on?'primary':''}" aria-pressed="${on}" onclick="toggleFocusMusic()">Music ${on?'on':'off'}</button><button class="btn mini" onclick="hideFocusOverlay()">Close</button></div></div>`;
+ el.innerHTML=`<div class="focus-overlay-card"><button class="focus-overlay-grip" aria-label="Move focus timer up or down. Drag, or press the Up and Down arrow keys" onpointerdown="startFocusOverlayDrag(event)" onkeydown="nudgeFocusOverlayKey(event)"></button><div class="eyebrow">Focus mode · ${state.focus.paused?'paused':'running'}</div><h2 class="focus-overlay-title">${esc(focusSessionTitle())}</h2><div id="overlay-timer" class="focus-overlay-timer">${fmtClock(state.focus.seconds)}</div><div class="bar focus-overlay-bar"><i id="overlay-bar" style="width:${pct}%"></i></div><div class="focus-overlay-actions"><button class="btn mini" onclick="toggleFocusPause()">${state.focus.active?'Pause':'Resume'}</button><button class="btn mini" onclick="resetFocusTimer()">Reset</button><button class="btn mini ${on?'primary':''}" aria-pressed="${on}" onclick="toggleFocusMusic()">Music ${on?'on':'off'}</button><button class="btn mini" onclick="hideFocusOverlay()">Close</button></div></div>`;
+ applyFocusOverlayY(el);
 }
+const FOCUS_OVERLAY_Y_KEY='asos.focusOverlayY';
+let __focusOverlayY=null;
+try{const v=parseFloat(localStorage.getItem(FOCUS_OVERLAY_Y_KEY));if(isFinite(v))__focusOverlayY=v}catch(e){}
+function focusOverlayClamp(el,y){const max=Math.max(8,window.innerHeight-el.offsetHeight-8);return Math.max(8,Math.min(max,y))}
+function applyFocusOverlayY(el){if(!el||__focusOverlayY===null)return;__focusOverlayY=focusOverlayClamp(el,__focusOverlayY);el.style.top=__focusOverlayY+'px';el.style.bottom='auto'}
+function setFocusOverlayY(y){const el=document.getElementById('focus-overlay');if(!el)return;__focusOverlayY=focusOverlayClamp(el,y);applyFocusOverlayY(el);try{localStorage.setItem(FOCUS_OVERLAY_Y_KEY,String(__focusOverlayY))}catch(e){}}
+function startFocusOverlayDrag(e){const el=document.getElementById('focus-overlay');if(!el||e.button>0)return;e.preventDefault();const handle=e.currentTarget,startY=e.clientY,startTop=el.getBoundingClientRect().top;if(handle.setPointerCapture)handle.setPointerCapture(e.pointerId);const move=ev=>setFocusOverlayY(startTop+ev.clientY-startY);const up=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',up)};handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',up);handle.addEventListener('pointercancel',up)}
+function nudgeFocusOverlayKey(e){if(e.key!=='ArrowUp'&&e.key!=='ArrowDown')return;e.preventDefault();const el=document.getElementById('focus-overlay');if(!el)return;setFocusOverlayY(el.getBoundingClientRect().top+(e.key==='ArrowUp'?-24:24))}
+window.addEventListener('resize',()=>applyFocusOverlayY(document.getElementById('focus-overlay')));
 function renderFocusOverlayTick(){const el=document.getElementById('overlay-timer');if(!el)return;el.textContent=fmtClock(state.focus.seconds);const b=document.getElementById('overlay-bar');if(b&&state.focus.initial)b.style.width=((state.focus.initial-state.focus.seconds)/state.focus.initial*100)+'%'}
 window.addEventListener('hashchange',()=>renderFocusOverlay());
 function hideFocusOverlay(){__focusOverlayHidden=true;renderFocusOverlay()}
@@ -3431,7 +3503,7 @@ async function applyEncryptedRestore(){
  }catch(e){toast('Could not restore encrypted backup')}
 }
 
-Object.assign(window,{switchMinimalMode,minimalStartEdit,minimalCancelEdit,minimalSaveEdit,minimalSnooze,minimalSetPinned,minimalPostText,minimalOpenDrawing,minimalCloseDrawing,minimalClearDrawing,minimalPostDrawing,minimalPin,minimalDelete,minimalToggleTheme,splitViewRoute,splitGroupModal,splitSaveGroup,splitDeleteGroup,splitAddPeople,splitRemovePerson,splitExpenseModal,splitPreview,splitSaveExpense,splitDeleteExpense,splitMarkPaid,splitMarkAll,splitUndoPayment,handleMinimalReturnPending,nextDue,quickCapture,restoreFromTrash,purgeFromTrash,undoLastRestore,restoreAutoSnapshot,applyEncryptedRestore,demoState,normalizeWorkspace,load,persist,resetDemo,toast,nav,setNav,formatDay,dateShort,taskById,facts,daysSince,startFreshWorkspace,openUpcoming,setSetting,toggleHideAmounts,setAmbientEffect,setAmbientStrength,setFocusSound,setFocusSoundVolume,toggleFocusSound,dismissRecommendation,parseCapture,captureCardModal,captureSwitch,saveCapture,openModal,taskModal,activeProblems,problemRuleCandidates,actionForRec,parkProblem,reopenProblem,resolveProblem,promoteTaskToProblem,problemModal,saveProblem,setProblemMovedForTest,setTaskReschedulesForTest,deleteAllLocalData,legalSummaryModal,toggleBetaContinue,
+Object.assign(window,{startFreeFocus,startFocusOverlayDrag,nudgeFocusOverlayKey,setFocusOverlayY,switchMinimalMode,minimalStartEdit,minimalCancelEdit,minimalSaveEdit,minimalSnooze,minimalSetPinned,minimalPostText,minimalOpenDrawing,minimalCloseDrawing,minimalClearDrawing,minimalPostDrawing,minimalPin,minimalDelete,minimalToggleTheme,splitViewRoute,splitGroupModal,splitSaveGroup,splitDeleteGroup,splitAddPeople,splitRemovePerson,splitExpenseModal,splitPreview,splitSaveExpense,splitDeleteExpense,splitMarkPaid,splitMarkAll,splitUndoPayment,handleMinimalReturnPending,nextDue,quickCapture,restoreFromTrash,purgeFromTrash,undoLastRestore,restoreAutoSnapshot,applyEncryptedRestore,demoState,normalizeWorkspace,load,persist,resetDemo,toast,nav,setNav,formatDay,dateShort,taskById,facts,daysSince,startFreshWorkspace,openUpcoming,setSetting,toggleHideAmounts,setAmbientEffect,setAmbientStrength,setFocusSound,setFocusSoundVolume,toggleFocusSound,dismissRecommendation,parseCapture,captureCardModal,captureSwitch,saveCapture,openModal,taskModal,activeProblems,problemRuleCandidates,actionForRec,parkProblem,reopenProblem,resolveProblem,promoteTaskToProblem,problemModal,saveProblem,setProblemMovedForTest,setTaskReschedulesForTest,deleteAllLocalData,legalSummaryModal,toggleBetaContinue,
   recommendation,actionForRec,completeTask,startFocus,scheduleTask,stopFocus,resumeFocus,pauseFocus,tick,renderFocusTimerOnly,
   openModal,closeModal,openDrawer,closeDrawer,taskModal,saveTask,noteModal,saveNote,expenseModal,saveExpense,wishlistModal,saveWishlistItem,toggleWishlistBought,deleteWishlistItem,decisionModal,openDecision,reconcile,
   createGoalModal,saveGoal,globalCreate,inspect,viewToday,viewWork,viewFocus,viewPlan,viewGoals,executeStep,viewLife,toggleHabit,

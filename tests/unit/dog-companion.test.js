@@ -507,3 +507,56 @@ test('removeLog deletes one entry by id from any log and ignores unknown lists',
   assert.equal(dog.meals.length, 0);
   assert.equal(D.removeLog(dog, 'settings', 'x'), false);
 });
+
+/* ---------- water and treat logs ---------- */
+
+test('logMeal records water and treats as their own kind, meals stay the default', () => {
+  const dog = D.blank();
+  D.logMeal(dog, at(2026, 10, 18, 9));
+  D.logMeal(dog, at(2026, 10, 18, 10), '', 'water');
+  D.logMeal(dog, at(2026, 10, 18, 11), 'liver', 'treat');
+  assert.deepEqual(dog.meals.map(m => m.kind), ['meal', 'water', 'treat']);
+  assert.equal(dog.meals[2].note, 'liver');
+});
+
+test('logMeal rejects an unknown kind', () => {
+  const dog = D.blank();
+  assert.equal(D.logMeal(dog, at(2026, 10, 18), '', 'soda'), false);
+  assert.equal(dog.meals.length, 0);
+});
+
+test('normalizeDog keeps valid kinds and falls back to meal for anything else', () => {
+  const dog = D.normalizeDog({ meals: [
+    { t: at(2026, 10, 18, 8).getTime(), kind: 'water' },
+    { t: at(2026, 10, 18, 9).getTime(), kind: 'bogus' },
+    { t: at(2026, 10, 18, 10).getTime() }
+  ] });
+  assert.deepEqual(dog.meals.map(m => m.kind), ['water', 'meal', 'meal']);
+});
+
+test('updateLog can change a meals entry to water or treat and rejects other kinds', () => {
+  const dog = D.blank();
+  D.logMeal(dog, at(2026, 10, 18, 9));
+  const id = dog.meals[0].id;
+  const now = at(2026, 10, 18, 12);
+  const base = { time: D.localInput(at(2026, 10, 18, 9).getTime()), note: '' };
+  assert.equal(D.updateLog(dog, 'meals', id, { ...base, kind: 'treat' }, now).ok, true);
+  assert.equal(dog.meals[0].kind, 'treat');
+  assert.ok(D.updateLog(dog, 'meals', id, { ...base, kind: 'soda' }, now).error);
+  assert.equal(dog.meals[0].kind, 'treat');
+});
+
+test('weekly comparison counts only meals, not water or treats', () => {
+  const now = at(2026, 10, 18, 12);
+  const dog = D.blank();
+  D.logMeal(dog, now);
+  D.logMeal(dog, now, '', 'water');
+  D.logMeal(dog, now, '', 'treat');
+  const row = D.weekCompare(dog, now).find(r => r.name === 'Meals');
+  assert.equal(row.current, 1);
+});
+
+test('every skill has an icon of its own type, not a shared fallback for most skills', () => {
+  const props = new Set(D.ITEMS.map(i => i.prop));
+  assert.ok(props.size >= 30, `only ${props.size} distinct icons`);
+});
