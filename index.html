@@ -681,6 +681,19 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
  .task-card-actions .btn{min-height:44px;width:100%;justify-content:center}
 }
 
+/* Compact task cards: actions stay on one line so more tasks fit one screen */
+.list:has(> .task-card){gap:8px;padding:8px}
+.task-card{padding:12px 14px;gap:8px;border-radius:14px}
+.task-card-main{gap:6px}
+.task-card-title{font-size:15px;line-height:1.35}
+.task-card .chips{gap:6px}
+.task-card-actions{display:flex;flex-wrap:nowrap;gap:6px;padding-top:0;align-items:center}
+.task-card-actions .btn{min-height:30px;padding:5px 10px;font-size:12px;border-radius:9px;white-space:nowrap;flex:0 0 auto}
+@media (max-width:620px){
+ .task-card{padding:10px 12px;gap:8px}
+ .task-card-actions .btn{flex:1 1 0;min-height:32px;padding:5px 6px;justify-content:center}
+}
+
 /* Focus mode overlay */
 .focus-overlay{position:fixed;inset:auto 12px 12px auto;z-index:70;max-width:calc(100vw - 24px)}
 .focus-overlay[hidden]{display:none}
