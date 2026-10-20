@@ -42,3 +42,61 @@ def test_calendar_planned_marker_opens_plan(app_server):
         page.wait_for_timeout(250)
         assert page.locator(".plan-row").count() > 0, "marker should open the Plan view"
         browser.close()
+
+
+def _open_plan(page, app_server, dialogs=None):
+    page.on("dialog", lambda d: (dialogs.append(d.message) if dialogs is not None else None, d.dismiss()))
+    _open(page, app_server)
+    page.evaluate("() => setNav('plan')")
+    page.wait_for_timeout(250)
+
+
+def test_plan_block_removal_needs_no_dialog_and_undo_restores_it(app_server):
+    """Removal is immediate (no native confirm that can be suppressed) and an Undo action brings the block back."""
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
+        page = browser.new_page(viewport={"width": 390, "height": 844})
+        dialogs = []
+        _open_plan(page, app_server, dialogs)
+        page.locator(".plan-row", has_text="Lunch").locator("button", has_text="Remove").click()
+        page.wait_for_timeout(200)
+        assert dialogs == [], f"removal should not open a dialog: {dialogs}"
+        assert page.locator(".plan-row", has_text="Lunch").count() == 0
+        page.locator("#toast .toast-action", has_text="Undo").click()
+        page.wait_for_timeout(200)
+        titles = [page.locator(".plan-row").nth(i).locator(".row-title").text_content()
+                  for i in range(page.locator(".plan-row").count())]
+        assert titles == ["Client meeting", "Lunch", "Deep work"], f"undo should restore the original order: {titles}"
+        browser.close()
+
+
+def test_clear_plan_empties_the_list_and_undo_restores_every_block(app_server):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
+        page = browser.new_page(viewport={"width": 390, "height": 844})
+        _open_plan(page, app_server)
+        page.locator("button", has_text="Clear plan").click()
+        page.wait_for_timeout(200)
+        assert page.locator(".plan-row").count() == 0
+        assert page.locator("text=Nothing planned").count() == 1, "empty plan should show an empty state"
+        page.locator("#toast .toast-action", has_text="Undo").click()
+        page.wait_for_timeout(200)
+        assert page.locator(".plan-row").count() == 3, "undo should restore all three blocks"
+        browser.close()
+
+
+def test_removed_plan_block_stays_removed_after_reload(app_server):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
+        page = browser.new_page(viewport={"width": 390, "height": 844})
+        _open_plan(page, app_server)
+        page.locator(".plan-row", has_text="Client meeting").locator("button", has_text="Remove").click()
+        page.wait_for_timeout(600)  # allow the save to finish
+        page.reload(wait_until="load")
+        page.wait_for_selector("#app")
+        page.wait_for_timeout(400)
+        page.evaluate("() => setNav('plan')")
+        page.wait_for_timeout(250)
+        assert page.locator(".plan-row", has_text="Client meeting").count() == 0, "removal must persist"
+        assert page.locator(".plan-row").count() == 2
+        browser.close()

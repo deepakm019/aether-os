@@ -279,8 +279,8 @@ with sync_playwright() as p:
     acknowledge(page)
     nav(page, "settings")
     options = page.get_by_label("Font style").locator("option").count()
-    check("J1 nine font options in settings", options == 9, str(options))
-    fonts = ["system", "humanist", "rounded", "geometric", "editorial", "serif", "condensed", "mono", "accessible"]
+    check("J1 fourteen font options in settings", options == 14, str(options))
+    fonts = ["system", "humanist", "rounded", "geometric", "editorial", "serif", "condensed", "mono", "accessible", "inter", "atkinson", "jetbrains", "lora", "nunito"]
     bad = []
     for key in fonts:
         page.evaluate("(k)=>setSetting('font',k)", key)
@@ -290,8 +290,9 @@ with sync_playwright() as p:
         if applied != key or not fam:
             bad.append((key, applied, fam[:30]))
     check("J2 every font applies a body family", not bad, str(bad))
+    before_unknown = page.evaluate("document.documentElement.dataset.font")
     page.evaluate("setSetting('font','comic-sans')")
-    check("J3 unknown font refused", page.evaluate("document.documentElement.dataset.font") == "accessible")
+    check("J3 unknown font refused", page.evaluate("document.documentElement.dataset.font") == before_unknown)
     page.evaluate("setSetting('font','mono')"); page.wait_for_timeout(400)
     stored = idb_workspace(page)
     check("J4 font choice persisted", stored and stored["settings"]["font"] == "mono")

@@ -1,10 +1,17 @@
-const CACHE_NAME = 'astralsurge-os-v5.60';
+const CACHE_NAME = 'astralsurge-os-v5.61';
 const APP_SHELL = [
     new URL('./', self.location.href).href,
     new URL('./index.html', self.location.href).href,
     new URL('./index.html?storage=local', self.location.href).href,
     new URL('./standalone.html', self.location.href).href,
-    new URL('./manifest.json', self.location.href).href
+    new URL('./manifest.json', self.location.href).href,
+    new URL('./fonts/inter-latin-var.woff', self.location.href).href,
+    new URL('./fonts/atkinson-hyperlegible-regular.woff2', self.location.href).href,
+    new URL('./fonts/atkinson-hyperlegible-bold.woff2', self.location.href).href,
+    new URL('./fonts/jetbrains-mono-regular.woff', self.location.href).href,
+    new URL('./fonts/jetbrains-mono-bold.woff', self.location.href).href,
+    new URL('./fonts/lora-latin-var.woff', self.location.href).href,
+    new URL('./fonts/nunito-latin-var.woff', self.location.href).href
 ];
 const CACHEABLE_URLS = new Set(APP_SHELL);
 const OFFLINE_PAGE = new URL('./index.html', self.location.href).href;

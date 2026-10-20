@@ -59,6 +59,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html standalone.html sw.js manifest.json CNAME .nojekyll _site/
+          cp -r fonts _site/
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

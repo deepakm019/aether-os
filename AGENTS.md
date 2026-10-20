@@ -14,7 +14,7 @@
 - Treat vault imports and all persisted data as untrusted. Escape user-controlled text before inserting it into HTML, and do not interpolate imported values into inline JavaScript or event-handler attributes. Prefer delegated event listeners and validate data indexes before use.
 - Keep cryptographic operations on the Web Crypto API. Do not log passphrases, derived keys, decrypted vault contents, or other sensitive data.
 - Update the service worker cache version when changing app-shell assets. Keep its same-origin app-shell allowlist strict; do not add external origins or arbitrary request caching.
-- Keep runtime assets local. Do not add third-party network dependencies, fonts, or analytics.
+- Keep runtime assets local. Fonts must be bundled under `fonts/` as open-licensed (SIL OFL) files with their license text in `fonts/licenses/`, referenced with relative `url()` paths and precached in `sw.js`. Do not load fonts from a CDN or any other remote origin, and do not add network dependencies or analytics.
 - Vault and snapshot values must be encrypted before IndexedDB/localStorage writes. New encryption uses Web Crypto AES-GCM; any legacy CBC support is migration-only.
 - Task image attachments are part of the encrypted vault state. Validate imported attachment records and image data URLs, limit attachment counts and source sizes, and resize supported raster images before persistence to avoid oversized vault writes. Never persist object URLs or unencrypted image data outside the encrypted vault.
 - Keep task-image previews local: use DOM APIs and textContent for user-controlled filenames, provide accessible preview/remove controls, and revoke any object URLs if introduced for temporary previews.

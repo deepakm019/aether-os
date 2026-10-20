@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Static build gate for AstralSurge OS. No dependencies; runs on Node 20+.
 // Fails with a non-zero exit code if any check fails.
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
@@ -71,6 +71,32 @@ try {
 // 7. GitHub Pages deployment files.
 check('CNAME present', existsSync(join(root, 'CNAME')));
 check('.nojekyll present', existsSync(join(root, '.nojekyll')));
+
+// 8. Bundled fonts: local files only, precached for offline use, licensed under SIL OFL,
+//    and every font setting has a matching CSS rule.
+const fontUrls = [...html.matchAll(/url\(\s*["']?(fonts\/[^"')\s]+)["']?\s*\)/g)].map((m) => m[1]);
+check('index.html declares bundled font faces', fontUrls.length >= 1, `${fontUrls.length} font file(s)`);
+for (const file of new Set(fontUrls)) {
+  check(`bundled font exists: ${file}`, existsSync(join(root, file)));
+  check(`bundled font is precached: ${file}`, sw.includes(`'./${file}'`));
+}
+const fontFiles = readdirSync(join(root, 'fonts')).filter((f) => /\.woff2?$/.test(f));
+check('every font file under fonts/ is referenced by a font face', fontFiles.every((f) => fontUrls.includes(`fonts/${f}`)));
+const licenses = existsSync(join(root, 'fonts/licenses')) ? readdirSync(join(root, 'fonts/licenses')) : [];
+const oflFiles = licenses.filter((f) => /^OFL-.+\.txt$/.test(f));
+check('each bundled font family ships an OFL license', oflFiles.length >= 5, `${oflFiles.length} license file(s)`);
+for (const file of oflFiles) {
+  check(`license text is SIL OFL: ${file}`, /SIL OPEN FONT LICENSE|SIL Open Font License/i.test(read(`fonts/licenses/${file}`)));
+}
+const fontOptions = [...html.matchAll(/\['([a-z]+)','[^']*'\]/g)].map((m) => m[1]);
+const fontOptionsBlock = html.match(/const FONT_OPTIONS=\[([\s\S]*?)\];/);
+const optionKeys = fontOptionsBlock ? [...fontOptionsBlock[1].matchAll(/\['([a-z]+)'/g)].map((m) => m[1]) : [];
+check('FONT_OPTIONS is declared', optionKeys.length >= 5, `${optionKeys.length} option(s)`);
+for (const key of optionKeys) {
+  check(`font option has a CSS rule: ${key}`, html.includes(`html[data-font="${key}"] body{`));
+}
+const deploy = read('.github/workflows/pages.yml');
+check('Pages deploy copies fonts/', /cp -r fonts _site\//.test(deploy));
 
 if (failures.length) {
   console.error(`\n${failures.length} check(s) failed.`);

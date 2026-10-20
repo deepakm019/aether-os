@@ -61,7 +61,7 @@ The live site is deployed from the repository root with GitHub Pages, on the cus
 
 ### Look and feel
 - Dark, light and automatic themes; accent colours; wallpapers; ambient effects.
-- Nine font styles: system, friendly, rounded, geometric, editorial serif, classic serif, condensed, monospace and high readability.
+- Fourteen font styles: system, friendly, rounded, geometric, editorial serif, classic serif, condensed, monospace, high readability, Inter, Atkinson Hyperlegible, JetBrains Mono, Lora and Nunito. The last five are bundled in `fonts/` under the SIL Open Font License (license texts in `fonts/licenses/`), so they work offline and load nothing from the network.
 - Hide amounts toggle for privacy in public.
 - Works on phones and desktop. Layout is tested at 320, 390, 430, 768 and 1280 px. On narrow screens, long names in the split-cost view wrap instead of overlapping the checkbox.
 
@@ -85,6 +85,7 @@ localStorage is used only as a fallback. If IndexedDB is unavailable, a copy of 
 | `standalone.html` | Local-storage wrapper around `index.html` (see above) |
 | `sw.js` | Service worker. Caches a same-origin app shell for offline use. Cache name is versioned (`astralsurge-os-v5.25`) |
 | `manifest.json` | Web app manifest for installing the app to a home screen |
+| `fonts/` | Bundled open-source (SIL OFL) font files for the Settings font choices. Licenses are in `fonts/licenses/` |
 | `CNAME` | Custom domain for GitHub Pages |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is |
 | `scripts/check.mjs` | Static build gate (no dependencies) |
