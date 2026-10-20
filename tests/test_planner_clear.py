@@ -100,3 +100,24 @@ def test_removed_plan_block_stays_removed_after_reload(app_server):
         assert page.locator(".plan-row", has_text="Client meeting").count() == 0, "removal must persist"
         assert page.locator(".plan-row").count() == 2
         browser.close()
+
+
+def test_upcoming_shows_real_due_tasks_not_sample_commitments(app_server):
+    """Upcoming lists tasks due in the next 7 days. It has no sample rows, and clearing the plan does not change it."""
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
+        page = browser.new_page(viewport={"width": 1280, "height": 800})
+        page.on("dialog", lambda d: d.accept())
+        _open(page, app_server)
+        page.evaluate("() => setNav('plan')")
+        page.wait_for_timeout(250)
+        table = page.locator("section", has_text="Upcoming").locator("tbody")
+        text = table.text_content()
+        for sample in ("Demo rehearsal", "Client follow-up", "Workout"):
+            assert sample not in text, f"sample commitment still listed: {sample}"
+        assert "Finish proposal" in text, "a task due today should appear under Upcoming"
+        before = table.locator("tr").count()
+        page.locator("button", has_text="Clear plan").click()
+        page.wait_for_timeout(250)
+        assert table.locator("tr").count() == before, "clearing the plan must not change Upcoming"
+        browser.close()
