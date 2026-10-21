@@ -11,7 +11,6 @@ def _open_dog(page, url, width=1280):
         page.check("#beta-ack")
         page.click("#beta-demo")
         page.wait_for_timeout(300)
-    page.evaluate("() => { setWorkspace('dog'); }")
     page.wait_for_timeout(300)
 
 

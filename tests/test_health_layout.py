@@ -42,7 +42,6 @@ def _open_health(browser, url, width):
         page.check("#beta-ack")
         page.click("#beta-demo")
         page.wait_for_timeout(300)
-    page.evaluate("() => setWorkspace('dog')")
     page.wait_for_timeout(150)
     page.evaluate("() => setNav('dog')")
     page.wait_for_timeout(250)

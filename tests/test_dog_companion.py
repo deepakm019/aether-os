@@ -1,6 +1,5 @@
-"""Dog training companion: the workspace setting is mutually exclusive with the
-existing setup, the dog menu item only appears when it is active, the 55 skills
-render, and logging an event updates the saved dog data."""
+"""Dog training companion: it is a normal app. It is always in More, opens without a setup step,
+Settings has no workspace switch, the 55 skills render, and logging an event updates the saved dog data."""
 from playwright.sync_api import sync_playwright
 
 
@@ -19,59 +18,25 @@ def open_app(browser, url):
     return ctx, page, errors
 
 
-def pressed(page, label):
-    return page.get_attribute(f"button:has-text('{label}')", "aria-pressed")
-
-
-def test_workspace_choice_is_mutually_exclusive(app_server):
+def test_dog_training_is_always_available_like_any_app(app_server):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
         ctx, page, errors = open_app(browser, app_server)
 
+        # No workspace switch in Settings and no "turn on" gate.
         page.evaluate("() => setNav('settings')")
         page.wait_for_timeout(200)
-        assert pressed(page, "Existing setup") == "true"
-        assert pressed(page, "Dog training companion") == "false"
+        assert page.locator("button:has-text('Dog training companion')").count() == 0
+        assert page.locator("button:has-text('Existing setup')").count() == 0
 
-        # Dog training is off, so its menu tile is hidden.
-        page.evaluate("() => setNav('more')")
-        page.wait_for_timeout(200)
-        assert page.locator("text=Dog training").count() == 0
-
-        # Turning dog training on turns existing setup off.
-        page.evaluate("() => setNav('settings')")
-        page.click("button:has-text('Dog training companion')")
-        page.wait_for_timeout(300)
-        assert errors == [], errors
-        assert pressed(page, "Dog training companion") == "true"
-        assert pressed(page, "Existing setup") == "false"
-
-        # The menu tile now appears.
+        # The More tile is there straight away and the page opens with its skills.
         page.evaluate("() => setNav('more')")
         page.wait_for_timeout(200)
         assert page.locator("text=Dog training").count() >= 1
-
-        # Switching back restores existing setup and hides the tile again.
-        page.evaluate("() => setNav('settings')")
-        page.click("button:has-text('Existing setup')")
-        page.wait_for_timeout(300)
-        assert pressed(page, "Existing setup") == "true"
-        page.evaluate("() => setNav('more')")
-        page.wait_for_timeout(200)
-        assert page.locator("text=Dog training").count() == 0
-
-        assert errors == [], errors
-        browser.close()
-
-
-def test_dog_page_is_blocked_while_existing_setup_is_active(app_server):
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
-        ctx, page, errors = open_app(browser, app_server)
         page.evaluate("() => setNav('dog')")
-        page.wait_for_timeout(200)
-        assert page.locator("text=Dog training is off.").count() == 1
-        assert page.locator(".dog-card").count() == 0
+        page.wait_for_timeout(300)
+        assert page.locator("text=Dog training is off.").count() == 0
+        assert page.locator(".dog-card").count() == 55
         assert errors == [], errors
         browser.close()
 
@@ -80,10 +45,6 @@ def test_dog_page_shows_all_skills_and_logs_events(app_server):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
         ctx, page, errors = open_app(browser, app_server)
-        page.evaluate("() => setNav('settings')")
-        page.wait_for_timeout(200)
-        page.click("button:has-text('Dog training companion')")
-        page.wait_for_timeout(200)
         page.evaluate("() => setNav('dog')")
         page.wait_for_timeout(300)
         assert errors == [], errors
@@ -119,10 +80,6 @@ def test_skill_opens_in_a_modal_and_closes(app_server):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
         ctx, page, errors = open_app(browser, app_server)
-        page.evaluate("() => setNav('settings')")
-        page.wait_for_timeout(200)
-        page.click("button:has-text('Dog training companion')")
-        page.wait_for_timeout(200)
         page.evaluate("() => setNav('dog')")
         page.wait_for_timeout(300)
         page.click("button[data-dog-act='tab'][data-dog-val='train']")
