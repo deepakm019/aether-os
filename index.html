@@ -745,6 +745,11 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
 .dog-edit-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
 
 .journal-page{max-width:760px}.journal-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0}.journal-date{text-align:center}.journal-date small{display:block;color:var(--muted2);margin-top:3px}.journal-book{touch-action:pan-y;background:#14161c;border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:18px;box-shadow:0 10px 30px rgba(0,0,0,.25)}.journal-field{display:grid;gap:6px}.journal-title{font-weight:650}.journal-field textarea{width:100%;min-height:72px;resize:vertical;font:inherit}.journal-book.turn-next{animation:journalNext .32s ease both}.journal-book.turn-prev{animation:journalPrev .32s ease both}@keyframes journalNext{from{opacity:.2;transform:translateX(24px) rotateY(-6deg)}to{opacity:1;transform:none}}@keyframes journalPrev{from{opacity:.2;transform:translateX(-24px) rotateY(6deg)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){.journal-book.turn-next,.journal-book.turn-prev{animation:none}}
+/* Work cards and chips stay inside their card; the Plan table fits phone width without hiding its last column. */
+.chips{min-width:0;max-width:100%}
+.chip{max-width:100%;min-width:0;overflow-wrap:anywhere}
+.task-card-main>*{min-width:0;max-width:100%}
+@media (max-width:620px){.table th,.table td{padding:10px 8px;overflow-wrap:anywhere}.table-wrap .table th,.table-wrap .table td{white-space:normal}}
 </style>
 </head>
 <body>
