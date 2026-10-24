@@ -354,3 +354,16 @@ test('the headline ignores the optimistic stock case but still notes it', () => 
   assert.equal(a.headline.text, 'Prepaying beats the alternatives');
   assert.ok(a.points.some(p => /optimistic stock case/.test(p.text)));
 });
+
+test('simulator balance paths start at the loan and end at zero after a prepayment', () => {
+  const loan = { principal: 2400000, rate: 8.5, remainingMonths: 180, emi: null, penaltyType: 'None',
+    penaltyValue: 0, penaltyBasis: 'Prepaid', lockInEnd: null, freePrepayPct: 0 };
+  const sim = L.prepaySimulate(loan, { month: 12, amount: 500000, usedThisYear: 0, taxRatePct: 0, savingsRate: null, todayKey: '2026-10-24' });
+  assert.equal(sim.series.keep[0], 2400000);
+  assert.equal(sim.series.keep.length, sim.series.shorten.length);
+  // After the prepayment the shortened path is below the kept path at every later month.
+  assert.ok(sim.series.shorten[13] < sim.series.keep[13]);
+  assert.ok(sim.series.shorten[sim.series.shorten.length - 1] < 1);
+  // The kept path reaches zero at the end of the original tenure.
+  assert.ok(sim.series.keep[180] < 1);
+});

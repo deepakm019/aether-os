@@ -90,7 +90,7 @@ def run():
         page.wait_for_timeout(300)
         rows = page.locator("#drawer-content table tbody tr").count()
         check("schedule drawer shows one row per loan year", rows == 15, f"rows={rows}")
-        check("schedule drawer chart has a balance line", page.locator("#drawer-content .loan-balance").count() == 1)
+        check("schedule drawer has an interactive balance chart", page.locator("#drawer-content .lchart").count() >= 1)
         page.evaluate("() => closeDrawer()")
         page.wait_for_timeout(200)
 

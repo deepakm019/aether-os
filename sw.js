@@ -1,4 +1,4 @@
-const CACHE_NAME = 'astralsurge-os-v5.66';
+const CACHE_NAME = 'astralsurge-os-v5.67';
 const APP_SHELL = [
     new URL('./', self.location.href).href,
     new URL('./index.html', self.location.href).href,

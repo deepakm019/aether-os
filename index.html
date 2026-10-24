@@ -764,6 +764,27 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
 .loan-calc .loan-radio input[type=radio]{width:auto;margin:0;flex:0 0 auto}
 .loan-points{list-style:none;padding:0;margin:0}
 .loan-points li{margin:6px 0;font-size:14px;line-height:1.5}
+.lchart{position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none;outline:none;border-radius:12px}
+.lchart:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+.lchart svg{width:100%;height:auto;display:block;overflow:visible}
+.lchart .g-grid{stroke:var(--line);stroke-width:1;opacity:.6}
+.lchart .g-zero{stroke:var(--muted);stroke-width:1;opacity:.8}
+.lchart text{fill:var(--muted);font-size:15px}
+.lchart .cross{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 3}
+.lchart .series{fill:none;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.lchart .dot{stroke:var(--panel,#111);stroke-width:2}
+.lchart .lc-bar{transition:opacity .15s}
+.lchart.on .lc-bar:not(.hit){opacity:.55}
+.lchart.on g.hl .lc-bar{opacity:1}
+.lchart-h text{font-size:12px}
+.lchart-tip{position:absolute;top:0;left:0;pointer-events:none;min-width:150px;max-width:70%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12px;line-height:1.4;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;transition:opacity .12s}
+.lchart.on .lchart-tip{opacity:1}
+.lchart-tip b{display:block;margin-bottom:4px;font-weight:700}
+.lchart-tip .row-l{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:2px 0}
+.lchart-tip .row-l b{display:inline;margin:0}
+.lchart-tip .row-l i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.lchart-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-top:6px}
+.lchart-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -918,6 +939,20 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     var Ep = full ? 0 : emi(balK - amount, rate, remLeft);
     var reduceS = full ? { months: 0, totalInterest: 0, rows: [] } : schedule(balK - amount, rate, Ep);
     var cashOut = amount + pen.total;
+    // Balance month by month from now, for charts. Index 0 is today; index k is the balance after any prepayment.
+    var keepArr = [Number(loan.principal)];
+    base.rows.forEach(function (r) { keepArr.push(r.balance); });
+    var pathOf = function (s) {
+      var a = [];
+      for (var m = 0; m < k; m++) a.push(m === 0 ? Number(loan.principal) : (base.rows[m - 1] ? base.rows[m - 1].balance : 0));
+      a.push(full ? 0 : balK - amount);
+      s.rows.forEach(function (r) { a.push(r.balance); });
+      return a;
+    };
+    var pathShort = pathOf(shortS), pathReduce = pathOf(reduceS);
+    var len = Math.max(keepArr.length, pathShort.length, pathReduce.length);
+    var padTo = function (a) { while (a.length < len) a.push(0); return a; };
+    var series = { keep: padTo(keepArr), shorten: padTo(pathShort), reduce: padTo(pathReduce) };
     // Payments avoided each month: the current schedule minus the new one.
     var streamOf = function (s) {
       var out = [];
@@ -940,7 +975,8 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
         interestSaved: round2(saved(reduceS)), net: round2(saved(reduceS) - pen.total - growth),
         annualRate: irrAnnual(cashOut, streamOf(reduceS))
       },
-      contInterest: round2(cont.totalInterest)
+      contInterest: round2(cont.totalInterest),
+      series: series
     };
   }
 
@@ -2689,15 +2725,138 @@ const loanMoney=v=>{if(state.settings.hideAmounts)return '••••';const n=
 const fmtMoneyOrDash=v=>isFinite(v)?loanMoney(v):'—';
 function fmtTenure(m){const y=Math.floor(m/12),r=m%12;return [y?`${y} yr`:'',r?`${r} mo`:''].filter(Boolean).join(' ')||'0 mo'}
 function payoffLabel(months){const d=new Date();const x=new Date(d.getFullYear(),d.getMonth()+months,1);return x.toLocaleDateString('en-IN',{month:'short',year:'numeric'})}
+/* ===== Loans charts: interactive SVG with touch, mouse and keyboard readouts ===== */
+const LCHART=new Map();let lchartSeq=0,lchartActive=null;
+const lchartClamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function lchartRegister(cfg){const id='lc'+(++lchartSeq);LCHART.set(id,cfg);if(LCHART.size>80)LCHART.delete(LCHART.keys().next().value);return id}
+function fmtCompactInr(v){const a=Math.abs(v),s=v<0?'−':'';if(a>=1e7)return s+'₹'+(a/1e7).toFixed(a>=1e8?0:1)+'Cr';if(a>=1e5)return s+'₹'+(a/1e5).toFixed(a>=1e6?0:1)+'L';if(a>=1e3)return s+'₹'+Math.round(a/1e3)+'K';return s+'₹'+Math.round(a)}
+function monthLabelAhead(k){const d=new Date(addMonths(today,k)+'T12:00:00');return d.toLocaleDateString('en-IN',{month:'short',year:'numeric'})}
+function addMonths(key,k){return LoanMath.addMonthsKey(key,k)}
+function chartLegend(series){return series.length<2?'':`<div class="lchart-legend">${series.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div>`}
+function chartGrid(G,lo,hi){return [0,.25,.5,.75,1].map(f=>{const v=lo+(hi-lo)*(1-f),y=G.pt+G.ph*f;return `<line class="g-grid" x1="${G.pl}" x2="${G.W-G.pr}" y1="${y}" y2="${y}"/><text x="${G.pl-6}" y="${y+4}" text-anchor="end">${fmtCompactInr(v)}</text>`}).join('')}
+function chartTicks(ticks,xOf,G,n){return (ticks||[]).map(t=>{const a=t.i<=0?'start':(t.i>=n-1?'end':'middle');return `<text x="${xOf(t.i).toFixed(1)}" y="${G.H-8}" text-anchor="${a}">${esc(t.text)}</text>`}).join('')}
+function chartWrap(id,cfg,svgInner,G){
+  return `<figure style="margin:14px 0 0"><div class="lchart" data-lchart="${id}" tabindex="0" role="group" aria-label="${esc(cfg.aria||'Chart')}"><svg viewBox="0 0 ${G.W} ${G.H}" aria-hidden="true">${svgInner}</svg><div class="lchart-tip" role="status" aria-live="polite"></div></div>${chartLegend(cfg.series||[])}<figcaption class="quiet">${esc(cfg.caption||'Touch, drag or hover to read values. Arrow keys work too.')}</figcaption></figure>`;
+}
+function tipRowsHtml(cfg,i){
+  const title=cfg.tipTitle?cfg.tipTitle(i):'';
+  const rows=(cfg.series||[]).map(s=>`<div class="row-l"><span><i style="background:${s.color}"></i>${esc(s.name)}</span><b>${esc(cfg.fmtTip(s.values[i]))}</b></div>`).join('');
+  const extra=(cfg.extra?cfg.extra(i):[]).map(e=>`<div class="row-l"><span>${esc(e[0])}</span><b>${esc(e[1])}</b></div>`).join('');
+  return `<b>${esc(title)}</b>${rows}${extra}`;
+}
+/* Line chart: one or more series over n points. Values may be negative (yMin adapts). */
+function lineChartHtml(cfg){
+  const n=cfg.n;if(!(n>0))return '';
+  const G={W:600,H:240,pl:64,pr:12,pt:14,pb:30};G.pw=G.W-G.pl-G.pr;G.ph=G.H-G.pt-G.pb;
+  const vals=[];cfg.series.forEach(s=>{for(let i=0;i<n;i++)vals.push(Number(s.values[i])||0)});
+  let lo=Math.min(0,...vals),hi=Math.max(0,...vals);if(hi-lo<1e-9)hi=lo+1;
+  const xOf=i=>G.pl+G.pw*(n<=1?0:i/(n-1)),yOf=v=>G.pt+G.ph*(1-(v-lo)/(hi-lo));
+  const step=Math.max(1,Math.ceil(n/200));
+  const lines=cfg.series.map(s=>{const pts=[];for(let i=0;i<n;i+=step)pts.push(`${xOf(i).toFixed(1)},${yOf(Number(s.values[i])||0).toFixed(1)}`);if((n-1)%step!==0)pts.push(`${xOf(n-1).toFixed(1)},${yOf(Number(s.values[n-1])||0).toFixed(1)}`);return `<polyline class="series" style="stroke:${s.color}${s.dash?';stroke-dasharray:6 4':''}" points="${pts.join(' ')}"/>`}).join('');
+  const zero=lo<0?`<line class="g-zero" x1="${G.pl}" x2="${G.W-G.pr}" y1="${yOf(0)}" y2="${yOf(0)}"/>`:'';
+  const cross=`<g class="cross-g" style="display:none"><line class="cross" x1="0" x2="0" y1="${G.pt}" y2="${G.pt+G.ph}"/>${cfg.series.map((s,k)=>`<circle class="dot" r="4.5" fill="${s.color}" cx="0" cy="0" data-s="${k}"/>`).join('')}</g>`;
+  const geom={kind:'line',W:G.W,H:G.H,pl:G.pl,pw:G.pw,xOf,yOf,anchor:i=>({x:xOf(i),y:yOf(Number(cfg.series[0].values[i])||0)})};
+  const id=lchartRegister({n,series:cfg.series,fmtTip:cfg.fmtTip,tipTitle:cfg.tipTitle,extra:cfg.extra,geom});
+  return chartWrap(id,cfg,`${chartGrid(G,lo,hi)}${zero}${lines}${chartTicks(cfg.xTicks,xOf,G,n)}${cross}`,G);
+}
+/* Stacked bars: one group per point, segments stacked bottom-up. */
+function stackChartHtml(cfg){
+  const n=cfg.n;if(!(n>0))return '';
+  const G={W:600,H:240,pl:64,pr:12,pt:14,pb:30};G.pw=G.W-G.pl-G.pr;G.ph=G.H-G.pt-G.pb;
+  const totals=[];for(let i=0;i<n;i++)totals.push(cfg.series.reduce((a,s)=>a+(Number(s.values[i])||0),0));
+  const hi=Math.max(1,...totals),band=G.pw/n,bw=Math.max(3,band*0.66);
+  const xOf=i=>G.pl+band*(i+0.5),yOf=v=>G.pt+G.ph*(1-v/hi);
+  const groups=[];
+  for(let i=0;i<n;i++){let base=0;const segs=cfg.series.map(s=>{const v=Number(s.values[i])||0,y0=yOf(base),y1=yOf(base+v);base+=v;return `<rect class="lc-bar" x="${(xOf(i)-bw/2).toFixed(1)}" y="${y1.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0,y0-y1).toFixed(1)}" fill="${s.color}"/>`}).join('');groups.push(`<g data-i="${i}">${segs}<rect class="hit" x="${(G.pl+band*i).toFixed(1)}" y="${G.pt}" width="${band.toFixed(1)}" height="${G.ph}" fill="transparent"/></g>`)}
+  const geom={kind:'bars',W:G.W,H:G.H,anchor:i=>({x:xOf(i),y:yOf(totals[i])})};
+  const id=lchartRegister({n,series:cfg.series,fmtTip:cfg.fmtTip,tipTitle:cfg.tipTitle,extra:cfg.extra,geom});
+  return chartWrap(id,cfg,`${chartGrid(G,0,hi)}${groups.join('')}${chartTicks(cfg.xTicks,xOf,G,n)}`,G);
+}
+/* Horizontal bars: one row per item, value and note on hover. */
+function hbarHtml(cfg){
+  const items=cfg.items;if(!items.length)return '';
+  const rowH=36,pl=150,pr=96,pt=8,pb=8,W=600,H=pt+pb+rowH*items.length;const pw=W-pl-pr;
+  const max=Math.max(1e-9,...items.map(it=>Math.max(0,Number(it.value)||0)));
+  const anchors=[];
+  const rows=items.map((it,i)=>{const y=pt+i*rowH,w=pw*Math.max(0,Number(it.value)||0)/max;anchors.push({x:pl+w,y:y+rowH/2});
+    return `<g data-i="${i}"><text x="${pl-8}" y="${(y+rowH/2+4).toFixed(1)}" text-anchor="end">${esc(String(it.label).length>22?String(it.label).slice(0,21)+'…':it.label)}</text><rect class="lc-bar" x="${pl}" y="${y+8}" width="${w.toFixed(1)}" height="${rowH-16}" rx="4" fill="${it.color}"/><text x="${(pl+w+6).toFixed(1)}" y="${(y+rowH/2+4).toFixed(1)}">${esc(cfg.fmt(it.value))}</text><rect class="hit" x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/></g>`}).join('');
+  const tips=items.map(it=>`<b>${esc(it.label)}</b><div class="row-l"><span>${esc(cfg.valueLabel||'Value')}</span><b>${esc(cfg.fmt(it.value))}</b></div>${it.note?`<div class="quiet" style="margin-top:4px">${esc(it.note)}</div>`:''}`);
+  const geom={kind:'bars',W,H,anchor:i=>anchors[i]};
+  const id=lchartRegister({n:items.length,series:[],fmtTip:cfg.fmt,tipTitle:null,extra:null,geom,tipHtml:i=>tips[i]});
+  return `<figure style="margin:14px 0 0"><div class="lchart lchart-h" data-lchart="${id}" tabindex="0" role="group" aria-label="${esc(cfg.aria||'Bar chart')}"><svg viewBox="0 0 ${W} ${H}" aria-hidden="true">${rows}</svg><div class="lchart-tip" role="status" aria-live="polite"></div></div><figcaption class="quiet">${esc(cfg.caption||'Touch, drag or hover a bar to read it.')}</figcaption></figure>`;
+}
+function lchartTipHtml(cfg,i){return cfg.tipHtml?cfg.tipHtml(i):tipRowsHtml(cfg,i)}
+function lchartShow(w,i){
+  const cfg=LCHART.get(w.dataset.lchart);if(!cfg)return;
+  const tip=w.querySelector('.lchart-tip'),svg=w.querySelector('svg'),cross=w.querySelector('.cross-g');
+  if(i===null||i===undefined||!(i>=0)){w.classList.remove('on');w.dataset.i='';if(cross)cross.style.display='none';w.querySelectorAll('[data-i]').forEach(g=>g.classList.remove('hl'));return}
+  i=lchartClamp(Math.round(i),0,cfg.n-1);
+  w.dataset.i=String(i);w.classList.add('on');
+  const a=cfg.geom.anchor(i),r=svg.getBoundingClientRect(),sx=r.width/cfg.geom.W,sy=r.height/cfg.geom.H;
+  if(cross&&cfg.geom.kind==='line'){cross.style.display='';const l=cross.querySelector('line.cross');l.setAttribute('x1',a.x);l.setAttribute('x2',a.x);cfg.series.forEach((s,k)=>{const c=cross.querySelector(`circle[data-s="${k}"]`);if(c){c.setAttribute('cx',a.x);c.setAttribute('cy',cfg.geom.yOf(Number(s.values[i])||0))}})}
+  w.querySelectorAll('[data-i]').forEach(g=>g.classList.toggle('hl',Number(g.getAttribute('data-i'))===i));
+  tip.innerHTML=lchartTipHtml(cfg,i);
+  const tw=tip.offsetWidth||160,th=tip.offsetHeight||60,px=a.x*sx;
+  let left=px+14;if(left+tw>r.width)left=px-tw-14;
+  tip.style.left=Math.max(0,left)+'px';
+  tip.style.top=Math.max(0,Math.min(r.height-th,a.y*sy-24))+'px';
+}
+function lchartPick(w,ev){
+  const cfg=LCHART.get(w.dataset.lchart);if(!cfg)return null;
+  if(cfg.geom.kind==='line'){const r=w.querySelector('svg').getBoundingClientRect();const vx=(ev.clientX-r.left)/r.width*cfg.geom.W;return Math.round((vx-cfg.geom.pl)/cfg.geom.pw*(cfg.n-1))}
+  const t=ev.target.closest?ev.target.closest('[data-i]'):null;return t&&w.contains(t)?Number(t.getAttribute('data-i')):null;
+}
+function lchartPointer(ev){
+  const w=ev.target.closest?ev.target.closest('.lchart'):null;
+  if(!w){if(lchartActive&&ev.pointerType==='mouse'){lchartShow(lchartActive,null);lchartActive=null}return}
+  if(lchartActive&&lchartActive!==w)lchartShow(lchartActive,null);
+  lchartActive=w;
+  const i=lchartPick(w,ev);if(i!==null)lchartShow(w,i);
+}
+function lchartKey(ev){
+  const w=ev.target.closest?ev.target.closest('.lchart'):null;if(!w)return;
+  const cfg=LCHART.get(w.dataset.lchart);if(!cfg)return;
+  let i=Number(w.dataset.i);if(!(i>=0))i=0;
+  if(ev.key==='ArrowRight'||ev.key==='ArrowUp')i+=1;
+  else if(ev.key==='ArrowLeft'||ev.key==='ArrowDown')i-=1;
+  else if(ev.key==='Home')i=0;
+  else if(ev.key==='End')i=cfg.n-1;
+  else if(ev.key==='Escape'){if(w.classList.contains('on')){ev.stopPropagation();lchartShow(w,null)}return}
+  else return;
+  ev.preventDefault();lchartShow(w,lchartClamp(i,0,cfg.n-1));
+}
+document.addEventListener('pointerdown',lchartPointer,{passive:true});
+document.addEventListener('pointermove',lchartPointer,{passive:true});
+document.addEventListener('keydown',lchartKey,true);
+/* Chart builders used by the Loans screen. */
 function loanChartSvg(rows,principal,totalInterest){
   if(!rows.length)return '';
-  const W=600,H=180,pad=24,n=rows.length,step=Math.max(1,Math.ceil(n/120));
-  const maxY=(principal+totalInterest)||1;
-  const x=i=>pad+(W-2*pad)*(n<=1?0:i/(n-1));
-  const y=v=>H-pad-(H-2*pad)*(v/maxY);
-  let cum=0;const bal=[],paid=[];
-  rows.forEach((r,i)=>{cum+=r.interest;if(i%step===0||i===n-1){bal.push(`${x(i).toFixed(1)},${y(r.balance).toFixed(1)}`);paid.push(`${x(i).toFixed(1)},${y(cum).toFixed(1)}`)}});
-  return `<figure style="margin:14px 0 0"><svg class="loan-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Chart: the balance falls to zero while total interest paid rises over ${Math.ceil(n/12)} years"><line class="loan-axis" x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}"/><polyline class="loan-balance" points="${bal.join(' ')}"/><polyline class="loan-interest" points="${paid.join(' ')}"/><text x="${pad}" y="${H-6}">Year 0</text><text x="${W-pad}" y="${H-6}" text-anchor="end">Year ${Math.ceil(n/12)}</text></svg><figcaption class="quiet">Blue: balance left. Amber: interest paid so far.</figcaption></figure>`;
+  const n=rows.length;let cum=0;const balance=[],paid=[],principalPaid=[];
+  rows.forEach(r=>{cum+=r.interest;balance.push(r.balance);paid.push(cum);principalPaid.push(Math.max(0,principal-r.balance))});
+  const ticks=[];const every=n>60?24:(n>24?12:6);for(let i=0;i<n;i+=every)ticks.push({i,text:i===0?'Now':`${Math.round((i+1)/12*10)/10} yr`});
+  return lineChartHtml({n,aria:'Balance falls to zero while interest paid rises',series:[{name:'Balance left',color:'#7aa2ff',values:balance},{name:'Interest paid so far',color:'#d98a3d',values:paid}],fmtTip:loanMoney,tipTitle:i=>`Month ${i+1} · ${monthLabelAhead(i+1)}`,extra:i=>[['Principal paid so far',loanMoney(principalPaid[i])]],xTicks:ticks});
+}
+function yearlyBarsHtml(yrs){
+  if(!yrs.length)return '';
+  return `<h3 style="margin:18px 0 0">Principal and interest each year</h3>`+stackChartHtml({n:yrs.length,aria:'Each year split into principal and interest',series:[{name:'Principal',color:'#7aa2ff',values:yrs.map(y=>y.principal)},{name:'Interest',color:'#d98a3d',values:yrs.map(y=>y.interest)}],fmtTip:loanMoney,tipTitle:i=>`Year ${yrs[i].year}`,extra:i=>[['Paid this year',loanMoney(yrs[i].payment)],['Balance left',loanMoney(yrs[i].balance)]],xTicks:yrs.map((y,i)=>({i,text:i%2===0?`Yr ${y.year}`:''})).filter(t=>t.text)});
+}
+function prepayPathsHtml(series){
+  const n=series.keep.length;if(n<2)return '';
+  const ticks=[];for(let i=0;i<n;i+=12)ticks.push({i,text:i===0?'Now':`${i/12} yr`});
+  return `<h3 style="margin:18px 0 0">Balance over time with and without prepaying</h3>`+lineChartHtml({n,aria:'Balance over time for keeping the loan, shortening it, and reducing the EMI',series:[{name:'Keep as is',color:'#8a929c',values:series.keep,dash:true},{name:'Shorten tenure',color:'#7aa2ff',values:series.shorten},{name:'Reduce EMI',color:'#d98a3d',values:series.reduce}],fmtTip:loanMoney,tipTitle:i=>`Month ${i} · ${i===0?'today':monthLabelAhead(i)}`,xTicks:ticks,caption:'Touch, drag or hover to compare the three balances at any month.'});
+}
+function timingHtml(timing){
+  if(timing.months.length<2)return '';
+  const ticks=timing.months.map((m,i)=>({i,text:m%12===0&&m>0?`${m/12} yr`:''})).filter(t=>t.text);
+  return `<h3 style="margin:18px 0 0">When you prepay matters</h3>`+lineChartHtml({n:timing.months.length,aria:'Net saving and penalty if you prepay after different numbers of months',series:[{name:'Net saving',color:'#7aa2ff',values:timing.net},{name:'Penalty',color:'#d98a3d',values:timing.pen}],fmtTip:loanMoney,tipTitle:i=>`After ${timing.months[i]} months · ${monthLabelAhead(timing.months[i])}`,xTicks:ticks,caption:'The same amount, prepaid at different times. Penalties often end after a lock-in date.'});
+}
+function optionsBarsHtml(options){
+  return `<h3 style="margin:18px 0 0">Return per year from each option</h3>`+hbarHtml({aria:'Return per year for each option',valueLabel:'Per year',fmt:v=>`${Number(v).toFixed(2)}% a year`,items:options.map(o=>({label:o.label,value:o.annual,color:o.guaranteed?'#7aa2ff':'#d98a3d',note:`${o.guaranteed?'Guaranteed':'Not guaranteed'}. ${o.risk}`})),caption:'Blue is guaranteed. Amber depends on the market, so it can be lower.'});
+}
+function loanOverviewHtml(loans){
+  const items=loans.map(l=>{const s=LoanMath.summarize(l);return {l,s}}).filter(x=>isFinite(x.s.totalInterest));
+  if(!items.length)return '';
+  return `<section class="section panel"><div class="panel-header"><h2>Where the money goes</h2><small>interest still to pay on each loan</small></div>${hbarHtml({aria:'Interest still to pay on each loan',valueLabel:'Interest left',fmt:loanMoney,items:items.map(x=>({label:x.l.name,value:x.s.totalInterest,color:'#d98a3d',note:`EMI ${loanMoney(x.s.emi)} · ends ${payoffLabel(x.s.months)} · total payable ${loanMoney(x.s.totalPayable)}`}))})}</section>`;
 }
 function penaltyText(l){
   if(!l.penaltyType||l.penaltyType==='None')return '';
@@ -2792,14 +2951,14 @@ function viewLoans(){
   const all=state.loans||[];
   const loans=all.filter(l=>l.status!=='Closed');
   const closed=all.filter(l=>l.status==='Closed');
-  return `<div class="page"><div class="eyebrow">Money</div><div class="h1">Loans</div><div class="lead">See what each loan really costs, when it ends, and what prepaying or closing it would save. Enter balances as of today.</div><section class="section panel"><div class="panel-header"><h2>Your loans</h2><button class="btn mini primary" onclick="openModal(loanModal)">+ Add loan</button></div>${loans.length?`<div class="list">${loans.map(loanCardHtml).join('')}</div>`:'<div class="empty"><strong>No open loans.</strong>Add one to see its EMI, total interest and payoff date.</div>'}${closed.length?`<div class="quiet" style="margin-top:12px">Closed: ${closed.map(l=>`${esc(l.name)} on ${dateShort(l.closedOn)}`).join(' · ')}</div>`:''}</section><section class="section panel"><div class="panel-header"><h2>Loan calculator</h2><small>nothing is saved</small></div><div class="loan-calc">${loanCalcForm()}<div id="loan-calc-out" aria-live="polite">${loanCalcResult()}</div></div></section>${loanSettingsHtml()}<section class="section panel"><div class="quiet">Estimates from the numbers you enter. Lenders may round or charge fees differently, so check your loan statement before you decide.</div></section></div>`;
+  return `<div class="page"><div class="eyebrow">Money</div><div class="h1">Loans</div><div class="lead">See what each loan really costs, when it ends, and what prepaying or closing it would save. Enter balances as of today.</div><section class="section panel"><div class="panel-header"><h2>Your loans</h2><button class="btn mini primary" onclick="openModal(loanModal)">+ Add loan</button></div>${loans.length?`<div class="list">${loans.map(loanCardHtml).join('')}</div>`:'<div class="empty"><strong>No open loans.</strong>Add one to see its EMI, total interest and payoff date.</div>'}${closed.length?`<div class="quiet" style="margin-top:12px">Closed: ${closed.map(l=>`${esc(l.name)} on ${dateShort(l.closedOn)}`).join(' · ')}</div>`:''}</section>${loanOverviewHtml(loans)}<section class="section panel"><div class="panel-header"><h2>Loan calculator</h2><small>nothing is saved</small></div><div class="loan-calc">${loanCalcForm()}<div id="loan-calc-out" aria-live="polite">${loanCalcResult()}</div></div></section>${loanSettingsHtml()}<section class="section panel"><div class="quiet">Estimates from the numbers you enter. Lenders may round or charge fees differently, so check your loan statement before you decide.</div></section></div>`;
 }
 function openLoanSchedule(id){
   const l=findLoan(id);if(!l)return;
   const s=LoanMath.summarize(l);
   if(s.neverRepays){toast('This EMI never clears the loan. Edit the loan first.');return}
   const yrs=LoanMath.yearly(s.rows);
-  openDrawer(`<div class="eyebrow">Loan schedule</div><h2 style="margin:4px 0">${esc(l.name)}</h2><div class="quiet">EMI ${fmtMoneyOrDash(s.emi)} · ${s.truncated?'not cleared within 50 years':fmtTenure(s.months)+' to repay'}</div>${s.truncated?'':loanChartSvg(s.rows,l.principal,s.totalInterest)}<div class="table-wrap" style="margin-top:14px"><table class="table"><thead><tr><th>Year</th><th>Paid</th><th>Interest</th><th>Principal</th><th>Left</th></tr></thead><tbody>${yrs.map(y=>`<tr><td>${y.year}</td><td>${loanMoney(y.payment)}</td><td>${loanMoney(y.interest)}</td><td>${loanMoney(y.principal)}</td><td>${loanMoney(y.balance)}</td></tr>`).join('')}</tbody></table></div><div class="row-actions" style="margin-top:14px"><button class="btn" onclick="closeDrawer()">Close</button></div>`);
+  openDrawer(`<div class="eyebrow">Loan schedule</div><h2 style="margin:4px 0">${esc(l.name)}</h2><div class="quiet">EMI ${fmtMoneyOrDash(s.emi)} · ${s.truncated?'not cleared within 50 years':fmtTenure(s.months)+' to repay'}</div>${s.truncated?'':loanChartSvg(s.rows,l.principal,s.totalInterest)+yearlyBarsHtml(yrs)}<div class="table-wrap" style="margin-top:14px"><table class="table loan-sim"><thead><tr><th>Year</th><th>Paid</th><th>Interest</th><th>Principal</th><th>Left</th></tr></thead><tbody>${yrs.map(y=>`<tr><td>${y.year}</td><td>${loanMoney(y.payment)}</td><td>${loanMoney(y.interest)}</td><td>${loanMoney(y.principal)}</td><td>${loanMoney(y.balance)}</td></tr>`).join('')}</tbody></table></div><div class="row-actions" style="margin-top:14px"><button class="btn" onclick="closeDrawer()">Close</button></div>`);
 }
 /* Prepayment and closure simulator */
 function prepaySim(l){
@@ -2810,6 +2969,18 @@ function openPrepay(id){
   const l=findLoan(id);if(!l)return;
   prepayDraft={id:id,month:0,amount:'',usedThisYear:'',mode:loanSettingsNow().defaultMode};
   openDrawer(prepayHtml(l));
+}
+function timingSamples(l,mode){
+  const st=loanSettingsNow(),amt=Number(prepayDraft.amount)||0;
+  const H=Math.round(l.remainingMonths),step=H>72?6:3;
+  const months=[],net=[],pen=[];
+  for(let k=0;k<Math.min(H,121);k+=step){
+    const s=LoanMath.prepaySimulate(l,{month:k,amount:amt>0?amt:null,usedThisYear:0,taxRatePct:st.penaltyTaxRate,savingsRate:st.savingsRate,todayKey:isoDate(new Date())});
+    if(s.invalid)continue;
+    const r=mode==='Reduce'?s.reduce:s.shorten;
+    months.push(k);net.push(LoanMath.round2(r.net));pen.push(s.penalty.total);
+  }
+  return {months,net,pen};
 }
 function prepayHtml(l){
   const d=prepayDraft,mode=d.mode||loanSettingsNow().defaultMode;
@@ -2847,7 +3018,7 @@ function prepayOut(l){
   const be=sim.breakEvenMonths>0?` The penalty is recovered from interest saved in about ${sim.breakEvenMonths} month${sim.breakEvenMonths===1?'':'s'}.`:'';
   const {options,advice}=loanAdviceFor(l,sim,mode);
   const canRecord=sim.k===0;
-  return `<div class="panel surface" style="margin-top:14px;padding:14px"><div class="trend">${verdict}${be}</div><div class="trend" style="margin-top:6px">${penNote}${freeNote} ${growth}</div></div><div class="table-wrap" style="margin-top:12px"><table class="table loan-sim"><thead><tr><th></th><th>Shorten tenure</th><th>Reduce EMI</th></tr></thead><tbody>${row('Pays now',loanMoney(sim.payNow),loanMoney(sim.payNow))}${row('Balance after',loanMoney(full?0:sim.balance-sim.amount),loanMoney(full?0:sim.balance-sim.amount))}${row('New EMI',emiCell(S.emi),emiCell(R.emi))}${row('Months left',months(S.months),months(R.months))}${row('EMI saved each month',emiCell(S.emiSaved),emiCell(R.emiSaved))}${row('Interest saved',loanMoney(S.interestSaved),loanMoney(R.interestSaved))}${row('<strong>Net saving</strong>',`<strong>${loanMoney(S.net)}</strong>`,`<strong>${loanMoney(R.net)}</strong>`)}</tbody></table></div><div class="quiet" style="margin-top:8px">Net saving = interest saved − penalty − growth you give up. Monthly EMI savings are not reinvested in this estimate.</div>${loanCompareHtml(options)}${loanGuidanceHtml(advice)}${canRecord?`<div class="quiet" style="margin-top:12px">Recording uses the option selected above.</div><div class="row-actions" style="margin-top:12px"><button class="btn primary" onclick="applyPrepay()">Record ${full?'closure':'prepayment'} now</button></div>`:`<div class="quiet" style="margin-top:12px">This is a projection. Set months to 0 to record it now.</div>`}`;
+  return `<div class="panel surface" style="margin-top:14px;padding:14px"><div class="trend">${verdict}${be}</div><div class="trend" style="margin-top:6px">${penNote}${freeNote} ${growth}</div></div><div class="table-wrap" style="margin-top:12px"><table class="table loan-sim"><thead><tr><th></th><th>Shorten tenure</th><th>Reduce EMI</th></tr></thead><tbody>${row('Pays now',loanMoney(sim.payNow),loanMoney(sim.payNow))}${row('Balance after',loanMoney(full?0:sim.balance-sim.amount),loanMoney(full?0:sim.balance-sim.amount))}${row('New EMI',emiCell(S.emi),emiCell(R.emi))}${row('Months left',months(S.months),months(R.months))}${row('EMI saved each month',emiCell(S.emiSaved),emiCell(R.emiSaved))}${row('Interest saved',loanMoney(S.interestSaved),loanMoney(R.interestSaved))}${row('<strong>Net saving</strong>',`<strong>${loanMoney(S.net)}</strong>`,`<strong>${loanMoney(R.net)}</strong>`)}</tbody></table></div><div class="quiet" style="margin-top:8px">Net saving = interest saved − penalty − growth you give up. Monthly EMI savings are not reinvested in this estimate.</div>${prepayPathsHtml(sim.series)}${timingHtml(timingSamples(l,mode))}${loanCompareHtml(options)}${options.length>1?optionsBarsHtml(options):''}${loanGuidanceHtml(advice)}${canRecord?`<div class="quiet" style="margin-top:12px">Recording uses the option selected above.</div><div class="row-actions" style="margin-top:12px"><button class="btn primary" onclick="applyPrepay()">Record ${full?'closure':'prepayment'} now</button></div>`:`<div class="quiet" style="margin-top:12px">This is a projection. Set months to 0 to record it now.</div>`}`;
 }
 function applyPrepay(){
   const l=findLoan(prepayDraft.id);if(!l)return;
