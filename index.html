@@ -750,6 +750,14 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
 .chip{max-width:100%;min-width:0;overflow-wrap:anywhere}
 .task-card-main>*{min-width:0;max-width:100%}
 @media (max-width:620px){.table th,.table td{padding:10px 8px;overflow-wrap:anywhere}.table-wrap .table th,.table-wrap .table td{white-space:normal}}
+.loan-chart{width:100%;height:auto;display:block;overflow:visible}
+.loan-chart .loan-axis{stroke:var(--line);stroke-width:1}
+.loan-chart polyline{fill:none;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.loan-chart .loan-balance{stroke:var(--accent)}
+.loan-chart .loan-interest{stroke:#d98a3d}
+.loan-chart text{fill:var(--muted);font-size:11px}
+.loan-calc{padding:4px 16px 16px}
+.loan-calc .field label{display:block}
 </style>
 </head>
 <body>
@@ -760,6 +768,132 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
 <div id="modal" class="modal" aria-modal="true" role="dialog" aria-labelledby="modal-title" style="display:none"></div>
 <div id="drawer-backdrop" class="drawer-backdrop" onclick="closeDrawer()"></div>
 <div id="drawer" class="drawer" role="dialog" aria-label="Details"><div id="drawer-content" class="drawer-inner"></div></div>
+<script id="loan-math">
+/* Loan maths for the Loans screen. Pure functions, no DOM access.
+   tests/unit/loan-math.test.js reads this block, so keep it self-contained. */
+(function (root) {
+  'use strict';
+  var MAX_MONTHS = 600;
+  var MAX_RATE = 60;
+  var LOAN_TYPES = ['Home', 'Car', 'Personal', 'Credit card', 'Education', 'Gold', 'Business', 'Other'];
+  var RATE_TYPES = ['Fixed', 'Floating'];
+
+  function round2(v) { return Math.round((Number(v) || 0) * 100) / 100; }
+  function monthlyRate(annualPct) { return (Number(annualPct) || 0) / 100 / 12; }
+
+  // Standard EMI: P * r * (1+r)^n / ((1+r)^n - 1). Zero-rate loans are principal / months.
+  function emi(principal, annualPct, months) {
+    var P = Number(principal), n = Math.round(Number(months));
+    if (!(P > 0) || !(n > 0)) return NaN;
+    var r = monthlyRate(annualPct);
+    if (r === 0) return P / n;
+    var g = Math.pow(1 + r, n);
+    return P * r * g / (g - 1);
+  }
+
+  // Months needed to clear the loan at a fixed payment. Infinity when the payment never covers interest.
+  function tenureFromEmi(principal, annualPct, payment) {
+    var P = Number(principal), E = Number(payment), r = monthlyRate(annualPct);
+    if (!(P > 0) || !(E > 0)) return NaN;
+    if (r === 0) return Math.ceil(P / E);
+    if (E <= P * r) return Infinity;
+    // Tolerance stops floating-point noise from adding a spare month (e.g. 60.0000000001 -> 61).
+    return Math.ceil(Math.round(-Math.log(1 - P * r / E) / Math.log(1 + r) * 1e6) / 1e6);
+  }
+
+  // Month-by-month schedule at a fixed payment. Capped at MAX_MONTHS.
+  function schedule(principal, annualPct, payment) {
+    var P = Number(principal), E = Number(payment), r = monthlyRate(annualPct);
+    var rows = [];
+    if (!(P > 0) || !(E > 0)) return { rows: rows, neverRepays: true, totalInterest: NaN, months: NaN, truncated: false };
+    if (E <= P * r + 1e-9) return { rows: rows, neverRepays: true, totalInterest: Infinity, months: Infinity, truncated: false };
+    var bal = P, totalInterest = 0;
+    for (var m = 1; m <= MAX_MONTHS && bal > 0.005; m++) {
+      var interest = bal * r;
+      var pay = Math.min(E, bal + interest);
+      var principalPart = pay - interest;
+      bal = Math.max(0, bal - principalPart);
+      totalInterest += interest;
+      rows.push({ month: m, payment: pay, interest: interest, principal: principalPart, balance: bal });
+    }
+    return { rows: rows, neverRepays: false, totalInterest: totalInterest, months: rows.length, truncated: bal > 0.005 };
+  }
+
+  // Groups monthly rows into loan years for the summary table.
+  function yearly(rows) {
+    var out = [];
+    rows.forEach(function (r, i) {
+      var y = Math.floor(i / 12);
+      if (!out[y]) out[y] = { year: y + 1, payment: 0, interest: 0, principal: 0, balance: r.balance };
+      out[y].payment += r.payment;
+      out[y].interest += r.interest;
+      out[y].principal += r.principal;
+      out[y].balance = r.balance;
+    });
+    return out.filter(Boolean);
+  }
+
+  function validateLoan(l) {
+    var errs = [];
+    var P = Number(l.principal), rate = Number(l.rate), n = Number(l.remainingMonths);
+    if (!String(l.name || '').trim()) errs.push('Give the loan a name.');
+    if (!(P > 0)) errs.push('Outstanding amount must be more than zero.');
+    if (!(rate >= 0 && rate <= MAX_RATE)) errs.push('Interest rate must be between 0 and ' + MAX_RATE + '%.');
+    if (!(Number.isInteger(n) && n >= 1 && n <= MAX_MONTHS)) errs.push('Remaining months must be a whole number from 1 to ' + MAX_MONTHS + '.');
+    if (l.emi !== null && l.emi !== undefined && l.emi !== '') {
+      var E = Number(l.emi);
+      if (!(E > 0)) errs.push('Monthly EMI must be more than zero, or left blank to calculate it.');
+      else if (P > 0 && rate >= 0 && E <= P * monthlyRate(rate) + 1e-9) errs.push('This EMI does not cover the monthly interest, so the loan would never end.');
+    }
+    return errs;
+  }
+
+  // Clamps stored values to safe ranges so bad or old data cannot break the screen.
+  function normalizeLoan(x) {
+    x = x || {};
+    var emiVal = Number(x.emi);
+    return {
+      id: String(x.id || ''),
+      name: String(x.name || '').trim().slice(0, 80),
+      type: LOAN_TYPES.indexOf(x.type) >= 0 ? x.type : 'Other',
+      principal: Math.max(0, round2(x.principal)),
+      rate: Math.max(0, Math.min(MAX_RATE, Number(x.rate) || 0)),
+      rateType: RATE_TYPES.indexOf(x.rateType) >= 0 ? x.rateType : 'Fixed',
+      remainingMonths: Math.max(1, Math.min(MAX_MONTHS, Math.round(Number(x.remainingMonths) || 1))),
+      emi: emiVal > 0 ? round2(emiVal) : null,
+      asOf: /^\d{4}-\d{2}-\d{2}$/.test(String(x.asOf || '')) ? String(x.asOf) : null
+    };
+  }
+
+  // Full picture for one saved loan. Uses the entered EMI when present, otherwise the calculated one.
+  function summarize(loan) {
+    var P = Number(loan.principal);
+    var computed = emi(P, loan.rate, loan.remainingMonths);
+    var payment = loan.emi > 0 ? Number(loan.emi) : computed;
+    var s = schedule(P, loan.rate, payment);
+    var totalInterest = s.totalInterest;
+    var finite = isFinite(totalInterest);
+    return {
+      emi: payment,
+      computedEmi: computed,
+      emiDiffers: loan.emi > 0 && Math.abs(loan.emi - computed) > 0.005,
+      months: s.months,
+      totalInterest: totalInterest,
+      totalPayable: finite ? P + totalInterest : Infinity,
+      interestShare: finite && P + totalInterest > 0 ? totalInterest / (P + totalInterest) * 100 : NaN,
+      neverRepays: s.neverRepays,
+      truncated: s.truncated,
+      rows: s.rows
+    };
+  }
+
+  root.LoanMath = {
+    LOAN_TYPES: LOAN_TYPES, RATE_TYPES: RATE_TYPES, MAX_MONTHS: MAX_MONTHS, MAX_RATE: MAX_RATE,
+    round2: round2, monthlyRate: monthlyRate, emi: emi, tenureFromEmi: tenureFromEmi, schedule: schedule,
+    yearly: yearly, validateLoan: validateLoan, normalizeLoan: normalizeLoan, summarize: summarize
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
 <script id="dog-companion">
 /* AstralSurge OS: dog training companion.
    Pure logic first (testable in Node, see tests/unit), then a small renderer and one delegated click handler.
@@ -1911,7 +2045,7 @@ function demoRaw(){
  workouts:[{id:'w1',title:'Upper body',type:'Strength',duration:42,rpe:7,date:addDays(-1)},{id:'w2',title:'Easy run',type:'Run',duration:28,rpe:5,date:addDays(-4)}],
  budgets:[{id:'b1',name:'Dining',limit:8000,spent:7040,items:[{id:'i1',title:'Food delivery membership',amount:149,repeat:'monthly',next:addDays(5)}]},{id:'b2',name:'Transport',limit:4500,spent:2100,items:[{id:'i2',title:'Metro pass',amount:800,repeat:'monthly',next:addDays(2)},{id:'i3',title:'Car insurance',amount:12000,repeat:'yearly',next:addDays(40)}]},{id:'b3',name:'Tools',limit:6000,spent:5100,items:[{id:'i4',title:'Hosting',amount:1600,repeat:'monthly',next:addDays(12)},{id:'i5',title:'Domain renewal',amount:1100,repeat:'yearly',next:addDays(60)},{id:'i6',title:'Design software',amount:2400,repeat:'quarterly',next:addDays(20)}]}],
  transactions:[{id:'tx1',title:'Grocery',amount:1240,category:'Food',date:addDays(-1)},{id:'tx2',title:'Hosting',amount:1600,category:'Tools',date:addDays(-2)},{id:'tx3',title:'Cab',amount:420,category:'Transport',date:addDays(-2)}],
- decisions:[{id:'d1',title:'New monitor',projected:18000,actual:16500,status:'Awaiting reconciliation'}],
+ loans:[{id:'l1',name:'Home loan',type:'Home',principal:2400000,rate:8.5,rateType:'Floating',remainingMonths:180,emi:null,asOf:null}],decisions:[{id:'d1',title:'New monitor',projected:18000,actual:16500,status:'Awaiting reconciliation'}],
  activities:[{id:'a1',time:'10:14',title:'Acceptance criterion completed',meta:'Portfolio launch · Story'},{id:'a2',time:'12:05',title:'45 minutes became available',meta:'Planner · Open time'},{id:'a3',time:'18:20',title:'Dining reached 88% of configured limit',meta:'Money · Budget pressure'}],
  focus:{active:false,paused:false,taskId:'tsk_oauth',seconds:25*60,initial:25*60,category:'Deep Work',startedAt:null},
  activity:seedAct(),habitLog:{h1:seedHab(.7,1,9,false),h2:seedHab(.55,2,4,true)},xp:1240,level:8,streak:9,settings:{suggestions:'On',density:'Normal',hideAmounts:false,theme:'Dark',ambientEffect:'Stars',ambientStrength:45,ambientOpacity:18,focusSound:'Off',focusSoundVolume:10},dismissed:{},events:[{type:'FOCUS_COMPLETED',entityId:'tsk_proposal',seconds:4200,at:Date.now()},{type:'FOCUS_COMPLETED',entityId:'tsk_oauth',seconds:2100,at:Date.now()},{type:'FOCUS_COMPLETED',entityId:'tsk_docs',seconds:1200,at:Date.now()}]};
@@ -2299,7 +2433,97 @@ function wishlistModal(){return `<div class="modal-inner"><div class="split"><di
 function saveWishlistItem(e){e.preventDefault();const f=new FormData(e.target);const title=String(f.get('title')||'').trim();if(!title)return toast('Name the item first');state.wishlist.unshift({id:uid('wish'),title:title.slice(0,120),price:Math.max(0,Number(f.get('price'))||0),priority:pickOne(String(f.get('priority')),['Low','Medium','High'],'Medium'),note:String(f.get('note')||'').trim().slice(0,300),bought:false});persist();closeModal();render()}
 function toggleWishlistBought(id){const w=state.wishlist.find(x=>x.id===id);if(!w)return;w.bought=!w.bought;persist();render()}
 function deleteWishlistItem(id){const w=state.wishlist.find(x=>x.id===id);if(!w)return;if(!confirm(`Remove "${w.title}" from things to buy?`))return;state.wishlist=state.wishlist.filter(x=>x.id!==id);persist();render();toast('Removed')}
-function viewMoney(){const income=Number(state.settings.incomeBaseline??120000),spent=state.transactions.reduce((a,t)=>a+t.amount,0);return `<div class="page"><div class="eyebrow">Money</div><div class="h1">Where do I stand?</div><div class="lead">Calm, data-forward financial awareness. Budget is intention, decision is anticipated choice, transaction is reality.</div><section class="section grid grid-3"><div class="panel metric"><div class="label">Income</div><div class="value">${state.settings.hideAmounts?'••••':money(income)}</div><div class="trend">monthly income baseline · <button class="btn mini" onclick="editIncomeBaseline()">Edit baseline</button></div></div><div class="panel metric"><div class="label">Spent</div><div class="value">${state.settings.hideAmounts?'••••':money(spent)}</div><div class="trend">recorded transactions</div></div><div class="panel metric"><div class="label">Room / pressure</div><div class="value">${facts().budgetPressure.length} signals</div><div class="trend">review configured limits</div></div></section>${moneyAnalysis()}<section class="section grid grid-2"><div class="panel"><div class="panel-header"><h2>Budgets</h2><button class="btn mini" onclick="addBudget()">+ Category</button></div>${budgetRows()}</div><div class="panel"><div class="panel-header"><h2>Decisions</h2><small>anticipated → actual</small></div>${state.decisions.map(d=>`<div class="row"><div class="row-main"><div class="row-title">${esc(d.title)}</div><div class="row-meta">Projected ${money(d.projected)} · Actual ${money(d.actual)}${d.review?` · ${esc(d.review.outcome)}`:''}${d.review?.lesson?` — ${esc(d.review.lesson)}`:''}${decisionReviewDue(d)?' · review due':''}</div></div>${decisionReviewDue(d)?`<button class="btn mini primary" onclick="openDecisionReview(${jarg(d.id)})">Review</button>`:''}<button class="btn mini ${d.status==='Reconciled'?'':'primary'}" onclick="${d.status==='Reconciled'?'toast(\'Already reconciled\')':`openDecision(${jarg(d.id)})`}">${d.status==='Reconciled'?'Reconciled':'Reconcile'}</button></div>`).join('')}</div></section><section class="section panel" aria-labelledby="wishlist-title"><div class="panel-header"><h2 id="wishlist-title">Things to buy</h2><button class="btn mini" onclick="openModal(wishlistModal)">+ Item</button></div>${wishlistRows()}</section><section class="section panel"><div class="panel-header"><h2>Transactions</h2><button class="btn mini" onclick="openModal(expenseModal)">+ Expense</button></div><table class="table"><thead><tr><th>Date</th><th>What</th><th>Category</th><th>Amount</th></tr></thead><tbody>${state.transactions.map(t=>`<tr><td>${dateShort(t.date)}</td><td>${esc(t.title)}</td><td>${esc(t.category)}</td><td class="pill-value">${state.settings.hideAmounts?'••••':money(t.amount)}</td></tr>`).join('')}</tbody></table></section></div>`}
+/* ===== Loans: loan list, calculator, schedule and entry form ===== */
+let loanCalc={principal:2000000,rate:9,mode:'emi',months:180,emi:20000};
+const findLoan=id=>(state.loans||[]).find(x=>x.id===id);
+const loanMoney=v=>state.settings.hideAmounts?'••••':'₹'+Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtMoneyOrDash=v=>isFinite(v)?loanMoney(v):'—';
+function fmtTenure(m){const y=Math.floor(m/12),r=m%12;return [y?`${y} yr`:'',r?`${r} mo`:''].filter(Boolean).join(' ')||'0 mo'}
+function payoffLabel(months){const d=new Date();const x=new Date(d.getFullYear(),d.getMonth()+months,1);return x.toLocaleDateString('en-IN',{month:'short',year:'numeric'})}
+function loanChartSvg(rows,principal,totalInterest){
+  if(!rows.length)return '';
+  const W=600,H=180,pad=24,n=rows.length,step=Math.max(1,Math.ceil(n/120));
+  const maxY=(principal+totalInterest)||1;
+  const x=i=>pad+(W-2*pad)*(n<=1?0:i/(n-1));
+  const y=v=>H-pad-(H-2*pad)*(v/maxY);
+  let cum=0;const bal=[],paid=[];
+  rows.forEach((r,i)=>{cum+=r.interest;if(i%step===0||i===n-1){bal.push(`${x(i).toFixed(1)},${y(r.balance).toFixed(1)}`);paid.push(`${x(i).toFixed(1)},${y(cum).toFixed(1)}`)}});
+  return `<figure style="margin:14px 0 0"><svg class="loan-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Chart: the balance falls to zero while total interest paid rises over ${Math.ceil(n/12)} years"><line class="loan-axis" x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}"/><polyline class="loan-balance" points="${bal.join(' ')}"/><polyline class="loan-interest" points="${paid.join(' ')}"/><text x="${pad}" y="${H-6}">Year 0</text><text x="${W-pad}" y="${H-6}" text-anchor="end">Year ${Math.ceil(n/12)}</text></svg><figcaption class="quiet">Blue: balance left. Amber: interest paid so far.</figcaption></figure>`;
+}
+function loanCardHtml(l){
+  const s=LoanMath.summarize(l);
+  const ends=s.neverRepays?'Payment never clears the loan':s.truncated?'Not cleared within 50 years':`Ends ${payoffLabel(s.months)} · ${fmtTenure(s.months)} left`;
+  const asOf=l.asOf?` · balance as of ${dateShort(l.asOf)}`:'';
+  const differs=s.emiDiffers?` · calculated EMI is ${loanMoney(s.computedEmi)}`:'';
+  return `<div class="row"><div class="row-main"><div class="row-title">${esc(l.name)} <span class="chip">${esc(l.type)}</span> <span class="chip">${esc(String(l.rate))}% ${esc(l.rateType)}</span></div><div class="row-meta">EMI ${fmtMoneyOrDash(s.emi)} · ${ends}${asOf}${differs}</div><div class="row-meta">Interest left ${fmtMoneyOrDash(s.totalInterest)} · total payable ${fmtMoneyOrDash(s.totalPayable)}</div></div><div class="row-actions"><button class="btn mini" onclick="openLoanSchedule(${jarg(l.id)})">Schedule</button><button class="btn mini" onclick="openModal(loanModal,findLoan(${jarg(l.id)}))">Edit</button></div></div>`;
+}
+function loanCalcForm(){
+  const c=loanCalc;
+  return `<div class="grid grid-2"><div class="field"><label for="lc-p">Amount (₹)</label><input id="lc-p" type="number" min="1" step="any" inputmode="decimal" value="${esc(c.principal)}" oninput="loanCalcRead()"></div><div class="field"><label for="lc-r">Interest rate (% a year)</label><input id="lc-r" type="number" min="0" max="60" step="0.01" inputmode="decimal" value="${esc(c.rate)}" oninput="loanCalcRead()"></div></div><div class="grid grid-2"><div class="field"><label for="lc-mode">Solve for</label><select id="lc-mode" onchange="loanCalcRead(true)"><option value="emi" ${c.mode==='emi'?'selected':''}>Monthly EMI</option><option value="tenure" ${c.mode==='tenure'?'selected':''}>Time to repay</option></select></div>${c.mode==='emi'?`<div class="field"><label for="lc-x">Tenure (months)</label><input id="lc-x" type="number" min="1" max="600" step="1" inputmode="numeric" value="${esc(c.months)}" oninput="loanCalcRead()"></div>`:`<div class="field"><label for="lc-x">Monthly EMI (₹)</label><input id="lc-x" type="number" min="1" step="any" inputmode="decimal" value="${esc(c.emi)}" oninput="loanCalcRead()"></div>`}</div>`;
+}
+function loanCalcRead(structural){
+  const g=id=>document.getElementById(id);
+  if(!g('lc-p'))return;
+  const x=Number(g('lc-x').value);
+  if(loanCalc.mode==='emi')loanCalc.months=x;else loanCalc.emi=x;
+  loanCalc.principal=Number(g('lc-p').value);
+  loanCalc.rate=Number(g('lc-r').value);
+  loanCalc.mode=g('lc-mode').value;
+  if(structural){render();return}
+  g('loan-calc-out').innerHTML=loanCalcResult();
+}
+function loanCalcResult(){
+  const c=loanCalc,P=c.principal,R=c.rate;
+  const never='<div class="empty"><strong>This EMI never clears the loan.</strong>It does not cover the monthly interest. Increase the EMI or the amount you can pay.</div>';
+  if(!(P>0)||!(R>=0)||R>LoanMath.MAX_RATE)return '<div class="quiet">Enter an amount and an interest rate to see the result.</div>';
+  let payment;
+  if(c.mode==='emi'){
+    if(!(c.months>=1&&c.months<=LoanMath.MAX_MONTHS))return `<div class="quiet">Enter a tenure from 1 to ${LoanMath.MAX_MONTHS} months.</div>`;
+    payment=LoanMath.emi(P,R,c.months);
+  }else{
+    if(!(c.emi>0))return '<div class="quiet">Enter the monthly EMI you can pay.</div>';
+    if(!isFinite(LoanMath.tenureFromEmi(P,R,c.emi)))return never;
+    payment=c.emi;
+  }
+  const s=LoanMath.schedule(P,R,payment);
+  if(s.neverRepays)return never;
+  const total=P+s.totalInterest,share=s.totalInterest/total*100;
+  return `<div class="grid grid-3" style="margin-top:14px"><div class="metric surface"><div class="label">Monthly EMI</div><div class="value">${loanMoney(payment)}</div></div><div class="metric surface"><div class="label">Time to repay</div><div class="value">${fmtTenure(s.months)}</div></div><div class="metric surface"><div class="label">Total interest</div><div class="value">${loanMoney(s.totalInterest)}</div><div class="trend">${share.toFixed(1)}% of what you pay</div></div></div><div class="trend" style="margin-top:8px">Total payable ${loanMoney(total)}.</div>${s.truncated?'':loanChartSvg(s.rows,P,s.totalInterest)}`;
+}
+function viewLoans(){
+  const loans=state.loans||[];
+  return `<div class="page"><div class="eyebrow">Money</div><div class="h1">Loans</div><div class="lead">See what each loan really costs and when it ends. Enter balances as of today.</div><section class="section panel"><div class="panel-header"><h2>Your loans</h2><button class="btn mini primary" onclick="openModal(loanModal)">+ Add loan</button></div>${loans.length?`<div class="list">${loans.map(loanCardHtml).join('')}</div>`:'<div class="empty"><strong>No loans yet.</strong>Add one to see its EMI, total interest and payoff date.</div>'}</section><section class="section panel"><div class="panel-header"><h2>Loan calculator</h2><small>nothing is saved</small></div><div class="loan-calc">${loanCalcForm()}<div id="loan-calc-out" aria-live="polite">${loanCalcResult()}</div></div></section><section class="section panel"><div class="quiet">Estimates from the numbers you enter. Lenders may round or charge fees differently, so check your loan statement before you decide.</div></section></div>`;
+}
+function openLoanSchedule(id){
+  const l=findLoan(id);if(!l)return;
+  const s=LoanMath.summarize(l);
+  if(s.neverRepays){toast('This EMI never clears the loan. Edit the loan first.');return}
+  const yrs=LoanMath.yearly(s.rows);
+  openDrawer(`<div class="eyebrow">Loan schedule</div><h2 style="margin:4px 0">${esc(l.name)}</h2><div class="quiet">EMI ${fmtMoneyOrDash(s.emi)} · ${s.truncated?'not cleared within 50 years':fmtTenure(s.months)+' to repay'}</div>${s.truncated?'':loanChartSvg(s.rows,l.principal,s.totalInterest)}<div class="table-wrap" style="margin-top:14px"><table class="table"><thead><tr><th>Year</th><th>Paid</th><th>Interest</th><th>Principal</th><th>Left</th></tr></thead><tbody>${yrs.map(y=>`<tr><td>${y.year}</td><td>${loanMoney(y.payment)}</td><td>${loanMoney(y.interest)}</td><td>${loanMoney(y.principal)}</td><td>${loanMoney(y.balance)}</td></tr>`).join('')}</tbody></table></div><div class="row-actions" style="margin-top:14px"><button class="btn" onclick="closeDrawer()">Close</button></div>`);
+}
+function loanModal(l){
+  const d=l||{name:'',type:'Home',principal:'',rate:'',rateType:'Fixed',remainingMonths:'',emi:'',asOf:today};
+  const id=l?l.id:'';
+  return `<div class="modal-inner"><div class="split"><div><div class="eyebrow">Loan</div><h2 id="modal-title" style="margin:4px 0 4px">${l?esc(l.name):'New loan'}</h2><div class="quiet">Enter the balance as of the date below.</div></div><button class="btn icon-btn" onclick="closeModal()">×</button></div><form class="form" onsubmit="saveLoan(event,${jarg(id)})" style="margin-top:18px"><div class="field"><label for="ln-name">Name</label><input id="ln-name" name="name" required maxlength="80" value="${esc(d.name)}"></div><div class="grid grid-2"><div class="field"><label for="ln-type">Type</label><select id="ln-type" name="type">${LoanMath.LOAN_TYPES.map(t=>`<option ${d.type===t?'selected':''}>${t}</option>`).join('')}</select></div><div class="field"><label for="ln-rt">Rate type</label><select id="ln-rt" name="rateType">${LoanMath.RATE_TYPES.map(t=>`<option ${d.rateType===t?'selected':''}>${t}</option>`).join('')}</select><div class="field-help">Floating rates change. Update the rate when it does.</div></div></div><div class="grid grid-2"><div class="field"><label for="ln-p">Outstanding amount (₹)</label><input id="ln-p" name="principal" type="number" min="1" step="any" required value="${esc(d.principal)}"></div><div class="field"><label for="ln-r">Interest rate (% a year)</label><input id="ln-r" name="rate" type="number" min="0" max="60" step="0.01" required value="${esc(d.rate)}"></div></div><div class="grid grid-2"><div class="field"><label for="ln-n">Remaining months</label><input id="ln-n" name="remainingMonths" type="number" min="1" max="600" step="1" required value="${esc(d.remainingMonths)}"></div><div class="field"><label for="ln-e">Monthly EMI (optional)</label><input id="ln-e" name="emi" type="number" min="1" step="any" value="${esc(d.emi??'')}"><div class="field-help">Leave blank to calculate it from the amount, rate and months.</div></div></div><div class="field"><label for="ln-asof">Balance as of</label><input id="ln-asof" name="asOf" type="date" value="${esc(d.asOf||today)}"></div><div class="row-actions" style="margin-top:14px">${l?`<button class="btn" type="button" onclick="deleteLoan(${jarg(id)})">Remove loan</button>`:''}<button class="btn primary" type="submit">Save loan</button></div></form></div>`;
+}
+function saveLoan(e,id){
+  e.preventDefault();
+  const f=new FormData(e.target);
+  const draft={name:f.get('name'),type:f.get('type'),principal:Number(f.get('principal')),rate:Number(f.get('rate')),rateType:f.get('rateType'),remainingMonths:Number(f.get('remainingMonths')),emi:f.get('emi')?Number(f.get('emi')):null,asOf:f.get('asOf')||today};
+  const errs=LoanMath.validateLoan(draft);
+  if(errs.length){toast(errs[0]);return}
+  const clean=LoanMath.normalizeLoan({...draft,id:id||uid('ln')});
+  state.loans=state.loans||[];
+  const i=id?state.loans.findIndex(x=>x.id===id):-1;
+  if(i>=0)state.loans[i]=clean;else state.loans.push(clean);
+  persist();closeModal();render();
+}
+function deleteLoan(id){
+  if(!confirm('Remove this loan? This cannot be undone.'))return;
+  state.loans=(state.loans||[]).filter(x=>x.id!==id);
+  persist();closeModal();render();
+}
+function viewMoney(){const income=Number(state.settings.incomeBaseline??120000),spent=state.transactions.reduce((a,t)=>a+t.amount,0);return `<div class="page"><div class="eyebrow">Money</div><div class="h1">Where do I stand?</div><div class="lead">Calm, data-forward financial awareness. Budget is intention, decision is anticipated choice, transaction is reality.</div><div style="margin-top:12px"><button class="btn" onclick="setNav('loans')">Loans calculator</button></div><section class="section grid grid-3"><div class="panel metric"><div class="label">Income</div><div class="value">${state.settings.hideAmounts?'••••':money(income)}</div><div class="trend">monthly income baseline · <button class="btn mini" onclick="editIncomeBaseline()">Edit baseline</button></div></div><div class="panel metric"><div class="label">Spent</div><div class="value">${state.settings.hideAmounts?'••••':money(spent)}</div><div class="trend">recorded transactions</div></div><div class="panel metric"><div class="label">Room / pressure</div><div class="value">${facts().budgetPressure.length} signals</div><div class="trend">review configured limits</div></div></section>${moneyAnalysis()}<section class="section grid grid-2"><div class="panel"><div class="panel-header"><h2>Budgets</h2><button class="btn mini" onclick="addBudget()">+ Category</button></div>${budgetRows()}</div><div class="panel"><div class="panel-header"><h2>Decisions</h2><small>anticipated → actual</small></div>${state.decisions.map(d=>`<div class="row"><div class="row-main"><div class="row-title">${esc(d.title)}</div><div class="row-meta">Projected ${money(d.projected)} · Actual ${money(d.actual)}${d.review?` · ${esc(d.review.outcome)}`:''}${d.review?.lesson?` — ${esc(d.review.lesson)}`:''}${decisionReviewDue(d)?' · review due':''}</div></div>${decisionReviewDue(d)?`<button class="btn mini primary" onclick="openDecisionReview(${jarg(d.id)})">Review</button>`:''}<button class="btn mini ${d.status==='Reconciled'?'':'primary'}" onclick="${d.status==='Reconciled'?'toast(\'Already reconciled\')':`openDecision(${jarg(d.id)})`}">${d.status==='Reconciled'?'Reconciled':'Reconcile'}</button></div>`).join('')}</div></section><section class="section panel" aria-labelledby="wishlist-title"><div class="panel-header"><h2 id="wishlist-title">Things to buy</h2><button class="btn mini" onclick="openModal(wishlistModal)">+ Item</button></div>${wishlistRows()}</section><section class="section panel"><div class="panel-header"><h2>Transactions</h2><button class="btn mini" onclick="openModal(expenseModal)">+ Expense</button></div><table class="table"><thead><tr><th>Date</th><th>What</th><th>Category</th><th>Amount</th></tr></thead><tbody>${state.transactions.map(t=>`<tr><td>${dateShort(t.date)}</td><td>${esc(t.title)}</td><td>${esc(t.category)}</td><td class="pill-value">${state.settings.hideAmounts?'••••':money(t.amount)}</td></tr>`).join('')}</tbody></table></section></div>`}
 // ---- Journal: one page per day, swipe to turn ----
 var JOURNAL_MOODS=['Rough','Low','Okay','Good','Great'];
 var JOURNAL_FIELDS=[['highlight','Best part of today','What stood out?'],['grateful','Three things I am grateful for','One per line'],['learned','What I learned','Any insight, fact or lesson'],['challenge','What was hard','It is fine to write it down'],['tomorrow','One thing for tomorrow','Keep it small'],['free','Anything else','Free writing']];
@@ -2768,7 +2992,7 @@ async function deleteIndexedDB(){if(__idbPromise){try{(await __idbPromise).close
 const WORKSPACE_SCHEMA=2;
 const BACKUP_FORMAT='astralsurge-backup';
 const FONT_OPTIONS=[['system','System (default)'],['humanist','Friendly'],['rounded','Rounded'],['geometric','Geometric'],['editorial','Editorial serif'],['serif','Classic serif'],['condensed','Condensed'],['mono','Monospace'],['accessible','High readability'],['inter','Inter'],['atkinson','Atkinson Hyperlegible'],['jetbrains','JetBrains Mono'],['lora','Lora serif'],['nunito','Nunito rounded']];
-const WORKSPACE_LISTS=['tasks','planner','habits','workouts','budgets','transactions','notes','goals','stories','decisions','activities','reminders','trash','groups','wishlist'];
+const WORKSPACE_LISTS=['tasks','planner','habits','workouts','budgets','transactions','notes','goals','stories','decisions','activities','reminders','trash','groups','wishlist','loans'];
 const TRASH_DAYS=30;
 const REPEAT_RULES=['none','daily','weekdays','weekly'];
 const WORKSPACE_ITEM_LIMIT=20000;
@@ -2793,6 +3017,7 @@ function normalizeWorkspace(input,opts={}){
  out.searchUsage=normalizeSearchUsage(src.searchUsage);
  out.xp=Math.max(0,Math.round(Number(src.xp)||0));
  out.streak=Math.max(0,Math.round(Number(src.streak)||0));
+ out.loans=out.loans.map(x=>LoanMath.normalizeLoan(Object.assign({},x,{id:String(x.id||uid('ln'))})));
  out.settings=normalizeSettings(src.settings);
  out.focus=normalizeFocus(src.focus,!!opts.fromImport);out.journal=normalizeJournal(src.journal);
  out.tasks=out.tasks.map(t=>({...t,id:String(t.id||uid('tsk')),reschedules:Math.max(0,Math.min(999,Math.round(Number(t.reschedules)||0))),title:String(t.title||'Untitled task'),repeat:pickOne(t.repeat,REPEAT_RULES,'none'),desc:String(t.desc||''),priority:pickOne(t.priority,['Low','Medium','High'],'Medium'),energy:pickOne(t.energy,['Light','Focused','Deep'],'Light'),status:pickOne(t.status,['Inbox','To Do','In Progress','Completed'],'Inbox'),due:typeof t.due==='string'?t.due:null,important:!!t.important,urgent:!!t.urgent,scheduled:!!t.scheduled,timeSpent:Math.max(0,Number(t.timeSpent)||0),goalId:t.goalId||null,tags:(Array.isArray(t.tags)?t.tags:[]).map(String).slice(0,12),subtasks:(Array.isArray(t.subtasks)?t.subtasks:[]).filter(isPlainObj).map(x=>({...x,id:String(x.id||uid('s')),t:String(x.t||''),done:!!x.done,xp:Math.max(0,Math.min(100,Number(x.xp??2)||0))})),images:cleanImages(t.images)}));
@@ -3523,7 +3748,7 @@ function bindDelegatedInteractions(){
  document.addEventListener('click',e=>{const el=e.target.closest?.('[data-action]');if(!el)return;const a=el.dataset.action;if(a==='delete-sub')delSub(el.dataset.id,el.dataset.subId);else if(a==='search-open'){recordSearchUsage(el.dataset.type,el.dataset.id);searchOpen(el.dataset.type,el.dataset.id)}else if(a==='search-shortcut')runSearchShortcut(el.dataset.id)});
  document.addEventListener('change',e=>{const el=e.target.closest?.('[data-action]');if(!el)return;if(el.dataset.action==='toggle-sub')toggleSub(el.dataset.id,el.dataset.subId)});
 }
-function workspaceTiles(){return [['dog','Dog training','Care, training, health']]}function viewDog(){if(!window.DogCompanion)return '<div class="page"><div class="lead">The dog training module did not load.</div></div>';try{return window.DogCompanion.view()}catch(e){console.error('dog view failed',e);return '<div class="page"><div class="eyebrow">Dog training</div><div class="h1">This page could not be shown.</div><div class="lead">Switch to Existing setup in Settings, or reload the page. Details are in the browser console.</div></div>'}}function initDogCompanion(){if(window.DogCompanion)window.DogCompanion.init({getState:()=>state,commit:()=>{persist();render()},refresh:()=>render(),toast:toast,isActive:()=>true,openModal:openModal,closeModal:closeModal})}function render(){if(isMinimalMode()){renderMinimal();return}applyTypographyAndTimezone();applyTheme();saveAppearanceSnapshot();const n=nav();const y=lastRoute===n?window.scrollY:0;let c='';if(n==='today')c=viewToday();else if(n==='work')c=viewWork();else if(n==='focus')c=viewFocus();else if(n==='plan')c=viewPlan();else if(n==='more')c=moreIndex();else if(n==='goals')c=viewGoals();else if(n==='life')c=viewLife();else if(n==='money')c=viewMoney();else if(n==='journal')c=viewJournal();else if(n==='memory')c=viewMemory();else if(n==='progress')c=viewProgress();else if(n==='rules')c=viewRules();else if(n==='vault')c=viewVault();else if(n==='calendar')c=viewCalendar();else if(n==='reminders')c=viewReminders();else if(n==='timer')c=viewTimer();else if(n==='convert')c=viewConvert();else if(n==='prompts')c=viewPrompts();else if(n==='dog')c=viewDog();else if(n==='split'||n.startsWith('split/'))c=splitViewRoute(n);else if(n==='settings')c=viewSettings();else if(n==='legal')c=viewLegal();else c=viewToday();document.getElementById('app').innerHTML=!betaAck()?betaScreen():state.vault.locked?lockScreen():renderShell(c);bindDelegatedInteractions();if(!state.focus.active)document.title='AstralSurge OS';lastRoute=n;window.scrollTo(0,y);tickClock();if(document.querySelectorAll)document.querySelectorAll('.heat-wrap').forEach(e=>e.scrollLeft=e.scrollWidth);if(timerHandle)clearInterval(timerHandle);if(state.focus.active)timerHandle=setInterval(tick,1000);refreshStorageHealth()}
+function workspaceTiles(){return [['dog','Dog training','Care, training, health']]}function viewDog(){if(!window.DogCompanion)return '<div class="page"><div class="lead">The dog training module did not load.</div></div>';try{return window.DogCompanion.view()}catch(e){console.error('dog view failed',e);return '<div class="page"><div class="eyebrow">Dog training</div><div class="h1">This page could not be shown.</div><div class="lead">Switch to Existing setup in Settings, or reload the page. Details are in the browser console.</div></div>'}}function initDogCompanion(){if(window.DogCompanion)window.DogCompanion.init({getState:()=>state,commit:()=>{persist();render()},refresh:()=>render(),toast:toast,isActive:()=>true,openModal:openModal,closeModal:closeModal})}function render(){if(isMinimalMode()){renderMinimal();return}applyTypographyAndTimezone();applyTheme();saveAppearanceSnapshot();const n=nav();const y=lastRoute===n?window.scrollY:0;let c='';if(n==='today')c=viewToday();else if(n==='work')c=viewWork();else if(n==='focus')c=viewFocus();else if(n==='plan')c=viewPlan();else if(n==='more')c=moreIndex();else if(n==='goals')c=viewGoals();else if(n==='life')c=viewLife();else if(n==='money')c=viewMoney();else if(n==='loans')c=viewLoans();else if(n==='journal')c=viewJournal();else if(n==='memory')c=viewMemory();else if(n==='progress')c=viewProgress();else if(n==='rules')c=viewRules();else if(n==='vault')c=viewVault();else if(n==='calendar')c=viewCalendar();else if(n==='reminders')c=viewReminders();else if(n==='timer')c=viewTimer();else if(n==='convert')c=viewConvert();else if(n==='prompts')c=viewPrompts();else if(n==='dog')c=viewDog();else if(n==='split'||n.startsWith('split/'))c=splitViewRoute(n);else if(n==='settings')c=viewSettings();else if(n==='legal')c=viewLegal();else c=viewToday();document.getElementById('app').innerHTML=!betaAck()?betaScreen():state.vault.locked?lockScreen():renderShell(c);bindDelegatedInteractions();if(!state.focus.active)document.title='AstralSurge OS';lastRoute=n;window.scrollTo(0,y);tickClock();if(document.querySelectorAll)document.querySelectorAll('.heat-wrap').forEach(e=>e.scrollLeft=e.scrollWidth);if(timerHandle)clearInterval(timerHandle);if(state.focus.active)timerHandle=setInterval(tick,1000);refreshStorageHealth()}
 
 
 // Preserve legacy restore UI but support encrypted backups.
@@ -3546,7 +3771,7 @@ Object.assign(window,{startFreeFocus,startFocusOverlayDrag,nudgeFocusOverlayKey,
   recommendation,actionForRec,completeTask,startFocus,scheduleTask,stopFocus,resumeFocus,pauseFocus,tick,renderFocusTimerOnly,
   openModal,closeModal,openDrawer,closeDrawer,taskModal,saveTask,clearPlan,noteModal,saveNote,expenseModal,saveExpense,wishlistModal,saveWishlistItem,toggleWishlistBought,deleteWishlistItem,decisionModal,openDecision,reconcile,
   createGoalModal,saveGoal,globalCreate,inspect,viewToday,viewWork,viewFocus,viewPlan,viewGoals,executeStep,viewLife,toggleHabit,
-  logWorkout,viewMoney,viewMemory,convertNote,vaultDrawer,viewVault,toggleLock,backupWorkspace,createCheckpoint,compareCheckpoint,
+  logWorkout,viewMoney,viewLoans,loanModal,saveLoan,deleteLoan,openLoanSchedule,loanCalcRead,findLoan,viewMemory,convertNote,vaultDrawer,viewVault,toggleLock,backupWorkspace,createCheckpoint,compareCheckpoint,
   fileRestore,shiftCalendar,resetCalendar,viewProgress,viewRules,viewSettings,downloadState,viewLegal,viewCalendar,viewReminders,viewTimer,startStandaloneTimer,
   stopStandalone,resetStandaloneTimer,setStandaloneMinutes,copyTodaySummary,snoozeReminderTomorrow,exportTasksIcs,viewConvert,setConvert,setConvertValue,swapConvert,viewPrompts,generatePrompt,copyPrompt,openDecisionReview,saveDecisionReview,repeatLastWorkout,startStopwatch,pauseStopwatch,lapStopwatch,resetStopwatch,editIncomeBaseline,renameBudget,removeBudget,editItem,addHabit,renameHabit,removeHabit,delWorkout,renameWorkout,renameGoal,removeGoal,setAccent,setWall,pickWall,setAmbientEffect,setAmbientStrength,setAmbientOpacity,showImg,hideImg,pickImgs,dropImgs,rmImg,addSub,toggleSub,editSub,delSub,addItem,toggleItem,delItem,addBudget,setPassphrase,unlockVault,restoreCheckpoint,acceptBeta,showBeta,setFocusLen,toggleFocusPause,resetFocusTimer,toggleFocusMusic,hideFocusOverlay,openMinimalFocus,deleteTask,deleteNote,editNote,doneStep,executeStep,removeBlock,restorePreview,applyRestore,openSlot,dropBlocks,fmtClock,recommendationRaw,search,globalSearch,drawSearchResults,searchOpen,navItems,renderShell,moreIndex,render,bootAstral,exportRecoveryNoImages,morningWizard,saveMorningWizard,weeklyReviewModal,saveReview,addReminder,addQuickReminder,saveReminder,editReminder,snoozeReminder,doneReminder,deleteReminder,requestNotifications,installPWA,setPassphrase,unlockVault,toggleLock,recoveryImport,backupWorkspace,encryptedBackup,editWorkout,saveWorkout,workoutModal,logWorkout,viewLife,viewProgress,viewVault,viewReminders,viewSettings,viewDog,setScreenDensity});
 
