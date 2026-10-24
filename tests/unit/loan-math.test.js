@@ -94,3 +94,141 @@ test('summarize uses the entered EMI and flags when it differs from the calculat
   assert.ok(higher.months < 120, 'a higher EMI should finish sooner');
   assert.ok(higher.totalInterest < calc.totalInterest);
 });
+
+// ---- Phase 2: penalties, prepayment simulator, settings ----
+const base = { principal: 2000000, rate: 9, remainingMonths: 180, emi: null,
+  penaltyType: 'None', penaltyValue: 0, penaltyBasis: 'Prepaid', lockInEnd: null, freePrepayPct: 0 };
+const withPenalty = (o) => ({ ...base, ...o });
+
+test('no penalty is charged when the loan has none', () => {
+  const p = L.penaltyFor(base, 500000, 2000000, 0, 18, true);
+  assert.equal(p.total, 0);
+  assert.equal(p.chargeable, 500000);
+});
+
+test('percentage penalty applies to the prepaid amount, with tax on top', () => {
+  const loan = withPenalty({ penaltyType: 'Percent', penaltyValue: 2 });
+  const p = L.penaltyFor(loan, 500000, 2000000, 0, 18, true);
+  assert.equal(p.penalty, 10000);
+  assert.equal(p.tax, 1800);
+  assert.equal(p.total, 11800);
+});
+
+test('outstanding-basis penalty uses the whole balance', () => {
+  const loan = withPenalty({ penaltyType: 'Percent', penaltyValue: 2, penaltyBasis: 'Outstanding' });
+  assert.equal(L.penaltyFor(loan, 500000, 2000000, 0, 0, true).penalty, 40000);
+});
+
+test('flat penalty is a fixed amount', () => {
+  const loan = withPenalty({ penaltyType: 'Flat', penaltyValue: 5000 });
+  assert.equal(L.penaltyFor(loan, 300000, 2000000, 0, 0, true).penalty, 5000);
+});
+
+test('the yearly free allowance is used before any penalty', () => {
+  const loan = withPenalty({ penaltyType: 'Percent', penaltyValue: 2, freePrepayPct: 20 });
+  // 20% of 20,00,000 is 4,00,000 free; 1,00,000 of it already used this year, so 3,00,000 is free.
+  const p = L.penaltyFor(loan, 500000, 2000000, 100000, 0, true);
+  assert.equal(p.free, 300000);
+  assert.equal(p.chargeable, 200000);
+  assert.equal(p.penalty, 4000);
+});
+
+test('no penalty once the lock-in has ended', () => {
+  const loan = withPenalty({ penaltyType: 'Percent', penaltyValue: 2, lockInEnd: '2027-01-01' });
+  assert.equal(L.penaltyActive(loan, '2026-06-01'), true);
+  assert.equal(L.penaltyActive(loan, '2027-01-01'), false);
+  assert.equal(L.penaltyFor(loan, 500000, 2000000, 0, 0, false).penalty, 0);
+});
+
+test('addMonthsKey keeps the day and clamps to month end', () => {
+  assert.equal(L.addMonthsKey('2026-10-24', 3), '2027-01-24');
+  assert.equal(L.addMonthsKey('2026-01-31', 1), '2026-02-28');
+});
+
+test('prepaying with the EMI kept finishes sooner and saves interest', () => {
+  const sim = L.prepaySimulate(withPenalty({}), { month: 0, amount: 500000, usedThisYear: 0, taxRatePct: 0, savingsRate: null, todayKey: '2026-10-24' });
+  assert.ok(sim.shorten.interestSaved > 0);
+  assert.ok(sim.shorten.months < 180);
+  assert.equal(sim.shorten.emi, sim.emi);
+  // Reduce keeps the tenure and lowers the EMI instead.
+  assert.ok(sim.reduce.emi < sim.emi);
+  assert.equal(sim.reduce.months, 180);
+  assert.ok(sim.reduce.emiSaved > 0);
+});
+
+test('net saving subtracts the penalty and the growth you give up', () => {
+  const loan = withPenalty({ penaltyType: 'Percent', penaltyValue: 2 });
+  const plain = L.prepaySimulate(loan, { month: 0, amount: 500000, usedThisYear: 0, taxRatePct: 0, savingsRate: null, todayKey: '2026-10-24' });
+  assert.equal(plain.penalty.total, 10000);
+  assert.equal(plain.growthForgone, 0);
+  assert.equal(plain.shorten.net, round(plain.shorten.interestSaved - 10000));
+  const withGrowth = L.prepaySimulate(loan, { month: 0, amount: 500000, usedThisYear: 0, taxRatePct: 0, savingsRate: 7, todayKey: '2026-10-24' });
+  const expectedGrowth = 500000 * (Math.pow(1 + 0.07 / 12, 180) - 1);
+  near(withGrowth.growthForgone, expectedGrowth, 0.01);
+  near(withGrowth.shorten.net, withGrowth.shorten.interestSaved - 10000 - expectedGrowth, 0.02);
+});
+
+test('closing the loan now saves all the remaining interest', () => {
+  const loan = withPenalty({});
+  const sim = L.prepaySimulate(loan, { month: 0, amount: null, usedThisYear: 0, taxRatePct: 0, savingsRate: null, todayKey: '2026-10-24' });
+  assert.equal(sim.full, true);
+  assert.ok(Math.abs(sim.payNow - 2000000) < 0.01);
+  near(sim.shorten.interestSaved, sim.contInterest, 0.01);
+});
+
+test('closing later uses the balance at that month, not the original principal', () => {
+  const loan = withPenalty({});
+  const sim = L.prepaySimulate(loan, { month: 36, amount: null, usedThisYear: 0, taxRatePct: 0, savingsRate: null, todayKey: '2026-10-24' });
+  assert.ok(sim.balance < 2000000 && sim.balance > 1500000, `balance ${sim.balance}`);
+  assert.equal(sim.onDate, '2029-10-24');
+});
+
+test('break-even counts the months of interest needed to recover the penalty', () => {
+  const loan = withPenalty({ penaltyType: 'Percent', penaltyValue: 2 });
+  const sim = L.prepaySimulate(loan, { month: 0, amount: 500000, usedThisYear: 0, taxRatePct: 0, savingsRate: null, todayKey: '2026-10-24' });
+  // Interest avoided per month at the start is 500000 * 9% / 12 = 3750; 10000 / 3750 rounds up to 3 months.
+  assert.equal(sim.breakEvenMonths, 3);
+});
+
+test('tax on the penalty is included in cash needed', () => {
+  const loan = withPenalty({ penaltyType: 'Percent', penaltyValue: 2 });
+  const sim = L.prepaySimulate(loan, { month: 0, amount: 500000, usedThisYear: 0, taxRatePct: 18, savingsRate: null, todayKey: '2026-10-24' });
+  assert.equal(sim.payNow, 511800);
+});
+
+test('simulator reports why when there is nothing to prepay', () => {
+  const sim = L.prepaySimulate(withPenalty({ emi: 100, principal: 100000, rate: 12 }), { month: 0, amount: 1000, todayKey: '2026-10-24' });
+  assert.match(sim.invalid, /never clears/);
+});
+
+test('settings default to neutral values and clamp bad input', () => {
+  const d = L.normalizeLoanSettings({});
+  assert.deepEqual(d, { penaltyTaxRate: 0, defaultMode: 'Shorten', savingsRate: null, logTransaction: false, logDecision: true });
+  const c = L.normalizeLoanSettings({ penaltyTaxRate: 900, defaultMode: 'Nope', savingsRate: 80, logDecision: false });
+  assert.equal(c.penaltyTaxRate, 50);
+  assert.equal(c.defaultMode, 'Shorten');
+  assert.equal(c.savingsRate, 30);
+  assert.equal(c.logDecision, false);
+});
+
+test('validateLoan checks penalty and allowance ranges', () => {
+  const good = { name: 'X', principal: 100000, rate: 8, remainingMonths: 60, emi: null };
+  assert.deepEqual(L.validateLoan({ ...good, penaltyType: 'Percent', penaltyValue: 2 }), []);
+  assert.ok(L.validateLoan({ ...good, penaltyType: 'Percent', penaltyValue: 25 }).length > 0);
+  assert.ok(L.validateLoan({ ...good, penaltyType: 'Flat', penaltyValue: -1 }).length > 0);
+  assert.ok(L.validateLoan({ ...good, freePrepayPct: 150 }).length > 0);
+});
+
+test('normalizeLoan keeps penalty terms and clears penalty values when there is no penalty', () => {
+  const n = L.normalizeLoan({ name: 'A', penaltyType: 'Percent', penaltyValue: 3, lockInEnd: '2027-06-30', freePrepayPct: 20, status: 'Closed', closedOn: '2026-10-01' });
+  assert.equal(n.penaltyValue, 3);
+  assert.equal(n.lockInEnd, '2027-06-30');
+  assert.equal(n.freePrepayPct, 20);
+  assert.equal(n.status, 'Closed');
+  assert.equal(n.closedOn, '2026-10-01');
+  const none = L.normalizeLoan({ name: 'B', penaltyType: 'None', penaltyValue: 9 });
+  assert.equal(none.penaltyValue, 0);
+  assert.equal(L.normalizeLoan({ name: 'C' }).status, 'Active');
+});
+
+function round(v) { return Math.round(v * 100) / 100; }
