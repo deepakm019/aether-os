@@ -762,6 +762,8 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
 .table-wrap .loan-sim th{white-space:normal}
 .loan-calc .field label.loan-radio{display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;margin:6px 0;cursor:pointer}
 .loan-calc .loan-radio input[type=radio]{width:auto;margin:0;flex:0 0 auto}
+.loan-points{list-style:none;padding:0;margin:0}
+.loan-points li{margin:6px 0;font-size:14px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -876,6 +878,24 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     return { free: round2(free), chargeable: round2(chargeable), penalty: round2(penalty), tax: round2(tax), total: round2(penalty + tax) };
   }
 
+  // Annual effective rate earned by paying `cashOut` now to stop the payments in `stream` (monthly, from month 1).
+  // Bisection on the monthly rate. This is the loan's true cost of money, so it can be compared with savings and stocks.
+  function irrAnnual(cashOut, stream) {
+    if (!(cashOut > 0) || !stream.length) return NaN;
+    function pv(i) {
+      var v = 1 / (1 + i), s = 0, f = 1;
+      for (var m = 0; m < stream.length; m++) { f *= v; s += stream[m] * f; }
+      return s - cashOut;
+    }
+    var lo = -0.05, hi = 0.2;
+    if (pv(lo) < 0) return NaN;
+    for (var k = 0; k < 80; k++) {
+      var mid = (lo + hi) / 2;
+      if (pv(mid) > 0) lo = mid; else hi = mid;
+    }
+    return (Math.pow(1 + lo, 12) - 1) * 100;
+  }
+
   // Compares keeping the loan as it is with prepaying `amount` now or after `month` months.
   // Shorten keeps the EMI and finishes sooner; Reduce keeps the tenure and lowers the EMI.
   function prepaySimulate(loan, o) {
@@ -894,9 +914,16 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     var onDate = addMonthsKey(o.todayKey, k);
     var pen = penaltyFor(loan, amount, balK, o.usedThisYear, o.taxRatePct, penaltyActive(loan, onDate));
     var growth = o.savingsRate > 0 ? amount * (Math.pow(1 + o.savingsRate / 100 / 12, remLeft) - 1) : 0;
-    var shortS = full ? { months: 0, totalInterest: 0 } : schedule(balK - amount, rate, E);
+    var shortS = full ? { months: 0, totalInterest: 0, rows: [] } : schedule(balK - amount, rate, E);
     var Ep = full ? 0 : emi(balK - amount, rate, remLeft);
-    var reduceS = full ? { months: 0, totalInterest: 0 } : schedule(balK - amount, rate, Ep);
+    var reduceS = full ? { months: 0, totalInterest: 0, rows: [] } : schedule(balK - amount, rate, Ep);
+    var cashOut = amount + pen.total;
+    // Payments avoided each month: the current schedule minus the new one.
+    var streamOf = function (s) {
+      var out = [];
+      for (var m = 0; m < cont.rows.length; m++) out.push((cont.rows[m] ? cont.rows[m].payment : 0) - (s.rows[m] ? s.rows[m].payment : 0));
+      return out;
+    };
     var saved = function (s) { return cont.totalInterest - s.totalInterest; };
     return {
       k: k, onDate: onDate, balance: round2(balK), amount: round2(amount), full: full,
@@ -905,11 +932,13 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
       breakEvenMonths: pen.total > 0 && amount * r > 0 ? Math.ceil(pen.total / (amount * r)) : 0,
       shorten: {
         emi: E, months: shortS.months, monthsSaved: cont.months - shortS.months, emiSaved: 0,
-        interestSaved: round2(saved(shortS)), net: round2(saved(shortS) - pen.total - growth)
+        interestSaved: round2(saved(shortS)), net: round2(saved(shortS) - pen.total - growth),
+        annualRate: irrAnnual(cashOut, streamOf(shortS))
       },
       reduce: {
         emi: round2(Ep), months: reduceS.months, monthsSaved: 0, emiSaved: round2(E - Ep),
-        interestSaved: round2(saved(reduceS)), net: round2(saved(reduceS) - pen.total - growth)
+        interestSaved: round2(saved(reduceS)), net: round2(saved(reduceS) - pen.total - growth),
+        annualRate: irrAnnual(cashOut, streamOf(reduceS))
       },
       contInterest: round2(cont.totalInterest)
     };
@@ -961,17 +990,123 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     };
   }
 
-  // App-wide loan preferences. Empty savings rate means "not set".
+  // App-wide loan preferences. Empty values mean "not set" and are never guessed.
   function normalizeLoanSettings(x) {
     x = x || {};
-    var hasRate = x.savingsRate !== null && x.savingsRate !== undefined && x.savingsRate !== '';
     return {
       penaltyTaxRate: clamp(Number(x.penaltyTaxRate) || 0, 0, 50),
       defaultMode: PREPAY_MODES.indexOf(x.defaultMode) >= 0 ? x.defaultMode : 'Shorten',
-      savingsRate: hasRate ? clamp(Number(x.savingsRate) || 0, 0, 30) : null,
+      savingsRate: optNum(x.savingsRate, 0, 30),
       logTransaction: !!x.logTransaction,
-      logDecision: x.logDecision !== false
+      logDecision: x.logDecision !== false,
+      returnTaxPct: clamp(Number(x.returnTaxPct) || 0, 0, 50),
+      stockConservative: optNum(x.stockConservative, -30, 60),
+      stockBase: optNum(x.stockBase, -30, 60),
+      stockOptimistic: optNum(x.stockOptimistic, -30, 60),
+      highRateThreshold: optNum(x.highRateThreshold, 0, MAX_RATE),
+      emergencyMonths: optNum(x.emergencyMonths, 0, 24),
+      liquidSavings: optNum(x.liquidSavings, 0, 1e12),
+      monthlyExpenses: optNum(x.monthlyExpenses, 0, 1e12)
     };
+  }
+
+  // Optional number from settings: null when empty or not a number, clamped otherwise.
+  function optNum(x, lo, hi) {
+    if (x === null || x === undefined || x === '') return null;
+    var v = Number(x);
+    return isFinite(v) ? clamp(v, lo, hi) : null;
+  }
+
+  // Compares what the cash could do over `months`: prepaying the loan, savings, or stocks.
+  // Gains are shown as an annual rate so the options can be ranked. Stock figures are estimates.
+  function compareOptions(o) {
+    var X = Number(o.amount), H = Math.max(1, Math.round(Number(o.months) || 1));
+    var t = clamp(Number(o.returnTaxPct) || 0, 0, 50) / 100;
+    var out = [];
+    function endFactor(annualPct) {
+      var gross = Math.pow(1 + annualPct / 100 / 12, H);
+      return 1 + (gross - 1) * (1 - t);
+    }
+    function push(op) {
+      op.gain = (op.endFactor - 1) * X;
+      op.annual = op.annualOverride !== undefined && isFinite(op.annualOverride)
+        ? op.annualOverride
+        : (Math.pow(op.endFactor, 12 / H) - 1) * 100;
+      out.push(op);
+    }
+    if (!(X > 0)) return out;
+    push({ key: 'prepay', label: 'Prepay the loan', guaranteed: true, canWithdraw: false,
+      endFactor: 1 + (Number(o.prepayGain) || 0) / X, risk: 'None. The saving is fixed by the loan.',
+      annualOverride: o.prepayAnnualPct == null ? undefined : Number(o.prepayAnnualPct) });
+    var s = optNum(o.savingsRate, 0, 30);
+    if (s !== null) push({ key: 'savings', label: 'Savings or FD', guaranteed: true, canWithdraw: true,
+      endFactor: endFactor(s), risk: 'Low. Depends on the bank or issuer.' });
+    var stock = o.stock || {};
+    [['conservative', 'Stocks or index, conservative'], ['base', 'Stocks or index, base'], ['optimistic', 'Stocks or index, optimistic']]
+      .forEach(function (pair) {
+        var r = optNum(stock[pair[0]], -30, 60);
+        if (r !== null) push({ key: 'stock-' + pair[0], label: pair[1], guaranteed: false, canWithdraw: true,
+          endFactor: endFactor(r), risk: 'High. Values can fall below what you put in.' });
+      });
+    return out;
+  }
+
+  // Plain-language next steps for one loan. Returns a headline and supporting points, no money formatting.
+  function adviseLoan(loan, o) {
+    var points = [];
+    var head = null;
+    var rate = Number(loan.rate) || 0;
+    var options = o.options || [];
+    var prepay = options.filter(function (op) { return op.key === 'prepay'; })[0];
+    var alts = options.filter(function (op) { return op.key !== 'prepay'; });
+    // The headline compares with savings and the base or conservative case. The optimistic case is noted separately.
+    var optimistic = alts.filter(function (op) { return op.key === 'stock-optimistic'; })[0];
+    var candidates = alts.filter(function (op) { return op.key !== 'stock-optimistic'; });
+    if (!candidates.length) candidates = alts;
+    var bestAlt = candidates.reduce(function (b, op) { return !b || op.annual > b.annual ? op : b; }, null);
+
+    if (o.emergencyMonths > 0 && o.liquidMonths !== null && o.liquidMonths !== undefined && o.liquidMonths < o.emergencyMonths) {
+      head = { tone: 'hold', text: 'Build your emergency fund first (' + o.liquidMonths.toFixed(1) + ' of ' + o.emergencyMonths + ' months covered)' };
+      points.push({ tone: 'hold', text: 'Prepaying now would leave you short if something goes wrong.' });
+    }
+    if (loan.type === 'Credit card') {
+      if (!head) head = { tone: 'do', text: 'Clear this first' };
+      points.push({ tone: 'do', text: 'Card debt usually costs more than any investment return. Clear it before investing.' });
+    }
+    if (o.rateThreshold !== null && o.rateThreshold !== undefined && rate >= o.rateThreshold) {
+      if (!head) head = { tone: 'do', text: 'Pay this down first' };
+      points.push({ tone: 'do', text: 'Its rate of ' + rate + '% is at or above your ' + o.rateThreshold + '% threshold.' });
+    }
+    if (prepay && bestAlt) {
+      if (prepay.annual >= bestAlt.annual) {
+        if (!head) head = { tone: 'do', text: 'Prepaying beats the alternatives' };
+        points.push({ tone: 'do', text: 'Prepaying earns about ' + prepay.annual.toFixed(2) + '% a year, guaranteed. The next best, ' + bestAlt.label.toLowerCase() + ', is about ' + bestAlt.annual.toFixed(2) + '%' + (bestAlt.guaranteed ? '.' : ', which is not guaranteed.') });
+      } else {
+        if (!head) head = { tone: 'consider', text: 'Keep the loan and put the cash to work' };
+        points.push({ tone: 'consider', text: bestAlt.label + ' is about ' + bestAlt.annual.toFixed(2) + '% a year, more than the loan\'s effective ' + prepay.annual.toFixed(2) + '%' + (bestAlt.guaranteed ? '.' : ', though it is not guaranteed.') });
+      }
+    }
+    if (o.penaltyNow > 0 && loan.lockInEnd) {
+      points.push({ tone: o.prepayGain > 0 ? 'consider' : 'hold', text: 'The penalty ends on ' + loan.lockInEnd + '. Waiting until then removes it from the cost.' });
+    }
+    if (prepay && optimistic && bestAlt !== optimistic && optimistic.annual > prepay.annual) {
+      points.push({ tone: 'info', text: 'In the optimistic stock case, the return would be about ' + optimistic.annual.toFixed(2) + '% a year. That is possible, not promised.' });
+    }
+    if (loan.rateType === 'Floating') points.push({ tone: 'info', text: 'Floating rates change. Recheck when your rate moves.' });
+    else points.push({ tone: 'info', text: 'Fixed rate: the number to beat is what you can earn after tax.' });
+    var typeNotes = {
+      'Home': ['info', 'Check whether your interest is tax-deductible. If it is, the real cost is lower than the rate.'],
+      'Car': ['consider', 'Cars lose value. If the car is worth less than the balance, paying down first is sensible.'],
+      'Education': ['info', 'Check for tax benefits and repayment grace periods before prepaying.'],
+      'Gold': ['info', 'Check renewal terms and any lock-in before prepaying.'],
+      'Business': ['info', 'Check renewal terms and any lock-in before prepaying.']
+    };
+    if (typeNotes[loan.type]) points.push({ tone: typeNotes[loan.type][0], text: typeNotes[loan.type][1] });
+    if (options.some(function (op) { return !op.guaranteed; })) {
+      points.push({ tone: 'info', text: 'Stock returns are not guaranteed. The conservative case shows a weak year.' });
+    }
+    if (!head) head = { tone: 'info', text: 'Add your returns and thresholds in Loan settings to get a clear answer' };
+    return { headline: head, points: points };
   }
 
   // Full picture for one saved loan. Uses the entered EMI when present, otherwise the calculated one.
@@ -1001,7 +1136,7 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
     PREPAY_MODES: PREPAY_MODES, MAX_MONTHS: MAX_MONTHS, MAX_RATE: MAX_RATE, MAX_PENALTY_PCT: MAX_PENALTY_PCT,
     round2: round2, monthlyRate: monthlyRate, emi: emi, tenureFromEmi: tenureFromEmi, schedule: schedule,
     yearly: yearly, addMonthsKey: addMonthsKey, penaltyActive: penaltyActive, penaltyFor: penaltyFor,
-    prepaySimulate: prepaySimulate, validateLoan: validateLoan, normalizeLoan: normalizeLoan,
+    prepaySimulate: prepaySimulate, compareOptions: compareOptions, adviseLoan: adviseLoan, validateLoan: validateLoan, normalizeLoan: normalizeLoan,
     normalizeLoanSettings: normalizeLoanSettings, summarize: summarize
   };
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -2577,7 +2712,7 @@ function loanCardHtml(l){
   const asOf=l.asOf?` · balance as of ${dateShort(l.asOf)}`:'';
   const differs=s.emiDiffers?` · calculated EMI is ${loanMoney(s.computedEmi)}`:'';
   const pen=penaltyText(l);
-  return `<div class="row"><div class="row-main"><div class="row-title">${esc(l.name)} <span class="chip">${esc(l.type)}</span> <span class="chip">${esc(String(l.rate))}% ${esc(l.rateType)}</span></div><div class="row-meta">EMI ${fmtMoneyOrDash(s.emi)} · ${ends}${asOf}${differs}</div><div class="row-meta">Interest left ${fmtMoneyOrDash(s.totalInterest)} · total payable ${fmtMoneyOrDash(s.totalPayable)}</div>${pen?`<div class="row-meta">${esc(pen)}</div>`:''}</div><div class="row-actions"><button class="btn mini" onclick="openPrepay(${jarg(l.id)})">Prepay or close</button><button class="btn mini" onclick="openLoanSchedule(${jarg(l.id)})">Schedule</button><button class="btn mini" onclick="openModal(loanModal,findLoan(${jarg(l.id)}))">Edit</button></div></div>`;
+  return `<div class="row"><div class="row-main"><div class="row-title">${esc(l.name)} <span class="chip">${esc(l.type)}</span> <span class="chip">${esc(String(l.rate))}% ${esc(l.rateType)}</span></div><div class="row-meta">EMI ${fmtMoneyOrDash(s.emi)} · ${ends}${asOf}${differs}</div><div class="row-meta">Interest left ${fmtMoneyOrDash(s.totalInterest)} · total payable ${fmtMoneyOrDash(s.totalPayable)}</div>${pen?`<div class="row-meta">${esc(pen)}</div>`:''}${loanCardAdvice(l)}</div><div class="row-actions"><button class="btn mini" onclick="openPrepay(${jarg(l.id)})">Prepay or close</button><button class="btn mini" onclick="openLoanSchedule(${jarg(l.id)})">Schedule</button><button class="btn mini" onclick="openModal(loanModal,findLoan(${jarg(l.id)}))">Edit</button></div></div>`;
 }
 function loanCalcForm(){
   const c=loanCalc;
@@ -2614,13 +2749,44 @@ function loanCalcResult(){
 }
 function loanSettingsHtml(){
   const st=loanSettingsNow();
-  return `<details class="section panel"><summary class="panel-header" style="cursor:pointer"><h2 style="display:inline">Loan settings</h2><small>used for prepayment and comparison</small></summary><form class="form loan-calc" onsubmit="saveLoanSettings(event)"><div class="grid grid-2"><div class="field"><label for="ls-tax">Tax on penalty (%)</label><input id="ls-tax" name="penaltyTaxRate" type="number" min="0" max="50" step="0.01" value="${esc(st.penaltyTaxRate)}"><div class="field-help">Tax your lender adds to a penalty, if any. 0 means none.</div></div><div class="field"><label for="ls-sr">Savings or FD rate (% a year)</label><input id="ls-sr" name="savingsRate" type="number" min="0" max="30" step="0.01" value="${esc(st.savingsRate??'')}"><div class="field-help">Growth you give up when cash goes to a loan. Empty means not set.</div></div></div><div class="grid grid-2"><div class="field"><label for="ls-mode">Default way to record a prepayment</label><select id="ls-mode" name="defaultMode"><option value="Shorten" ${st.defaultMode==='Shorten'?'selected':''}>Shorten tenure, keep EMI</option><option value="Reduce" ${st.defaultMode==='Reduce'?'selected':''}>Reduce EMI, keep tenure</option></select></div><div class="field"><label><input type="checkbox" name="logDecision" ${st.logDecision?'checked':''}> Log a decision when I record a prepayment</label><label><input type="checkbox" name="logTransaction" ${st.logTransaction?'checked':''}> Also add it as a transaction</label></div></div><div class="row-actions"><button class="btn primary" type="submit">Save settings</button></div></form></details>`;
+  const v=x=>esc(x??'');
+  return `<details class="section panel"><summary class="panel-header" style="cursor:pointer"><h2 style="display:inline">Loan settings</h2><small>returns, penalties and guidance</small></summary><form class="form loan-calc" onsubmit="saveLoanSettings(event)"><h3 style="margin:8px 0 4px">Returns to compare against</h3><div class="grid grid-2"><div class="field"><label for="ls-sr">Savings or FD rate (% a year)</label><input id="ls-sr" name="savingsRate" type="number" min="0" max="30" step="0.01" value="${v(st.savingsRate)}"><div class="field-help">Empty means not set.</div></div><div class="field"><label for="ls-tr">Tax on returns (%)</label><input id="ls-tr" name="returnTaxPct" type="number" min="0" max="50" step="0.01" value="${v(st.returnTaxPct)}"><div class="field-help">Applied to savings and stock gains. Not to the loan saving.</div></div></div><div class="grid grid-3"><div class="field"><label for="ls-sc">Stocks: conservative (%)</label><input id="ls-sc" name="stockConservative" type="number" min="-30" max="60" step="0.01" value="${v(st.stockConservative)}"></div><div class="field"><label for="ls-sb">Stocks: base (%)</label><input id="ls-sb" name="stockBase" type="number" min="-30" max="60" step="0.01" value="${v(st.stockBase)}"></div><div class="field"><label for="ls-so">Stocks: optimistic (%)</label><input id="ls-so" name="stockOptimistic" type="number" min="-30" max="60" step="0.01" value="${v(st.stockOptimistic)}"></div></div><div class="field-help">Enter your own estimates. They are not forecasts, and empty means not compared.</div><h3 style="margin:14px 0 4px">Prepayment</h3><div class="grid grid-2"><div class="field"><label for="ls-tax">Tax on penalty (%)</label><input id="ls-tax" name="penaltyTaxRate" type="number" min="0" max="50" step="0.01" value="${v(st.penaltyTaxRate)}"><div class="field-help">Tax your lender adds to a penalty, if any. 0 means none.</div></div><div class="field"><label for="ls-mode">Default way to record a prepayment</label><select id="ls-mode" name="defaultMode"><option value="Shorten" ${st.defaultMode==='Shorten'?'selected':''}>Shorten tenure, keep EMI</option><option value="Reduce" ${st.defaultMode==='Reduce'?'selected':''}>Reduce EMI, keep tenure</option></select></div></div><div class="grid grid-2"><label><input type="checkbox" name="logDecision" ${st.logDecision?'checked':''}> Log a decision when I record a prepayment</label><label><input type="checkbox" name="logTransaction" ${st.logTransaction?'checked':''}> Also add it as a transaction</label></div><h3 style="margin:14px 0 4px">Guidance</h3><div class="grid grid-2"><div class="field"><label for="ls-hr">High-rate threshold (%)</label><input id="ls-hr" name="highRateThreshold" type="number" min="0" max="60" step="0.01" value="${v(st.highRateThreshold)}"><div class="field-help">Loans at or above this rate are paid down first. Empty means no threshold.</div></div><div class="field"><label for="ls-em">Emergency fund target (months)</label><input id="ls-em" name="emergencyMonths" type="number" min="0" max="24" step="0.5" value="${v(st.emergencyMonths)}"><div class="field-help">Prepaying waits until your savings cover this many months.</div></div></div><div class="grid grid-2"><div class="field"><label for="ls-ls">Liquid savings (₹)</label><input id="ls-ls" name="liquidSavings" type="number" min="0" step="any" value="${v(st.liquidSavings)}"></div><div class="field"><label for="ls-me">Monthly expenses (₹)</label><input id="ls-me" name="monthlyExpenses" type="number" min="0" step="any" value="${v(st.monthlyExpenses)}"></div></div><div class="row-actions"><button class="btn primary" type="submit">Save settings</button></div></form></details>`;
 }
 function saveLoanSettings(e){
   e.preventDefault();
   const f=new FormData(e.target);
-  state.loanSettings=LoanMath.normalizeLoanSettings({penaltyTaxRate:f.get('penaltyTaxRate'),defaultMode:f.get('defaultMode'),savingsRate:f.get('savingsRate')===''?null:f.get('savingsRate'),logDecision:f.get('logDecision')==='on',logTransaction:f.get('logTransaction')==='on'});
+  const opt=k=>f.get(k)===''||f.get(k)===null?null:f.get(k);
+  state.loanSettings=LoanMath.normalizeLoanSettings({penaltyTaxRate:f.get('penaltyTaxRate'),defaultMode:f.get('defaultMode'),savingsRate:opt('savingsRate'),logDecision:f.get('logDecision')==='on',logTransaction:f.get('logTransaction')==='on',returnTaxPct:f.get('returnTaxPct'),stockConservative:opt('stockConservative'),stockBase:opt('stockBase'),stockOptimistic:opt('stockOptimistic'),highRateThreshold:opt('highRateThreshold'),emergencyMonths:opt('emergencyMonths'),liquidSavings:opt('liquidSavings'),monthlyExpenses:opt('monthlyExpenses')});
   persist();render();toast('Loan settings saved');
+}
+/* Comparison and guidance */
+function loanAdviceFor(l,sim,mode){
+  const st=loanSettingsNow();
+  const res=mode==='Reduce'?sim.reduce:sim.shorten;
+  const prepayGain=res.interestSaved-sim.penalty.total;
+  const options=LoanMath.compareOptions({amount:sim.amount,months:sim.remLeft,prepayGain,prepayAnnualPct:res.annualRate,savingsRate:st.savingsRate,stock:{conservative:st.stockConservative,base:st.stockBase,optimistic:st.stockOptimistic},returnTaxPct:st.returnTaxPct});
+  const liquidMonths=(st.liquidSavings!==null&&st.monthlyExpenses>0)?st.liquidSavings/st.monthlyExpenses:null;
+  const advice=LoanMath.adviseLoan(l,{options,rateThreshold:st.highRateThreshold,emergencyMonths:st.emergencyMonths,liquidMonths,penaltyNow:sim.penalty.total,prepayGain});
+  return {options,advice};
+}
+const TONE_LABEL={do:'Do this',consider:'Consider',hold:'Hold off',info:'Note'};
+function loanCompareHtml(options){
+  const hasOthers=options.length>1;
+  const rows=options.map(o=>`<tr><th scope="row">${esc(o.label)}</th><td>${loanMoney(o.gain)}</td><td>${o.annual.toFixed(2)}%</td><td>${o.guaranteed?'Yes':'No'}</td></tr>`).join('');
+  const risks=options.map(o=>`<li><strong>${esc(o.label)}:</strong> ${esc(o.risk)} ${o.canWithdraw?'You can withdraw it.':'The cash stays in the loan.'}</li>`).join('');
+  const note=hasOthers?'':'<div class="quiet" style="margin-top:8px">Set a savings rate or stock estimates in Loan settings to compare against other uses of this cash.</div>';
+  return `<h3 style="margin:18px 0 6px">Compare with other uses of this cash</h3><div class="table-wrap"><table class="table loan-sim"><thead><tr><th>Option</th><th>Gain</th><th>Per year</th><th>Guaranteed</th></tr></thead><tbody>${rows}</tbody></table></div>${note}<ul class="loan-points quiet" style="margin-top:8px">${risks}</ul>`;
+}
+function loanGuidanceHtml(a){
+  return `<div class="panel surface" style="margin-top:14px;padding:14px"><div class="eyebrow">Suggested next step</div><div class="row-title" style="margin:4px 0 8px">${esc(a.headline.text)}</div><ul class="loan-points">${a.points.map(p=>`<li><span class="chip">${TONE_LABEL[p.tone]||'Note'}</span> ${esc(p.text)}</li>`).join('')}</ul><div class="quiet">Guidance from the numbers you enter, not financial advice.</div></div>`;
+}
+function loanCardAdvice(l){
+  if(l.status==='Closed')return '';
+  const st=loanSettingsNow();
+  const sim=LoanMath.prepaySimulate(l,{month:0,amount:null,usedThisYear:0,taxRatePct:st.penaltyTaxRate,savingsRate:st.savingsRate,todayKey:isoDate(new Date())});
+  if(sim.invalid)return '';
+  const a=loanAdviceFor(l,sim,st.defaultMode).advice.headline;
+  return `<div class="row-meta"><span class="chip">${TONE_LABEL[a.tone]||'Note'}</span> ${esc(a.text)}</div>`;
 }
 function viewLoans(){
   const all=state.loans||[];
@@ -2679,8 +2845,9 @@ function prepayOut(l){
     ?`<strong>${full?'Closing':'Prepaying'} saves about ${loanMoney(res.net)} net</strong> over the rest of the loan.`
     :`<strong>Not worth it on these numbers.</strong> The penalty and growth you give up cost more than the interest you save.`;
   const be=sim.breakEvenMonths>0?` The penalty is recovered from interest saved in about ${sim.breakEvenMonths} month${sim.breakEvenMonths===1?'':'s'}.`:'';
+  const {options,advice}=loanAdviceFor(l,sim,mode);
   const canRecord=sim.k===0;
-  return `<div class="panel surface" style="margin-top:14px;padding:14px"><div class="trend">${verdict}${be}</div><div class="trend" style="margin-top:6px">${penNote}${freeNote} ${growth}</div></div><div class="table-wrap" style="margin-top:12px"><table class="table loan-sim"><thead><tr><th></th><th>Shorten tenure</th><th>Reduce EMI</th></tr></thead><tbody>${row('Pays now',loanMoney(sim.payNow),loanMoney(sim.payNow))}${row('Balance after',loanMoney(full?0:sim.balance-sim.amount),loanMoney(full?0:sim.balance-sim.amount))}${row('New EMI',emiCell(S.emi),emiCell(R.emi))}${row('Months left',months(S.months),months(R.months))}${row('EMI saved each month',emiCell(S.emiSaved),emiCell(R.emiSaved))}${row('Interest saved',loanMoney(S.interestSaved),loanMoney(R.interestSaved))}${row('<strong>Net saving</strong>',`<strong>${loanMoney(S.net)}</strong>`,`<strong>${loanMoney(R.net)}</strong>`)}</tbody></table></div><div class="quiet" style="margin-top:8px">Net saving = interest saved − penalty − growth you give up. Monthly EMI savings are not reinvested in this estimate.</div>${canRecord?`<div class="quiet" style="margin-top:12px">Recording uses the option selected above.</div><div class="row-actions" style="margin-top:12px"><button class="btn primary" onclick="applyPrepay()">Record ${full?'closure':'prepayment'} now</button></div>`:`<div class="quiet" style="margin-top:12px">This is a projection. Set months to 0 to record it now.</div>`}`;
+  return `<div class="panel surface" style="margin-top:14px;padding:14px"><div class="trend">${verdict}${be}</div><div class="trend" style="margin-top:6px">${penNote}${freeNote} ${growth}</div></div><div class="table-wrap" style="margin-top:12px"><table class="table loan-sim"><thead><tr><th></th><th>Shorten tenure</th><th>Reduce EMI</th></tr></thead><tbody>${row('Pays now',loanMoney(sim.payNow),loanMoney(sim.payNow))}${row('Balance after',loanMoney(full?0:sim.balance-sim.amount),loanMoney(full?0:sim.balance-sim.amount))}${row('New EMI',emiCell(S.emi),emiCell(R.emi))}${row('Months left',months(S.months),months(R.months))}${row('EMI saved each month',emiCell(S.emiSaved),emiCell(R.emiSaved))}${row('Interest saved',loanMoney(S.interestSaved),loanMoney(R.interestSaved))}${row('<strong>Net saving</strong>',`<strong>${loanMoney(S.net)}</strong>`,`<strong>${loanMoney(R.net)}</strong>`)}</tbody></table></div><div class="quiet" style="margin-top:8px">Net saving = interest saved − penalty − growth you give up. Monthly EMI savings are not reinvested in this estimate.</div>${loanCompareHtml(options)}${loanGuidanceHtml(advice)}${canRecord?`<div class="quiet" style="margin-top:12px">Recording uses the option selected above.</div><div class="row-actions" style="margin-top:12px"><button class="btn primary" onclick="applyPrepay()">Record ${full?'closure':'prepayment'} now</button></div>`:`<div class="quiet" style="margin-top:12px">This is a projection. Set months to 0 to record it now.</div>`}`;
 }
 function applyPrepay(){
   const l=findLoan(prepayDraft.id);if(!l)return;

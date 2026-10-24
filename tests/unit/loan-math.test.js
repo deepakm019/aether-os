@@ -203,7 +203,9 @@ test('simulator reports why when there is nothing to prepay', () => {
 
 test('settings default to neutral values and clamp bad input', () => {
   const d = L.normalizeLoanSettings({});
-  assert.deepEqual(d, { penaltyTaxRate: 0, defaultMode: 'Shorten', savingsRate: null, logTransaction: false, logDecision: true });
+  assert.deepEqual(d, { penaltyTaxRate: 0, defaultMode: 'Shorten', savingsRate: null, logTransaction: false, logDecision: true,
+    returnTaxPct: 0, stockConservative: null, stockBase: null, stockOptimistic: null, highRateThreshold: null,
+    emergencyMonths: null, liquidSavings: null, monthlyExpenses: null });
   const c = L.normalizeLoanSettings({ penaltyTaxRate: 900, defaultMode: 'Nope', savingsRate: 80, logDecision: false });
   assert.equal(c.penaltyTaxRate, 50);
   assert.equal(c.defaultMode, 'Shorten');
@@ -232,3 +234,123 @@ test('normalizeLoan keeps penalty terms and clears penalty values when there is 
 });
 
 function round(v) { return Math.round(v * 100) / 100; }
+
+// ---- Phase 3: comparison with other uses of the cash, and guidance ----
+test('compareOptions ranks prepay against savings and each stock case, as annual rates', () => {
+  const opts = L.compareOptions({ amount: 500000, months: 120, prepayGain: 400000, savingsRate: 7,
+    stock: { conservative: 4, base: 10, optimistic: 14 }, returnTaxPct: 0 });
+  const keys = opts.map(o => o.key);
+  assert.deepEqual(keys, ['prepay', 'savings', 'stock-conservative', 'stock-base', 'stock-optimistic']);
+  const savings = opts.find(o => o.key === 'savings');
+  // Monthly compounding at 7% a year is an effective 7.23% a year.
+  near(savings.annual, (Math.pow(1 + 0.07 / 12, 12) - 1) * 100, 0.001);
+  const base = opts.find(o => o.key === 'stock-base');
+  assert.equal(base.guaranteed, false);
+  assert.equal(opts.find(o => o.key === 'prepay').guaranteed, true);
+});
+
+test('compareOptions leaves out what the user has not set', () => {
+  const opts = L.compareOptions({ amount: 500000, months: 60, prepayGain: 1000, savingsRate: null, stock: {} });
+  assert.deepEqual(opts.map(o => o.key), ['prepay']);
+});
+
+test('tax on returns lowers savings and stock gains but not the prepay saving', () => {
+  const tax0 = L.compareOptions({ amount: 100000, months: 60, prepayGain: 20000, savingsRate: 8, returnTaxPct: 0 });
+  const tax20 = L.compareOptions({ amount: 100000, months: 60, prepayGain: 20000, savingsRate: 8, returnTaxPct: 20 });
+  assert.equal(tax20.find(o => o.key === 'prepay').annual, tax0.find(o => o.key === 'prepay').annual);
+  assert.ok(tax20.find(o => o.key === 'savings').annual < tax0.find(o => o.key === 'savings').annual);
+});
+
+test('a loan costing more than savings is kept, and the advice says to invest instead', () => {
+  const loan = { type: 'Personal', rate: 12, rateType: 'Fixed', lockInEnd: null };
+  const opts = L.compareOptions({ amount: 200000, months: 60, prepayGain: 40000, savingsRate: 7, stock: {} });
+  const a = L.adviseLoan(loan, { options: opts, rateThreshold: null, emergencyMonths: null, liquidMonths: null, penaltyNow: 0, prepayGain: 40000 });
+  assert.equal(a.headline.tone, 'consider');
+  assert.match(a.headline.text, /Keep the loan/);
+});
+
+test('a loan that beats savings is prepaid, and the advice says why', () => {
+  const loan = { type: 'Personal', rate: 14, rateType: 'Fixed', lockInEnd: null };
+  const opts = L.compareOptions({ amount: 200000, months: 60, prepayGain: 90000, savingsRate: 6, stock: {} });
+  const a = L.adviseLoan(loan, { options: opts, rateThreshold: null, emergencyMonths: null, liquidMonths: null, penaltyNow: 0, prepayGain: 90000 });
+  assert.equal(a.headline.text, 'Prepaying beats the alternatives');
+});
+
+test('an emergency fund below the target comes first, whatever the loan', () => {
+  const loan = { type: 'Personal', rate: 18, rateType: 'Fixed', lockInEnd: null };
+  const opts = L.compareOptions({ amount: 200000, months: 60, prepayGain: 90000, savingsRate: 6, stock: {} });
+  const a = L.adviseLoan(loan, { options: opts, rateThreshold: null, emergencyMonths: 6, liquidMonths: 2.5, penaltyNow: 0, prepayGain: 90000 });
+  assert.equal(a.headline.tone, 'hold');
+  assert.match(a.headline.text, /emergency fund first \(2\.5 of 6 months/);
+});
+
+test('credit card debt is cleared first', () => {
+  const loan = { type: 'Credit card', rate: 36, rateType: 'Fixed', lockInEnd: null };
+  const a = L.adviseLoan(loan, { options: [], rateThreshold: null, emergencyMonths: null, liquidMonths: null, penaltyNow: 0, prepayGain: 0 });
+  assert.equal(a.headline.text, 'Clear this first');
+  assert.ok(a.points.some(p => /Card debt/.test(p.text)));
+});
+
+test('a rate at or above the threshold is paid down first', () => {
+  const loan = { type: 'Personal', rate: 15, rateType: 'Fixed', lockInEnd: null };
+  const a = L.adviseLoan(loan, { options: [], rateThreshold: 14, emergencyMonths: null, liquidMonths: null, penaltyNow: 0, prepayGain: 0 });
+  assert.equal(a.headline.text, 'Pay this down first');
+});
+
+test('a penalty that ends later is flagged with the date', () => {
+  const loan = { type: 'Home', rate: 8.5, rateType: 'Floating', lockInEnd: '2027-06-30' };
+  const a = L.adviseLoan(loan, { options: [], rateThreshold: null, emergencyMonths: null, liquidMonths: null, penaltyNow: 10000, prepayGain: -2000 });
+  assert.ok(a.points.some(p => /2027-06-30/.test(p.text) && p.tone === 'hold'));
+});
+
+test('stock disclaimer appears whenever a stock option is shown', () => {
+  const loan = { type: 'Home', rate: 8, rateType: 'Floating', lockInEnd: null };
+  const opts = L.compareOptions({ amount: 100000, months: 60, prepayGain: 5000, savingsRate: null, stock: { base: 10 } });
+  const a = L.adviseLoan(loan, { options: opts, rateThreshold: null, emergencyMonths: null, liquidMonths: null, penaltyNow: 0, prepayGain: 5000 });
+  assert.ok(a.points.some(p => /not guaranteed/.test(p.text)));
+});
+
+test('settings reject out-of-range returns and keep empty values empty', () => {
+  const n = L.normalizeLoanSettings({ stockBase: 500, stockConservative: '', returnTaxPct: 90, highRateThreshold: 'x' });
+  assert.equal(n.stockBase, 60);
+  assert.equal(n.stockConservative, null);
+  assert.equal(n.returnTaxPct, 50);
+  assert.equal(n.highRateThreshold, null);
+});
+
+test('prepaying the whole balance earns about the loan rate, not the interest-to-cash ratio', () => {
+  // 24 lakh at 8.5% over 180 months: closing now stops the EMIs, so the true return is the loan rate.
+  const loan = { principal: 2400000, rate: 8.5, remainingMonths: 180, emi: null, penaltyType: 'None',
+    penaltyValue: 0, penaltyBasis: 'Prepaid', lockInEnd: null, freePrepayPct: 0 };
+  const sim = L.prepaySimulate(loan, { month: 0, amount: null, usedThisYear: 0, taxRatePct: 0, savingsRate: null, todayKey: '2026-10-24' });
+  const expected = (Math.pow(1 + 0.085 / 12, 12) - 1) * 100;
+  near(sim.shorten.annualRate, expected, 0.05);
+  near(sim.reduce.annualRate, expected, 0.05);
+});
+
+test('a partial prepayment earns about the loan rate too', () => {
+  const loan = { principal: 2400000, rate: 8.5, remainingMonths: 180, emi: null, penaltyType: 'None',
+    penaltyValue: 0, penaltyBasis: 'Prepaid', lockInEnd: null, freePrepayPct: 0 };
+  const sim = L.prepaySimulate(loan, { month: 0, amount: 500000, usedThisYear: 0, taxRatePct: 0, savingsRate: null, todayKey: '2026-10-24' });
+  const expected = (Math.pow(1 + 0.085 / 12, 12) - 1) * 100;
+  near(sim.shorten.annualRate, expected, 0.05);
+});
+
+test('a penalty lowers the true return of prepaying', () => {
+  const loan = { principal: 2400000, rate: 8.5, remainingMonths: 180, emi: null, penaltyType: 'Percent',
+    penaltyValue: 3, penaltyBasis: 'Prepaid', lockInEnd: null, freePrepayPct: 0 };
+  const plain = L.prepaySimulate({ ...loan, penaltyType: 'None' }, { month: 0, amount: 500000, usedThisYear: 0, taxRatePct: 0, savingsRate: null, todayKey: '2026-10-24' });
+  const pen = L.prepaySimulate(loan, { month: 0, amount: 500000, usedThisYear: 0, taxRatePct: 0, savingsRate: null, todayKey: '2026-10-24' });
+  assert.ok(pen.shorten.annualRate < plain.shorten.annualRate);
+});
+
+test('the headline ignores the optimistic stock case but still notes it', () => {
+  const loan = { type: 'Personal', rate: 9, rateType: 'Fixed', lockInEnd: null };
+  const opts = L.compareOptions({ amount: 200000, months: 60, prepayGain: 90000, savingsRate: 4,
+    stock: { base: 5, optimistic: 20 } });
+  const prepay = opts.find(o => o.key === 'prepay');
+  const a = L.adviseLoan(loan, { options: opts, rateThreshold: null, emergencyMonths: null, liquidMonths: null, penaltyNow: 0, prepayGain: 90000 });
+  assert.ok(prepay.annual > 5, 'prepay should beat the base case in this setup');
+  assert.equal(a.headline.text, 'Prepaying beats the alternatives');
+  assert.ok(a.points.some(p => /optimistic stock case/.test(p.text)));
+});
