@@ -834,6 +834,55 @@ html .minimal-app .minimal-item button.minimal-item-text{color:var(--min-fg)!imp
 html .minimal-app .minimal-item.is-group>.minimal-row button.minimal-item-text{font-weight:700}
 html .minimal-app .minimal-item.is-done>.minimal-row button.minimal-item-text{color:var(--min-muted)!important}
 html .minimal-app .minimal-item .minimal-meta{color:var(--min-muted)}
+/* Phone polish: one grid for composer fields and buttons, 44px touch targets, aligned row actions. */
+html .minimal-app .minimal-compose{padding:14px 0 12px}
+html .minimal-app .minimal-compose .minimal-label{margin-bottom:6px}
+html .minimal-app .minimal-compose textarea.minimal-control{font-size:16px;min-height:72px;line-height:1.45}
+html .minimal-app .minimal-compose-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px;align-items:end}
+html .minimal-app .minimal-field{display:grid;gap:6px;min-width:0;flex:none}
+html .minimal-app .minimal-field .minimal-label{font-size:11px;margin:0;line-height:1}
+html .minimal-app .minimal-compose-meta .minimal-control{width:100%;height:44px;min-height:44px;box-sizing:border-box;font-size:16px;padding:0 10px;margin:0}
+html .minimal-app .minimal-compose-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:center;margin-top:10px}
+html .minimal-app .minimal-compose-row .btn{width:100%;min-height:44px;margin:0;padding:0 10px;font-size:14px}
+html .minimal-app .minimal-compose-row .minimal-stamp{grid-column:1/-1;justify-self:end;margin:2px 0 0}
+html .minimal-app .minimal-mode-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px;align-items:center;padding:12px 0}
+html .minimal-app .minimal-mode-row>div:first-child{grid-column:1/-1}
+html .minimal-app .minimal-mode-row .btn{width:100%;min-height:40px;margin:0;padding:0 10px}
+html .minimal-app .minimal-edit{gap:12px;margin:10px 0 4px}
+html .minimal-app .minimal-edit .minimal-control{min-height:44px;font-size:16px}
+html .minimal-app .minimal-edit .minimal-compose-row{grid-template-columns:repeat(3,minmax(0,1fr))}
+html .minimal-app .minimal-item .minimal-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px;margin-top:10px;padding-top:10px}
+html .minimal-app .minimal-item .minimal-actions .btn{justify-self:start;min-height:34px;padding:6px 0;font-size:14px;line-height:1.2}
+@media (max-width:420px){
+ html .minimal-app .minimal-compose-meta{gap:6px}
+ html .minimal-app .minimal-compose-row{gap:6px}
+ html .minimal-app .minimal-item .minimal-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+html .minimal-app .minimal-mode-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 10px;padding:10px 0}
+html .minimal-app .minimal-mode-row>div:first-child{grid-column:auto}
+html .minimal-app .minimal-mode-row .btn{width:auto;min-height:36px;padding:0 14px;margin:0}
+html .minimal-app .minimal-mode-row .minimal-mode-label{display:none}
+@media (max-width:420px){
+ html .minimal-app .minimal-item .minimal-actions{display:flex;flex-wrap:wrap;gap:8px 18px}
+ html .minimal-app .minimal-item .minimal-actions .btn{justify-self:auto}
+}
+html .minimal-app .minimal-item .minimal-actions .btn{flex:0 0 auto;justify-content:flex-start}
+/* Match the main app: page heading format, panel surface, row title and meta sizes, same wallpaper and font. */
+html .minimal-app .minimal-head{display:block;padding:8px 0 14px;border-bottom:0}
+html .minimal-app .minimal-head .eyebrow{color:var(--min-muted)}
+html .minimal-app .minimal-head .h1{margin:6px 0}
+html .minimal-app .minimal-head .lead{color:var(--min-muted)}
+html .minimal-app .minimal-sticky{padding-top:0;margin:0 -8px}
+html .minimal-app .minimal-feed{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:0 16px;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+html .minimal-app .minimal-item{padding:14px 0}
+html .minimal-app .minimal-item:last-child{border-bottom:0}
+html .minimal-app .minimal-item .minimal-children>.minimal-item:last-child{border-bottom:0}
+html .minimal-app button.minimal-item-text{font-size:14px;font-weight:650;line-height:20px}
+html .minimal-app .minimal-item.is-group>.minimal-row button.minimal-item-text{font-weight:700}
+html .minimal-app .minimal-meta{font-size:12px;line-height:18px}
+html .minimal-app .minimal-row{column-gap:8px}
+html .minimal-app .minimal-check{margin-top:1px}
+html .minimal-app .minimal-grip{line-height:20px;height:20px;min-height:20px}
 </style>
 </head>
 <body>
@@ -3576,7 +3625,7 @@ let __storageWriteBusy=false;
 function queueWorkspaceSave(snapshot,label='Workspace'){if(window.__asosReadOnly)return Promise.resolve();const queued=clone(snapshot);__storageWriteBusy=true;__storageWrite=__storageWrite.catch(()=>{}).then(async()=>{try{const h=await storageHealth();if(h?.quota&&h.usage/h.quota>.86)await compactForStorage();let result;try{result=await persistWorkspaceSnapshot(queued)}catch(e){await compactForStorage();try{await idbDelete(IDB_KV,IDB_CHECKPOINT)}catch(x){}result=await persistWorkspaceSnapshot(state)}__storageVersion=result.compressed?'IndexedDB · compressed':'IndexedDB';try{__tabChan&&__tabChan.postMessage({type:'saved',tab:__tabId})}catch(e){}if(label==='Workspace'&&result.bytes>2*1024*1024)toast(`Workspace saved · ${(result.bytes/1048576).toFixed(1)} MB`);return result}catch(e){toast(`${label} could not be saved. Export the image-free recovery backup before continuing.`);throw e}finally{__storageWriteBusy=false}});return __storageWrite}
 var __tabId=Math.random().toString(36).slice(2);var __tabChan=null;try{__tabChan=('BroadcastChannel' in window)?new BroadcastChannel('astralsurge-os-workspace'):null}catch(e){}
 if(__tabChan)__tabChan.onmessage=e=>{if(e.data&&e.data.type==='saved'&&e.data.tab!==__tabId&&!window.__asosStale){window.__asosStale=true;toast('This workspace was saved in another tab. Reload this tab before editing so nothing is overwritten.')}};
-function persist(){if(isMinimalMode()||window.__minimalSwitching)return;if(window.__asosReadOnly){toast('Editing is paused to protect unreadable saved data');return}if(window.__asosStale){toast('Reload this tab first: the workspace changed in another tab.');return}if(state&&state.vault&&!window.__noChangeCount)state.vault.changes=(state.vault.changes||0)+1;try{try{awardBadges()}catch(e){}const dv=state.events.length-evSeen;if(dv>0){state.activity=state.activity||{};state.activity[today]=(state.activity[today]||0)+dv}if(state.events.length>300){let extra=state.events.length-300;state.events=state.events.filter(e=>{if(extra>0&&!isFocusEv(e)){extra--;return false}return true})}evSeen=state.events.length;queueWorkspaceSave(state,'Workspace').catch(()=>{})}catch(e){toast('Could not queue save')}}
+function persist(){if(isMinimalMode()||window.__minimalSwitching)return;saveAppearanceSnapshot();if(window.__asosReadOnly){toast('Editing is paused to protect unreadable saved data');return}if(window.__asosStale){toast('Reload this tab first: the workspace changed in another tab.');return}if(state&&state.vault&&!window.__noChangeCount)state.vault.changes=(state.vault.changes||0)+1;try{try{awardBadges()}catch(e){}const dv=state.events.length-evSeen;if(dv>0){state.activity=state.activity||{};state.activity[today]=(state.activity[today]||0)+dv}if(state.events.length>300){let extra=state.events.length-300;state.events=state.events.filter(e=>{if(extra>0&&!isFocusEv(e)){extra--;return false}return true})}evSeen=state.events.length;queueWorkspaceSave(state,'Workspace').catch(()=>{})}catch(e){toast('Could not queue save')}}
 async function readCheckpointRecord(){const rec=await idbGet(IDB_KV,IDB_CHECKPOINT);if(!rec)return null;const c=JSON.parse(await gunzipData(rec));if(vaultEnvelope(c)&&c.snapshotKind==='checkpoint'){if(!__vaultDataKey){toast('Unlock the vault before opening the checkpoint');return null}return JSON.parse(await openEncryptedSnapshot(c,__vaultDataKey))}return hydrateImages(c)}
 async function writeCheckpointRecord(snapshot){if(snapshot.vault?.encryptionEnabled){if(!__vaultDataKey)throw new Error('Vault locked');const env=await encryptSnapshot(snapshot,__vaultDataKey,snapshot.vault.encryptionMeta||{});env.snapshotKind='checkpoint';const json=JSON.stringify(env),packed=await gzipText(json);await idbPut(IDB_KV,IDB_CHECKPOINT,{v:3,encoding:packed.encoding,data:packed.data,updatedAt:Date.now(),bytes:json.length,compressed:packed.encoding==='gzip'});return}const stamped=Object.assign(clone(snapshot),{__at:new Date().toISOString()});await persistBlobRecord(IDB_CHECKPOINT,stamped,true)}
 async function migrateLegacyToIndexedDB(){let raw=null;try{raw=localStorage.getItem(KEY)}catch(e){}if(!raw)return null;try{const parsed=JSON.parse(raw);if(vaultEnvelope(parsed)){const p=await gzipText(JSON.stringify(parsed));await idbPut(IDB_KV,IDB_WORKSPACE,{v:3,encoding:p.encoding,data:p.data,updatedAt:Date.now(),bytes:JSON.stringify(parsed).length,compressed:p.encoding==='gzip'});try{localStorage.removeItem(KEY)}catch(e){}return parsed}const legacy=normalizeWorkspace(parsed);await persistBlobRecord(IDB_WORKSPACE,legacy,true);try{localStorage.removeItem(KEY)}catch(e){}return await readIdbState(IDB_WORKSPACE)}catch(e){return null}}
@@ -3972,9 +4021,9 @@ function minCountdownText(ms){const total=Math.max(0,Math.ceil(ms/1000)),h=Math.
 function minExpiryLabel(item){if(item.expiresAt===null)return 'stays';const ms=item.expiresAt-Date.now();if(ms<=0)return 'expired';return minCountdownText(ms)}
 function minTimestamp(ms){try{return appDateTime(ms,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:true})}catch(e){return new Date(ms).toLocaleString()}}
 /* Normal mode saves only the look (theme name, accent, wallpaper preset, font name) so minimal mode can match it. No data, no custom images. */
-function saveAppearanceSnapshot(){try{const st=state.settings||{};localStorage.setItem(APPEARANCE_KEY,JSON.stringify({theme:st.theme||'Dark',font:st.font||'system',accent:st.accent||'',accent2:st.accent2||'',wallpaper:(!st.wallpaper||st.wallpaper==='Custom')?'None':st.wallpaper}))}catch(e){}}
+function saveAppearanceSnapshot(){try{const st=state.settings||{};const custom=st.wallpaper==='Custom'&&typeof st.wallImg==='string'&&st.wallImg.length<350000?st.wallImg:'';localStorage.setItem(APPEARANCE_KEY,JSON.stringify({theme:st.theme||'Dark',font:st.font||'system',accent:st.accent||'',accent2:st.accent2||'',wallpaper:(!st.wallpaper||(st.wallpaper==='Custom'&&!custom))?'None':st.wallpaper,wallImg:custom}))}catch(e){}}
 function readAppearanceSnapshot(){try{const v=JSON.parse(localStorage.getItem(APPEARANCE_KEY)||'null');return v&&typeof v==='object'?v:null}catch(e){return null}}
-function applyMinimalAppearance(){const snap=readAppearanceSnapshot()||{};applyTheme({theme:snap.theme||'Dark',accent:snap.accent||'',accent2:snap.accent2||'',wallpaper:snap.wallpaper||'None',wallImg:null});const root=document.documentElement;root.classList.add('minimal-mode-active');root.dataset.font=FONT_OPTIONS.some(f=>f[0]===snap.font)?snap.font:'system'}
+function applyMinimalAppearance(){const snap=readAppearanceSnapshot()||{};applyTheme({theme:snap.theme||'Dark',accent:snap.accent||'',accent2:snap.accent2||'',wallpaper:snap.wallpaper||'None',wallImg:snap.wallImg||null});const root=document.documentElement;root.classList.add('minimal-mode-active');root.dataset.font=FONT_OPTIONS.some(f=>f[0]===snap.font)?snap.font:'system'}
 function setMinimalDocumentTheme(){applyMinimalAppearance()}
 function minimalSwitchUI(){return `<div class="minimal-mode-row"><div><div>minimal mode</div><div class="minimal-mode-label">separate local scribbles · normal data stays untouched</div></div><button type="button" class="btn mini" onclick="openMinimalFocus()">focus</button> <button type="button" class="btn mini" onclick="switchMinimalMode('normal')">switch to normal</button></div>`}
 function minTopOrder(data,parentId=null){const pid=parentId||null;return data.items.reduce((m,i)=>(i.parentId||null)===pid?Math.min(m,Number.isFinite(i.order)?i.order:0):m,0)-1}
@@ -4073,7 +4122,7 @@ function renderMinimalUi(data,seq){
  const feed=roots.map(r=>minimalItemHtml(r,data.items,0,today)).join('');
  const durationOpts=Object.keys(MIN_DURATIONS).map(k=>`<option value="${k}"${k==='24h'?' selected':''}>${esc(MIN_DURATION_LABELS[k])}</option>`).join('');
  const critOpts=MIN_CRIT.map(c=>`<option value="${c}"${c==='none'?' selected':''}>${c==='none'?'none':c}</option>`).join('');
- const content=`<div class="minimal-app" data-min-theme="${data.theme}"><div class="minimal-wrap"><div class="minimal-sticky"><header class="minimal-head"><div><div class="minimal-brandrow"><span class="brand-mark" aria-hidden="true">AS</span><div class="minimal-brand">astralsurge / scribbles</div></div><div class="minimal-sub">rows, subrows and timers. no dashboard. local only.</div></div></header>${minimalSwitchUI()}</div><section class="minimal-compose" aria-label="add a row">${underChip}<label class="minimal-label" for="minimal-note">add a row</label><textarea class="minimal-control" id="minimal-note" maxlength="2000" rows="2" placeholder="a task, a note or a group title… (Enter adds it)"></textarea><div class="minimal-compose-meta"><label class="minimal-field"><span class="minimal-label">urgency</span><select class="minimal-control" id="minimal-crit">${critOpts}</select></label><label class="minimal-field"><span class="minimal-label">due</span><input type="date" class="minimal-control" id="minimal-due"></label><label class="minimal-field"><span class="minimal-label">timer</span><select class="minimal-control" id="minimal-duration" aria-label="How long the row lasts">${durationOpts}</select></label></div><div class="minimal-compose-row"><button type="button" class="btn mini primary" onclick="minimalPostText(false)">post</button><button type="button" class="btn mini" onclick="minimalPostText(true)">as group</button><button type="button" class="btn mini" onclick="minimalOpenDrawing()">draw</button><span class="minimal-stamp" id="minimal-char-count">0 / 2000</span></div></section>${__minimalDrawingOpen?minimalDrawingUi(data.theme):''}<div class="minimal-count">${data.items.length} / ${MIN_MAX_ITEMS} scribbles</div><section class="minimal-feed" aria-label="scribble feed">${feed||'<div class="minimal-empty">nothing here. yet.</div>'}</section><footer class="minimal-footer">no network · no normal workspace access · timers remove rows automatically</footer></div></div>`;
+ const content=`<div class="minimal-app" data-min-theme="${data.theme}"><div class="minimal-wrap"><header class="minimal-head"><div class="eyebrow">Scribbles</div><div class="h1">Quick rows</div><div class="lead">Tasks, subrows and timers. Stored only on this device.</div></header><div class="minimal-sticky">${minimalSwitchUI()}</div><section class="minimal-compose" aria-label="add a row">${underChip}<label class="minimal-label" for="minimal-note">add a row</label><textarea class="minimal-control" id="minimal-note" maxlength="2000" rows="2" placeholder="A task, note or group title"></textarea><div class="minimal-compose-meta"><label class="minimal-field"><span class="minimal-label">urgency</span><select class="minimal-control" id="minimal-crit">${critOpts}</select></label><label class="minimal-field"><span class="minimal-label">due</span><input type="date" class="minimal-control" id="minimal-due"></label><label class="minimal-field"><span class="minimal-label">timer</span><select class="minimal-control" id="minimal-duration" aria-label="How long the row lasts">${durationOpts}</select></label></div><div class="minimal-compose-row"><button type="button" class="btn mini primary" onclick="minimalPostText(false)">post</button><button type="button" class="btn mini" onclick="minimalPostText(true)">as group</button><button type="button" class="btn mini" onclick="minimalOpenDrawing()">draw</button><span class="minimal-stamp" id="minimal-char-count">0 / 2000</span></div></section>${__minimalDrawingOpen?minimalDrawingUi(data.theme):''}<div class="minimal-count">${data.items.length} / ${MIN_MAX_ITEMS} scribbles</div><section class="minimal-feed" aria-label="scribble feed">${feed||'<div class="minimal-empty">nothing here. yet.</div>'}</section><footer class="minimal-footer">no network · no normal workspace access · timers remove rows automatically</footer></div></div>`;
  document.getElementById('app').innerHTML=!betaAck()?betaScreen():content;
  if(betaAck()){
   const t=document.getElementById('minimal-note'),counter=document.getElementById('minimal-char-count');

@@ -94,6 +94,7 @@ def run():
         card(page, "three hour snap").locator("button:text-is('edit')").click()
         page.fill("#minimal-edit-text", "edited snap text")
         page.click("button:has-text('cancel')")
+        page.wait_for_selector("form.minimal-edit", state="detached")
         check("cancel keeps original text", card(page, "three hour snap").count() == 1)
         card(page, "three hour snap").locator("button:text-is('edit')").click()
         page.fill("#minimal-edit-text", "   ")
