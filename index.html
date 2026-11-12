@@ -898,6 +898,11 @@ html .minimal-app .minimal-feed{flex:0 0 auto;min-height:0}
 html .minimal-app .minimal-meta{align-items:baseline}
 html .minimal-app .minimal-meta>span,html .minimal-app .minimal-meta>button{display:inline-block;line-height:18px}
 html .minimal-app .minimal-meta button.minimal-toggle{vertical-align:baseline;font-size:12px}
+/* Date inputs across the app: text centred in the 44px field, same on iOS and desktop. */
+html input[type=date]{-webkit-appearance:none;appearance:none;line-height:42px;min-height:44px;box-sizing:border-box}
+html input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:0}
+html input[type=date]::-webkit-datetime-edit{padding:0;line-height:42px}
+html input[type=date]::-webkit-calendar-picker-indicator{margin:0 0 0 6px;padding:0;opacity:.7;cursor:pointer}
 </style>
 </head>
 <body>
