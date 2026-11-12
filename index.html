@@ -785,85 +785,55 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
 .lchart-tip .row-l i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .lchart-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-top:6px}
 .lchart-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle}
-/* Scribble rows: a quiet list on a glass panel. Rows nest up to 3 levels with due dates, urgency and focus timers. */
-html .minimal-app .minimal-wrap{max-width:780px}
-html .minimal-app .minimal-sticky{position:sticky;top:0;z-index:6;background:color-mix(in srgb,var(--min-bg) 88%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);margin:0 -8px;padding:6px 8px 0}
-html .minimal-app .minimal-feed{gap:6px;padding:10px;border:1px solid var(--min-line);border-radius:22px;background:color-mix(in srgb,var(--min-surface) 78%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 22px 44px -26px rgba(0,0,0,.5)}
-html .minimal-app .minimal-item[data-color]{background:transparent!important;border:1px solid transparent;border-radius:14px;padding:8px 8px 6px;box-shadow:none;transform:none!important;transition:background .15s,border-color .15s}
-html .minimal-app .minimal-item:hover{background:color-mix(in srgb,var(--min-fg) 4%,transparent)}
-html .minimal-app .minimal-item.is-group>.minimal-row .minimal-item-text{font-weight:750;font-size:16px}
-html .minimal-app .minimal-row{display:flex;gap:6px;align-items:flex-start;min-width:0;border-radius:10px}
-html .minimal-app .minimal-item.crit-high>.minimal-row{box-shadow:inset 3px 0 0 #ef6b6b}
-html .minimal-app .minimal-item.crit-medium>.minimal-row{box-shadow:inset 3px 0 0 #e6b24a}
-html .minimal-app .minimal-item.crit-low>.minimal-row{box-shadow:inset 3px 0 0 #6bc38a}
-html .minimal-app .minimal-main{flex:1 1 auto;min-width:0;padding:2px 0 2px 4px}
-html .minimal-app .minimal-check{width:20px;height:20px;margin:6px 4px 0 0;accent-color:var(--min-fg);flex:0 0 auto;cursor:pointer}
-html .minimal-app .minimal-dot{display:none}
-html .minimal-app .minimal-item .minimal-item-text{color:var(--min-fg);font-size:15px;line-height:1.45;font-weight:600;overflow-wrap:anywhere;padding-top:2px}
-html .minimal-app .minimal-item.is-done>.minimal-row .minimal-item-text{text-decoration:line-through;opacity:.5}
-html .minimal-app .minimal-item .minimal-stamp{color:var(--min-muted)}
-html .minimal-app .minimal-item .minimal-label{color:var(--min-muted)}
-html .minimal-app .minimal-meta{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin-top:6px}
-html .minimal-app .minimal-chip{display:inline-flex;align-items:center;font:inherit;font-size:11px;line-height:1.4;padding:3px 9px;border-radius:999px;border:1px solid var(--min-line);color:var(--min-muted);background:transparent;font-variant-numeric:tabular-nums;white-space:nowrap}
-html .minimal-app button.minimal-chip{cursor:pointer}
-html .minimal-app button.minimal-chip:hover{border-color:var(--min-muted);color:var(--min-fg)}
-html .minimal-app .minimal-chip.c-high{color:#ff8a8a;border-color:rgba(239,107,107,.55)}
-html .minimal-app .minimal-chip.c-medium{color:#f2c46b;border-color:rgba(230,178,74,.55)}
-html .minimal-app .minimal-chip.c-low{color:#8fd9a8;border-color:rgba(107,195,138,.5)}
-html .minimal-app .minimal-chip.overdue{color:#ff8a8a;border-color:rgba(239,107,107,.55)}
-html .minimal-app .minimal-chip.today{color:#f2c46b;border-color:rgba(230,178,74,.55)}
-html .minimal-app .minimal-chip.live{color:#8fe3a8;border-color:rgba(143,227,168,.6)}
-html .minimal-app .minimal-item.is-focusing>.minimal-row{background:color-mix(in srgb,#8fe3a8 7%,transparent)}
-html .minimal-app .minimal-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-html .minimal-app .minimal-item .btn{color:var(--min-fg);border-color:var(--min-line);background:transparent;min-height:34px;padding:6px 12px;font-size:12px}
-html .minimal-app .minimal-item .btn:hover{background:var(--min-surface);border-color:var(--min-muted)}
-html .minimal-app .minimal-item .btn.primary{background:var(--min-fg);color:var(--min-bg);border-color:var(--min-fg)}
-html .minimal-app .minimal-children{margin:4px 0 2px 16px;padding-left:12px;border-left:1px dashed var(--min-line);display:grid;gap:2px}
-html .minimal-app .minimal-children .minimal-item .minimal-item-text{font-weight:500;font-size:14px}
-html .minimal-app .minimal-grip{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;background:transparent;border:0;color:var(--min-muted);font-size:13px;line-height:1;letter-spacing:-2px;min-width:22px;min-height:30px;padding:6px 0;border-radius:8px;flex:0 0 auto;opacity:.6}
-html .minimal-app .minimal-grip:hover{opacity:1;color:var(--min-fg)}
-html .minimal-app .minimal-compose{padding:18px 0}
+/* Scribble list: flat rows on hairline dividers. One title line, one muted meta line, actions on demand. */
+html .minimal-app .minimal-wrap{max-width:720px}
+html .minimal-app .minimal-sticky{position:sticky;top:0;z-index:6;background:color-mix(in srgb,var(--min-bg) 94%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);margin:0 -8px;padding:6px 8px 0}
+html .minimal-app .minimal-feed{display:block;gap:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+html .minimal-app .minimal-item{display:block;background:transparent!important;border:0;border-bottom:1px solid var(--min-line);border-radius:0;padding:10px 0;box-shadow:none;transform:none!important;text-align:left;min-width:0}
+html .minimal-app .minimal-item.is-open{background:color-mix(in srgb,var(--min-fg) 3%,transparent)!important}
+html .minimal-app .minimal-row{display:grid;grid-template-columns:16px 22px minmax(0,1fr);column-gap:6px;align-items:start}
+html .minimal-app .minimal-grip{width:16px;min-width:16px;max-width:16px;height:22px;min-height:22px;padding:0;margin:0;overflow:hidden;border:0;background:none;color:var(--min-muted);opacity:.3;font-size:11px;line-height:22px;letter-spacing:-2px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;text-align:left}
+html .minimal-app .minimal-grip:hover{opacity:.9}
+html .minimal-app .minimal-check{width:18px;height:18px;margin:2px 0 0;accent-color:var(--min-fg);cursor:pointer}
+html .minimal-app .minimal-main{min-width:0}
+html .minimal-app button.minimal-item-text{display:block;width:100%;margin:0;padding:0;border:0;background:none;color:var(--min-fg);font:inherit;font-size:15px;line-height:22px;font-weight:550;text-align:left;cursor:pointer;overflow-wrap:anywhere}
+html .minimal-app .minimal-item.is-group>.minimal-row button.minimal-item-text{font-weight:700}
+html .minimal-app .minimal-item.is-done button.minimal-item-text{text-decoration:line-through;color:var(--min-muted)}
+html .minimal-app .minimal-drawing{display:block;width:min(100%,300px);height:auto;margin:6px 0;border:1px solid var(--min-line);border-radius:10px;background:var(--min-bg)}
+html .minimal-app .minimal-meta{display:flex;flex-wrap:wrap;align-items:center;column-gap:6px;row-gap:0;font-size:12px;line-height:18px;color:var(--min-muted);margin-top:1px;font-variant-numeric:tabular-nums}
+html .minimal-app .minimal-meta .minimal-sep{opacity:.45}
+html .minimal-app .minimal-meta span,html .minimal-app .minimal-meta button{font:inherit;line-height:inherit;white-space:nowrap}
+html .minimal-app .minimal-prio{text-transform:none;font-weight:600;color:var(--min-muted)}
+html .minimal-app .minimal-prio.c-high{color:color-mix(in srgb,#e5484d 70%,var(--min-fg))}
+html .minimal-app .minimal-prio.c-medium{color:color-mix(in srgb,#c98a12 75%,var(--min-fg))}
+html .minimal-app .minimal-prio.c-low{color:color-mix(in srgb,#2f9e5e 75%,var(--min-fg))}
+html .minimal-app .minimal-due.today{color:color-mix(in srgb,#c98a12 75%,var(--min-fg));font-weight:600}
+html .minimal-app .minimal-due.overdue{color:color-mix(in srgb,#e5484d 70%,var(--min-fg));font-weight:600}
+html .minimal-app .minimal-live{color:color-mix(in srgb,#1f8a4c 70%,var(--min-fg));font-weight:600}
+html .minimal-app .minimal-meta button.minimal-toggle{background:none;border:0;padding:0;color:var(--min-fg);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--min-line);cursor:pointer}
+html .minimal-app .minimal-actions{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;padding-top:6px;border-top:1px dashed var(--min-line)}
+html .minimal-app .minimal-item .minimal-actions .btn{background:none;border:0;border-radius:0;padding:0;min-height:0;height:auto;color:var(--min-fg);font-size:13px;font-weight:550;text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--min-line);box-shadow:none;transform:none}
+html .minimal-app .minimal-item .minimal-actions .btn:hover{background:none;text-decoration-color:var(--min-fg)}
+html .minimal-app .minimal-item .minimal-actions .btn.primary{background:none;color:color-mix(in srgb,#1f8a4c 75%,var(--min-fg));text-decoration-color:currentColor;font-weight:700}
+html .minimal-app .minimal-item .minimal-actions .btn[onclick*="minimalDelete"]{color:color-mix(in srgb,#e5484d 70%,var(--min-fg))}
+html .minimal-app .minimal-item .minimal-edit{margin:8px 0 0}
+html .minimal-app .minimal-compose{padding:16px 0}
 html .minimal-app .minimal-compose-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:flex-end}
 html .minimal-app .minimal-field{flex:1 1 96px;min-width:0;display:grid;gap:4px}
-html .minimal-app .minimal-compose-meta .minimal-control{min-height:44px;padding:10px 12px;font-size:14px}
-@media (max-width:620px){html .minimal-app .minimal-sticky .minimal-sub{display:none}html .minimal-app .minimal-sticky .minimal-mode-row{padding:10px 0}}
 html .minimal-app .minimal-field .minimal-label{margin:0}
+html .minimal-app .minimal-compose-meta .minimal-control{min-height:44px;padding:10px 12px;font-size:14px}
 html .minimal-app .minimal-parent-chip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--min-muted);margin-bottom:8px}
 html .minimal-app .minimal-parent-chip b{color:var(--min-fg);font-weight:650}
-html .minimal-app .minimal-edit .minimal-field{margin:0}
-@media (max-width:420px){html .minimal-app .minimal-feed{padding:6px}html .minimal-app .minimal-children{margin-left:8px;padding-left:8px}html .minimal-app .minimal-actions .btn{flex:1 1 auto}}
-/* Visual pass: quieter actions, softer panel, group separators, compact header on phones. */
-html .minimal-app .minimal-feed{background:linear-gradient(180deg,color-mix(in srgb,var(--min-surface) 92%,transparent),color-mix(in srgb,var(--min-surface) 74%,transparent))}
-html .minimal-app .minimal-item{position:relative}
-html .minimal-app .minimal-item:focus-within{background:color-mix(in srgb,var(--min-fg) 5%,transparent)}
-html .minimal-app .minimal-item.is-group>.minimal-row{padding-bottom:4px;margin-bottom:4px;border-bottom:1px solid var(--min-line)}
-html .minimal-app .minimal-item.is-done{opacity:.72}
-html .minimal-app .minimal-item .minimal-actions{gap:4px 4px;margin-top:6px}
-html .minimal-app .minimal-item .minimal-actions .btn{background:transparent;border-color:transparent;color:var(--min-muted);min-height:30px;padding:4px 9px;font-size:12px;font-weight:550}
-html .minimal-app .minimal-item .minimal-actions .btn:hover{color:var(--min-fg);background:color-mix(in srgb,var(--min-fg) 7%,transparent);border-color:transparent}
-html .minimal-app .minimal-item .minimal-actions .btn.primary{background:var(--min-fg);color:var(--min-bg);border-color:var(--min-fg)}
-html .minimal-app .minimal-item .minimal-actions .btn[onclick*="minimalDelete"]:hover{color:#ff8a8a}
-html .minimal-app .minimal-item .minimal-chip{background:color-mix(in srgb,var(--min-fg) 4%,transparent)}
-html .minimal-app .minimal-item.is-focusing>.minimal-row{background:color-mix(in srgb,#8fe3a8 9%,transparent)}
-html .minimal-app .minimal-sticky{box-shadow:0 10px 18px -18px rgba(0,0,0,.6)}
-html .minimal-app .minimal-compose textarea.minimal-control{min-height:64px}
 @media (max-width:620px){
  html .minimal-app .minimal-sticky .minimal-sub,html .minimal-app .minimal-sticky .minimal-mode-label{display:none}
  html .minimal-app .minimal-sticky .minimal-brand{font-size:16px}
  html .minimal-app .minimal-sticky .minimal-head{padding-bottom:10px}
- html .minimal-app .minimal-created{display:none}
 }
-html .minimal-app .minimal-item{text-align:left}
-html .minimal-app .minimal-item .minimal-actions{justify-content:flex-start}
-html .minimal-app .minimal-compose-meta .minimal-field:first-child{flex:0 0 auto;width:112px}
-html .minimal-app .minimal-compose-meta .minimal-field:nth-child(2){flex:1 1 130px}
-html .minimal-app .minimal-compose-meta .minimal-field:nth-child(3){flex:1 1 110px}
-html .minimal-app .minimal-item .minimal-actions .btn{flex:0 0 auto}
-html .minimal-app .minimal-chip.c-high,html .minimal-app .minimal-chip.overdue{color:color-mix(in srgb,#e5484d 62%,var(--min-fg));border-color:color-mix(in srgb,#e5484d 45%,transparent)}
-html .minimal-app .minimal-chip.c-medium,html .minimal-app .minimal-chip.today{color:color-mix(in srgb,#c98a12 70%,var(--min-fg));border-color:color-mix(in srgb,#e6b24a 50%,transparent)}
-html .minimal-app .minimal-chip.c-low{color:color-mix(in srgb,#2f9e5e 70%,var(--min-fg));border-color:color-mix(in srgb,#6bc38a 50%,transparent)}
-html .minimal-app .minimal-chip.live{color:color-mix(in srgb,#1f8a4c 60%,var(--min-fg));border-color:color-mix(in srgb,#2f9e5e 55%,transparent)}
-html .minimal-app .minimal-item .minimal-actions .btn.primary{color:var(--min-bg)}
+html .minimal-app .minimal-check{position:relative;z-index:1}
+html .minimal-app .minimal-item button.minimal-item-text{color:var(--min-fg)!important;font-size:15px;font-weight:550}
+html .minimal-app .minimal-item.is-group>.minimal-row button.minimal-item-text{font-weight:700}
+html .minimal-app .minimal-item.is-done>.minimal-row button.minimal-item-text{color:var(--min-muted)!important}
+html .minimal-app .minimal-item .minimal-meta{color:var(--min-muted)}
 </style>
 </head>
 <body>
@@ -4026,38 +3996,40 @@ function minParentOk(items,selfId,parentId){
 function minTitle(item){return item.kind==='drawing'?'drawing':(String(item.text||'').split(/\r?\n/)[0].trim().slice(0,60)||'untitled')}
 function minClock(ms){const t=Math.max(0,Math.floor(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60;return (h?h+':':'')+minPad(m)+':'+minPad(s)}
 function minFocusTotal(item,now){return (item.focusMs||0)+(item.focusStart?Math.max(0,now-item.focusStart):0)}
-function minDueChip(item,today){
- if(!item.due)return '';
- const cls=item.due<today?'overdue':item.due===today?'today':'';
- const label=item.due===today?'due today':item.due<today?'overdue · '+item.due:'due '+item.due;
- return `<span class="minimal-chip ${cls}">${esc(label)}</span>`;
+function minDueLabel(item,today){
+ if(!item.due)return null;
+ if(item.due===today)return {cls:'today',text:'today'};
+ if(item.due<today)return {cls:'overdue',text:'overdue'};
+ const d=new Date(item.due+'T12:00:00');
+ return {cls:'',text:d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})};
 }
 function minimalIsOpen(item){return item.kind==='group'?!__minimalCollapsed.has(item.id):__minimalOpenSub.has(item.id)}
+const __minimalExpanded=new Set();
+function minimalToggleRow(id){__minimalExpanded.has(id)?__minimalExpanded.delete(id):__minimalExpanded.add(id);minimalRefresh()}
 function minimalItemHtml(item,items,depth,today){
- const now=Date.now(),editing=__minimalEditingId===item.id,color=minColor(item.color),drawing=item.kind==='drawing',group=item.kind==='group',timed=item.expiresAt!==null;
+ const now=Date.now(),editing=__minimalEditingId===item.id,drawing=item.kind==='drawing',group=item.kind==='group',timed=item.expiresAt!==null;
  const kids=minKids(items,item.id),open=kids.length>0&&minimalIsOpen(item),doneKids=kids.filter(k=>k.done).length;
- const running=!!item.focusStart,total=minFocusTotal(item,now);
- const cls=['minimal-item',item.pinned?'pinned':'',group?'is-group':'',item.done?'is-done':'',item.criticality!=='none'?'crit-'+item.criticality:'',running?'is-focusing':''].filter(Boolean).join(' ');
+ const running=!!item.focusStart,total=minFocusTotal(item,now),expanded=(__minimalExpanded.has(item.id)||editing)&&!editing;
+ const cls=['minimal-item',item.pinned?'pinned':'',group?'is-group':'',item.done?'is-done':'',expanded?'is-open':'',running?'is-focusing':''].filter(Boolean).join(' ');
  let main;
  if(editing)main=minimalEditHtml(item,items);
  else{
-  const body=drawing?`<img class="minimal-drawing" src="${esc(safeImageData(item.image))}" alt="hand-drawn scribble">`:`<div class="minimal-item-text">${esc(item.text)}</div>`;
-  const meta=[];
-  if(group)meta.push(`<span class="minimal-chip">group${kids.length?` · ${doneKids}/${kids.length} done`:''}</span>`);
-  if(item.criticality!=='none')meta.push(`<span class="minimal-chip c-${item.criticality}">${item.criticality}</span>`);
-  const dc=minDueChip(item,today);if(dc)meta.push(dc);
-  if(kids.length)meta.push(`<button type="button" class="minimal-chip minimal-toggle" aria-expanded="${open?'true':'false'}" onclick="minimalToggleOpen(${jarg(item.id)})">${open?'▾':'▸'} ${kids.length} subrow${kids.length===1?'':'s'}</button>`);
-  if(running)meta.push(`<span class="minimal-chip live minimal-focus-live" data-start="${Number(item.focusStart)}" data-base="${Number(item.focusMs)||0}">● ${minClock(total)}</span>`);
-  else if(item.focusMs>0)meta.push(`<span class="minimal-chip">focus ${minClock(item.focusMs)}</span>`);
-  meta.push(timed?`<span class="minimal-stamp minimal-countdown" data-expires="${Number(item.expiresAt)}">${esc(minExpiryLabel(item))}</span>`:'<span class="minimal-stamp">stays</span>');
-  meta.push(`<span class="minimal-stamp minimal-created">${esc(minTimestamp(item.createdAt))}</span>`);
-  if(item.pinned)meta.push('<span class="minimal-stamp">pinned</span>');
+  const title=drawing?`<span class="minimal-item-text">drawing</span>`:`<button type="button" class="minimal-item-text" aria-expanded="${expanded?'true':'false'}" onclick="minimalToggleRow(${jarg(item.id)})">${esc(item.text)}</button>`;
+  const body=drawing?`<img class="minimal-drawing" src="${esc(safeImageData(item.image))}" alt="hand-drawn scribble">`:'';
+  const bits=[];
+  if(group)bits.push(`<span>${kids.length?`${doneKids}/${kids.length} done`:'empty group'}</span>`);
+  if(item.criticality!=='none')bits.push(`<span class="minimal-prio c-${item.criticality}">${item.criticality}</span>`);
+  const dl=minDueLabel(item,today);if(dl)bits.push(`<span class="minimal-due ${dl.cls}">${esc(dl.text)}</span>`);
+  if(running)bits.push(`<span class="minimal-focus-live minimal-live" data-start="${Number(item.focusStart)}" data-base="${Number(item.focusMs)||0}">● ${minClock(total)}</span>`);
+  else if(item.focusMs>0)bits.push(`<span>focus ${minClock(item.focusMs)}</span>`);
+  bits.push(timed?`<span class="minimal-countdown" data-expires="${Number(item.expiresAt)}">${esc(minExpiryLabel(item))}</span>`:`<span>stays</span>`);
+  if(kids.length)bits.push(`<button type="button" class="minimal-toggle" aria-expanded="${open?'true':'false'}" onclick="minimalToggleOpen(${jarg(item.id)})">${open?'hide':'show'} ${kids.length}</button>`);
   const canSub=depth<2&&!drawing;
-  const actions=`<div class="minimal-actions"><button type="button" class="btn mini${running?' primary':''}" onclick="minimalFocusToggle(${jarg(item.id)})">${running?'stop focus':'focus'}</button>${canSub?`<button type="button" class="btn mini" onclick="minimalAddSub(${jarg(item.id)})">+ subrow</button>`:''}<button type="button" class="btn mini" onclick="minimalPin(${jarg(item.id)})">${item.pinned?'unpin':'pin'}</button><button type="button" class="btn mini" onclick="minimalStartEdit(${jarg(item.id)})">edit</button>${timed?`<button type="button" class="btn mini" onclick="minimalSnooze(${jarg(item.id)})">+1 h</button>`:''}<button type="button" class="btn mini" onclick="minimalDelete(${jarg(item.id)})">delete</button></div>`;
-  main=`${body}<div class="minimal-meta">${meta.join('')}</div>${actions}`;
+  const actions=expanded?`<div class="minimal-actions"><button type="button" class="btn${running?' primary':''}" onclick="minimalFocusToggle(${jarg(item.id)})">${running?'stop focus':'focus'}</button>${canSub?`<button type="button" class="btn" onclick="minimalAddSub(${jarg(item.id)})">+ subrow</button>`:''}<button type="button" class="btn" onclick="minimalPin(${jarg(item.id)})">${item.pinned?'unpin':'pin'}</button><button type="button" class="btn" onclick="minimalStartEdit(${jarg(item.id)})">edit</button>${timed?`<button type="button" class="btn" onclick="minimalSnooze(${jarg(item.id)})">+1 h</button>`:''}<button type="button" class="btn" onclick="minimalDelete(${jarg(item.id)})">delete</button></div>`:'';
+  main=`${title}${body}<div class="minimal-meta">${bits.join('<span class="minimal-sep" aria-hidden="true">·</span>')}</div>${actions}`;
  }
- const childHtml=open?`<div class="minimal-children">${kids.map(k=>minimalItemHtml(k,items,depth+1,today)).join('')}</div>`:'';
- return `<article class="${cls}" data-color="${color}" data-id="${esc(item.id)}" data-pinned="${item.pinned?'1':'0'}" data-parent="${esc(item.parentId||'')}" data-kind="${item.kind}"><div class="minimal-row"><button type="button" class="minimal-grip" aria-label="Drag to reorder" title="drag to reorder">&#8942;&#8942;</button><input type="checkbox" class="minimal-check" aria-label="mark done" title="mark done" ${item.done?'checked':''} onchange="minimalToggleDone(${jarg(item.id)})"><span class="minimal-dot" aria-hidden="true"></span><div class="minimal-main">${main}</div></div>${childHtml}</article>`;
+ const childHtml=open?kids.map(k=>minimalItemHtml(k,items,depth+1,today)).join(''):'';
+ return `<article class="${cls}" data-color="${minColor(item.color)}" data-id="${esc(item.id)}" data-pinned="${item.pinned?'1':'0'}" data-parent="${esc(item.parentId||'')}" data-kind="${item.kind}" data-depth="${depth}"><div class="minimal-row"><button type="button" class="minimal-grip" aria-label="Drag to reorder" title="drag to reorder">&#8942;&#8942;</button><input type="checkbox" class="minimal-check" aria-label="mark done" title="mark done" ${item.done?'checked':''} onchange="minimalToggleDone(${jarg(item.id)})"><div class="minimal-main">${main}</div></div>${childHtml}</article>`;
 }
 function minimalToggleOpen(id){
  const it=(__minimalDataCache?.items||[]).find(x=>x.id===id);if(!it)return;
@@ -4508,7 +4480,7 @@ async function applyEncryptedRestore(){
  }catch(e){toast('Could not restore encrypted backup')}
 }
 
-Object.assign(window,{startFreeFocus,startFocusOverlayDrag,nudgeFocusOverlayKey,setFocusOverlayY,switchMinimalMode,minimalStartEdit,minimalCancelEdit,minimalSaveEdit,minimalSnooze,minimalSetPinned,minimalPostText,minimalToggleOpen,minimalToggleDone,minimalFocusToggle,minimalAddSub,minimalClearParent,minimalOpenDrawing,minimalCloseDrawing,minimalClearDrawing,minimalPostDrawing,minimalPin,minimalDelete,splitViewRoute,splitGroupModal,splitSaveGroup,splitDeleteGroup,splitAddPeople,splitRemovePerson,splitExpenseModal,splitPreview,splitSaveExpense,splitDeleteExpense,splitMarkPaid,splitMarkAll,splitUndoPayment,handleMinimalReturnPending,nextDue,quickCapture,restoreFromTrash,purgeFromTrash,undoLastRestore,restoreAutoSnapshot,applyEncryptedRestore,demoState,normalizeWorkspace,load,persist,resetDemo,toast,nav,setNav,formatDay,dateShort,taskById,facts,daysSince,startFreshWorkspace,openUpcoming,setSetting,toggleHideAmounts,setAmbientEffect,setAmbientStrength,setFocusSound,setFocusSoundVolume,toggleFocusSound,dismissRecommendation,parseCapture,captureCardModal,captureSwitch,saveCapture,openModal,taskModal,activeProblems,problemRuleCandidates,actionForRec,parkProblem,reopenProblem,resolveProblem,promoteTaskToProblem,problemModal,saveProblem,setProblemMovedForTest,setTaskReschedulesForTest,deleteAllLocalData,legalSummaryModal,toggleBetaContinue,
+Object.assign(window,{startFreeFocus,startFocusOverlayDrag,nudgeFocusOverlayKey,setFocusOverlayY,switchMinimalMode,minimalStartEdit,minimalCancelEdit,minimalSaveEdit,minimalSnooze,minimalSetPinned,minimalPostText,minimalToggleOpen,minimalToggleDone,minimalFocusToggle,minimalAddSub,minimalClearParent,minimalToggleRow,minimalOpenDrawing,minimalCloseDrawing,minimalClearDrawing,minimalPostDrawing,minimalPin,minimalDelete,splitViewRoute,splitGroupModal,splitSaveGroup,splitDeleteGroup,splitAddPeople,splitRemovePerson,splitExpenseModal,splitPreview,splitSaveExpense,splitDeleteExpense,splitMarkPaid,splitMarkAll,splitUndoPayment,handleMinimalReturnPending,nextDue,quickCapture,restoreFromTrash,purgeFromTrash,undoLastRestore,restoreAutoSnapshot,applyEncryptedRestore,demoState,normalizeWorkspace,load,persist,resetDemo,toast,nav,setNav,formatDay,dateShort,taskById,facts,daysSince,startFreshWorkspace,openUpcoming,setSetting,toggleHideAmounts,setAmbientEffect,setAmbientStrength,setFocusSound,setFocusSoundVolume,toggleFocusSound,dismissRecommendation,parseCapture,captureCardModal,captureSwitch,saveCapture,openModal,taskModal,activeProblems,problemRuleCandidates,actionForRec,parkProblem,reopenProblem,resolveProblem,promoteTaskToProblem,problemModal,saveProblem,setProblemMovedForTest,setTaskReschedulesForTest,deleteAllLocalData,legalSummaryModal,toggleBetaContinue,
   recommendation,actionForRec,completeTask,startFocus,scheduleTask,stopFocus,resumeFocus,pauseFocus,tick,renderFocusTimerOnly,
   openModal,closeModal,openDrawer,closeDrawer,taskModal,saveTask,clearPlan,noteModal,saveNote,expenseModal,saveExpense,wishlistModal,saveWishlistItem,toggleWishlistBought,deleteWishlistItem,decisionModal,openDecision,reconcile,
   createGoalModal,saveGoal,globalCreate,inspect,viewToday,viewWork,viewFocus,viewPlan,viewGoals,executeStep,viewLife,toggleHabit,

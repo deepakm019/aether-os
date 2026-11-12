@@ -53,7 +53,11 @@ def items(page):
 
 
 def card(page, text):
-    return page.locator(".minimal-item", has_text=text).first
+    c = page.locator(".minimal-item", has_text=text).first
+    if c.locator(".minimal-actions").count() == 0 and c.locator("form.minimal-edit").count() == 0:
+        c.locator(".minimal-item-text").first.click()
+        c.locator(".minimal-actions").first.wait_for(timeout=5000)
+    return c
 
 
 def run():
@@ -87,11 +91,11 @@ def run():
         check("countdown ticks down live", label2 != label, f"{label} -> {label2}")
 
         # 4. Edit text, then cancel keeps old text, empty save is rejected.
-        card(page, "three hour snap").locator("button:has-text('edit')").click()
+        card(page, "three hour snap").locator("button:text-is('edit')").click()
         page.fill("#minimal-edit-text", "edited snap text")
         page.click("button:has-text('cancel')")
         check("cancel keeps original text", card(page, "three hour snap").count() == 1)
-        card(page, "three hour snap").locator("button:has-text('edit')").click()
+        card(page, "three hour snap").locator("button:text-is('edit')").click()
         page.fill("#minimal-edit-text", "   ")
         page.click("form.minimal-edit button[type=submit]")
         page.wait_for_timeout(200)
@@ -102,7 +106,7 @@ def run():
         check("edit saves new text", card(page, "edited snap text").count() == 1)
 
         # 5. Color change persists and is applied to the card.
-        card(page, "edited snap text").locator("button:has-text('edit')").click()
+        card(page, "edited snap text").locator("button:text-is('edit')").click()
         page.locator("input[name='minimal-edit-color'][value='pink']").check(force=True)
         page.click("form.minimal-edit button[type=submit]")
         page.wait_for_selector(".minimal-item[data-color='pink']")
@@ -115,7 +119,7 @@ def run():
         check("default color is yellow for new snaps", card(page, "fresh default snap").get_attribute("data-color") == "yellow")
 
         # 6. Edit time: choose 12h from edit form.
-        card(page, "edited snap text").locator("button:has-text('edit')").click()
+        card(page, "edited snap text").locator("button:text-is('edit')").click()
         page.select_option("#minimal-edit-expiry", "12h")
         page.click("form.minimal-edit button[type=submit]")
         page.wait_for_timeout(300)
@@ -131,7 +135,7 @@ def run():
         check("+1 h snooze adds one hour", abs((it["expiresAt"] - before) - 3600000) < 2000, f"{it['expiresAt'] - before}ms")
 
         # 8. Edit + snooze combined from the edit form.
-        card(page, "edited snap text").locator("button:has-text('edit')").click()
+        card(page, "edited snap text").locator("button:text-is('edit')").click()
         page.fill("#minimal-edit-text", "snoozed in edit")
         page.click("button:has-text('save + 1 h')")
         page.wait_for_selector(".minimal-item:has-text('snoozed in edit')")
@@ -144,9 +148,9 @@ def run():
 
         # 10. Drag the grip to reorder; pinned snaps keep their own group on top.
         def drag_card(text, target_text, offset=-4):
-            src = card(page, text).locator(".minimal-grip")
+            src = page.locator(".minimal-item", has_text=text).first.locator(".minimal-grip").first
             box = src.bounding_box()
-            tgt = card(page, target_text).bounding_box()
+            tgt = page.locator(".minimal-item", has_text=target_text).first.bounding_box()
             cx, cy = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
             ty = tgt["y"] + tgt["height"] / 2 + offset
             page.mouse.move(cx, cy)
@@ -179,7 +183,7 @@ def run():
 
         # 11. Composer draft survives a re-render (edit start).
         page.fill("#minimal-note", "draft kept")
-        card(page, "forever snap").locator("button:has-text('edit')").click()
+        card(page, "forever snap").locator("button:text-is('edit')").click()
         check("composer draft kept while editing", page.locator("#minimal-note").input_value() == "draft kept")
 
         # 12. No visual leak: Normal mode has no minimal chrome or classes.
@@ -192,7 +196,7 @@ def run():
         # 13. Mobile: edit form fits the phone width.
         ctx, page = open_minimal(browser, 320, 568)
         post(page, "small screen snap")
-        card(page, "small screen snap").locator("button:has-text('edit')").click()
+        card(page, "small screen snap").locator("button:text-is('edit')").click()
         overflow = page.evaluate("() => document.documentElement.scrollWidth - document.documentElement.clientWidth")
         check("edit form fits 320px width", overflow <= 0, f"overflow {overflow}px")
         ctx.close()
