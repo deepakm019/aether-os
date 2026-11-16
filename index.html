@@ -789,7 +789,7 @@ html[data-palette] .row,html[data-palette] .table th,html[data-palette] .table t
 html .minimal-app .minimal-wrap{max-width:720px}
 html .minimal-app .minimal-sticky{position:sticky;top:0;z-index:6;background:color-mix(in srgb,var(--min-bg) 94%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);margin:0 -8px;padding:6px 8px 0}
 html .minimal-app .minimal-feed{display:block;gap:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
-html .minimal-app .minimal-item{display:block;background:transparent!important;border:0;border-bottom:1px solid var(--min-line);border-radius:0;padding:10px 0;box-shadow:none;transform:none!important;text-align:left;min-width:0}
+html .minimal-app .minimal-item{display:block;background:transparent!important;border:0;border-bottom:1px solid var(--min-line);border-radius:0;padding:10px 0;box-shadow:none;transform:none;text-align:left;min-width:0}
 html .minimal-app .minimal-item.is-open{background:color-mix(in srgb,var(--min-fg) 3%,transparent)!important}
 html .minimal-app .minimal-row{display:grid;grid-template-columns:16px 22px minmax(0,1fr);column-gap:6px;align-items:start}
 html .minimal-app .minimal-grip{width:16px;min-width:16px;max-width:16px;height:22px;min-height:22px;padding:0;margin:0;overflow:hidden;border:0;background:none;color:var(--min-muted);opacity:.3;font-size:11px;line-height:22px;letter-spacing:-2px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;text-align:left}
@@ -903,6 +903,24 @@ html input[type=date]{-webkit-appearance:none;appearance:none;line-height:42px;m
 html input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:0}
 html input[type=date]::-webkit-datetime-edit{padding:0;line-height:42px}
 html input[type=date]::-webkit-calendar-picker-indicator{margin:0 0 0 6px;padding:0;opacity:.7;cursor:pointer}
+/* Drag and polish: lifted row while dragging, large grip target, focus rings, press states, entrance for actions. */
+html .minimal-app .minimal-dragging,html .minimal-app .minimal-dragging *{user-select:none;-webkit-user-select:none;cursor:grabbing!important}
+html .minimal-app .minimal-item.is-dragging{position:relative;z-index:30;background:var(--panel)!important;border-radius:14px;box-shadow:0 18px 40px -14px rgba(0,0,0,.55),0 0 0 1px var(--line)}
+html .minimal-app .minimal-row{grid-template-columns:28px 22px minmax(0,1fr)}
+html .minimal-app .minimal-grip{width:28px;min-width:28px;max-width:28px;text-align:center;opacity:.45;cursor:grab;transition:opacity .15s}
+html .minimal-app .minimal-item:hover .minimal-grip,html .minimal-app .minimal-grip:focus-visible{opacity:1}
+html .minimal-app .minimal-grip:active{cursor:grabbing}
+html .minimal-app button:focus-visible,html .minimal-app input:focus-visible,html .minimal-app select:focus-visible,html .minimal-app textarea:focus-visible{outline:2px solid var(--accent,#8fe3a8);outline-offset:2px}
+html .minimal-app .btn:active{transform:scale(.97)}
+html .minimal-app .minimal-item .minimal-actions{animation:minimal-in .18s ease-out}
+html .minimal-app button.minimal-item-text{transition:color .15s,opacity .15s}
+html .minimal-app button.minimal-item-text:hover{opacity:.85}
+@keyframes minimal-in{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){html .minimal-app *,html .minimal-app *::before{animation:none!important;transition:none!important}}
+html .minimal-app .minimal-grip{background:none;border:0;box-shadow:none;padding:0;border-radius:0;min-height:22px;height:22px;line-height:22px}
+html .minimal-app .minimal-grip:hover,html .minimal-app .minimal-grip:focus-visible{background:none}
+html .minimal-app .minimal-item .minimal-actions{display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:baseline;gap:8px 14px;width:100%;min-width:0;max-width:100%}
+html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
 </style>
 </head>
 <body>
@@ -4250,45 +4268,90 @@ async function minimalSaveEdit(id,snooze){
  if(await minWriteSafe(data)){__minimalEditingId=null;await minimalRefresh();toast(snooze&&item.expiresAt!==null?'Saved. Snoozed 1 h.':'Saved.')}
 }
 /* Drag the grip to reorder snaps. Pinned and unpinned snaps stay in their own groups. */
+const MIN_DRAG_EASE='transform .2s cubic-bezier(.2,.8,.2,1)';
+function minimalVibrate(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch(x){}}
 function minimalDragStart(e){
+ if(e.button!==undefined&&e.button!==0)return;
  const g=e.target&&e.target.closest?e.target.closest('.minimal-grip'):null;if(!g||!isMinimalMode())return;
- const card=g.closest('.minimal-item');if(!card)return;
- __minimalDrag={id:card.dataset.id,card,parent:card.dataset.parent||'',pinned:card.dataset.pinned==='1',startCenter:e.clientY,startY:e.clientY,pointerId:e.pointerId,dy:0};
- e.preventDefault();try{g.setPointerCapture(e.pointerId)}catch(x){}
+ const card=g.closest('.minimal-item');if(!card||!card.parentElement)return;
+ const pinned=card.dataset.pinned==='1';
+ const sibs=[...card.parentElement.querySelectorAll(':scope > .minimal-item')].filter(c=>(c.dataset.pinned==='1')===pinned);
+ if(sibs.length<2)return;
+ e.preventDefault();
+ try{g.setPointerCapture(e.pointerId)}catch(x){}
+ /* Measure every sibling once, in document coordinates, so the layout stays stable while transforms move things. */
+ const items=sibs.map(c=>{const r=c.getBoundingClientRect();return {el:c,id:c.dataset.id,top:r.top+scrollY,h:r.height}});
+ const dragged=items.find(i=>i.id===card.dataset.id);if(!dragged)return;
+ __minimalDrag={pointerId:e.pointerId,items,dragged,startDoc:e.clientY+scrollY,clientY:e.clientY,dy:0,target:items.indexOf(dragged),order:items.map(i=>i.id),finalTop:dragged.top,moved:false,raf:0};
+ items.forEach(i=>{i.el.style.transition=i===dragged?'none':MIN_DRAG_EASE});
+ dragged.el.classList.add('is-dragging');
+ document.documentElement.classList.add('minimal-dragging');
+ minimalVibrate(8);
+ minimalDragLayout(__minimalDrag);
+ minimalDragEdge(__minimalDrag);
+}
+function minimalDragLayout(d){
+ const items=d.items,dragged=d.dragged;
+ const top=dragged.top+d.dy,bottom=top+dragged.h;
+ /* Decide with the leading edge: the top when moving up, the bottom when moving down. */
+ const edge=d.dy<0?top:bottom;
+ const others=items.filter(i=>i!==dragged);
+ const idx=others.filter(o=>o.top+o.h/2<edge).length;
+ const order=others.map(o=>o.id);order.splice(idx,0,dragged.id);
+ if(idx!==d.target){d.target=idx;minimalVibrate(4)}
+ /* Lay every row out in its new slot; the dragged row follows the pointer. */
+ const byId=new Map(items.map(i=>[i.id,i]));
+ let run=items[0].top;
+ order.forEach(id=>{const it=byId.get(id),slot=run;run+=it.h;
+  if(it===dragged){d.finalTop=slot;it.el.style.transform=`translate3d(0,${d.dy}px,0) scale(1.015)`}
+  else{const shift=slot-it.top;it.el.style.transform=shift?`translate3d(0,${shift}px,0)`:''}
+ });
+ d.order=order;d.moved=order.some((id,i)=>id!==items[i].id);
+}
+function minimalDragEdge(d){
+ /* Scroll the page while the pointer rests near the top or bottom edge. */
+ const step=()=>{
+  if(__minimalDrag!==d)return;
+  const vh=innerHeight;let dir=0;
+  if(d.clientY<90)dir=-1;else if(d.clientY>vh-90)dir=1;
+  if(dir){const before=scrollY;scrollBy(0,dir*10);if(scrollY!==before){d.dy=d.clientY+scrollY-d.startDoc;minimalDragLayout(d)}}
+  d.raf=requestAnimationFrame(step);
+ };
+ d.raf=requestAnimationFrame(step);
 }
 function minimalDragMove(e){
- if(!__minimalDrag||e.pointerId!==__minimalDrag.pointerId)return;
- __minimalDrag.dy=e.clientY-__minimalDrag.startY;
- __minimalDrag.card.style.transform=`translateY(${Math.max(-120,Math.min(120,__minimalDrag.dy))}px)`;
+ const d=__minimalDrag;if(!d||e.pointerId!==d.pointerId)return;
+ d.clientY=e.clientY;d.dy=e.clientY+scrollY-d.startDoc;
+ minimalDragLayout(d);
 }
-function minimalComputeOrder(d){
- const others=[...document.querySelectorAll('.minimal-feed .minimal-item')].filter(c=>c!==d.card&&(c.dataset.parent||'')===d.parent);
- const group=others.filter(c=>(c.dataset.pinned==='1')===d.pinned);
- const finalCenter=d.startCenter+d.dy;
- const t=group.filter(c=>{const r=c.getBoundingClientRect();return r.top+r.height/2<finalCenter}).length;
- let at;
- if(!group.length)at=d.pinned?0:others.length;
- else if(t>=group.length)at=others.indexOf(group[group.length-1])+1;
- else at=others.indexOf(group[t]);
- const list=others.slice();list.splice(at,0,d.card);
- return list.map(c=>c.dataset.id);
-}
+function minimalComputeOrder(d){return d.order}
 async function minimalApplyOrder(ids){
  const data=await minReadSafe(),pos=new Map(ids.map((id,i)=>[id,i]));
  let changed=false;
  data.items.forEach(it=>{if(pos.has(it.id)&&it.order!==pos.get(it.id)){it.order=pos.get(it.id);changed=true}});
  if(changed&&await minWriteSafe(data))await minimalRefresh();
 }
-async function minimalDragEnd(e){
- if(!__minimalDrag||(e&&e.pointerId!==__minimalDrag.pointerId))return;
- const d=__minimalDrag;__minimalDrag=null;d.card.style.transform='';
- if(Math.abs(d.dy)<8)return;
- await minimalApplyOrder(minimalComputeOrder(d));
+async function minimalDragEnd(e,cancel){
+ const d=__minimalDrag;if(!d)return;
+ if(e&&e.pointerId!==undefined&&e.pointerId!==d.pointerId)return;
+ __minimalDrag=null;cancelAnimationFrame(d.raf);
+ const commit=!cancel&&d.moved;
+ const target=commit?d.finalTop-d.dragged.top:0;
+ d.dragged.el.classList.remove('is-dragging');
+ d.dragged.el.style.transition=MIN_DRAG_EASE;
+ d.dragged.el.style.transform=`translate3d(0,${target}px,0)`;
+ if(!commit)d.items.forEach(i=>{if(i!==d.dragged)i.el.style.transform=''});
+ await new Promise(r=>setTimeout(r,commit?200:220));
+ document.documentElement.classList.remove('minimal-dragging');
+ if(commit){minimalVibrate(6);await minimalApplyOrder(d.order)}
+ /* A re-render replaces these nodes; clearing again covers the case where the order did not change. */
+ d.items.forEach(i=>{i.el.style.transform='';i.el.style.transition=''});
 }
 document.addEventListener('pointerdown',minimalDragStart);
 document.addEventListener('pointermove',minimalDragMove);
-document.addEventListener('pointerup',minimalDragEnd);
-document.addEventListener('pointercancel',minimalDragEnd);
+document.addEventListener('pointerup',e=>minimalDragEnd(e,false));
+document.addEventListener('pointercancel',e=>minimalDragEnd(e,true));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&__minimalDrag)minimalDragEnd(null,true)});
 async function minimalDelete(id){
  const data=await minReadSafe(),subs=minDescendantIds(data.items,id).length;
  if(!confirm(subs?`Delete this row and its ${subs} subrow${subs===1?'':'s'}? This cannot be undone.`:'Delete this row? This cannot be undone.'))return;
