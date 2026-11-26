@@ -2,7 +2,8 @@
 
 The file and folder pickers are replaced with real OPFS handles, so the reference path
 (handle stored in IndexedDB, permission check, decode through Web Audio) runs for real.
-Set MUSIC_FIXTURE to a short MP3 file path (about 2 seconds is ideal).
+Set MUSIC_FIXTURE to a short MP3 file path (about 2 seconds is ideal); otherwise
+a generated silent MP3 is used.
 """
 import base64
 import os
@@ -22,6 +23,13 @@ def check(name, ok, detail=""):
 
 
 MOCK_PICKER = "window.showOpenFilePicker = async () => window.__pick || [];"
+
+
+def silent_mp3(frames=80):
+    """Valid MPEG-1 Layer III frames (128 kbps, 44.1 kHz) of silence, about 2 seconds.
+    Used when MUSIC_FIXTURE is not set, so the suite runs anywhere."""
+    frame = bytes([0xFF, 0xFB, 0x90, 0x00]) + bytes(413)
+    return frame * frames
 
 
 def open_app(browser, width=1280, height=900):
@@ -130,10 +138,11 @@ def add_folder(page, data_b64):
 
 
 def main():
-    if not FIXTURE or not os.path.exists(FIXTURE):
-        print("MUSIC_FIXTURE not set or missing; skipping browser checks")
-        sys.exit(2)
-    data_b64 = base64.b64encode(open(FIXTURE, "rb").read()).decode()
+    if FIXTURE and os.path.exists(FIXTURE):
+        audio = open(FIXTURE, "rb").read()
+    else:
+        audio = silent_mp3()
+    data_b64 = base64.b64encode(audio).decode()
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page, errors = open_app(browser)
