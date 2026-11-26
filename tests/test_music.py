@@ -67,7 +67,7 @@ def add_reference(page, name, data_b64):
         [name, data_b64],
     )
     page.click("button[data-mu='pickFiles']")
-    page.wait_for_function("() => document.querySelector('.mu-page') && /Added 1 track/.test(document.body.textContent)", timeout=10000)
+    page.wait_for_function("() => document.querySelector('.mu-page') && /Added 1 song/.test(document.body.textContent)", timeout=10000)
 
 
 def main():
@@ -108,15 +108,15 @@ def main():
         page.reload(wait_until="load")
         page.wait_for_selector("#app")
         open_music(page)
-        check("library survives reload", "1 track" in page.inner_text(".mu-page"))
+        check("library survives reload", "1 song" in page.inner_text(".mu-page"))
         page.click("button[data-mu='play']")
         page.wait_for_function("() => { const a = document.getElementById('mu-audio'); return a && a.src.startsWith('blob:'); }", timeout=8000)
         check("replays after reload using stored permission", True)
 
         page.click("button[data-mu='shuffle']")
-        check("shuffle toggles", "Shuffle on" in page.inner_text(".mu-player"))
+        check("shuffle toggles", page.get_attribute("button[data-mu='shuffle']", "aria-pressed") == "true")
         page.click("button[data-mu='repeat']")
-        check("repeat cycles to all", "Repeat all" in page.inner_text(".mu-player"))
+        check("repeat cycles to all", page.get_attribute("button[data-mu='repeat']", "aria-label") == "Repeat all")
 
         page.set_viewport_size({"width": 390, "height": 844})
         page.wait_for_timeout(200)

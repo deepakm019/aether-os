@@ -2294,26 +2294,31 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
 <script id="music-module">
 (function () {
   'use strict';
-  // Local MP3 player. Files are played where they already are: the app keeps a
-  // reference (file handle) to each one and streams it from disk. Nothing is copied
-  // or uploaded. Only metadata and listening stats are stored in this browser.
+  // Local music player. Files play where they already are: each track keeps a
+  // reference (file handle) and streams from disk. Nothing is copied or uploaded.
+  // Stored: references, tags read from the files, playlists and listening stats.
   var DB_NAME = 'astralsurge.music.refs.v1', DB_VER = 1;
   var PREF_KEY = 'astralsurge.music.prefs.v1';
-  var COUNT_AFTER = 30;       // seconds of listening that count as a play
-  var PAGE = 200;             // library rows rendered per page
-  var MAX_SCAN = 20000;       // folder import cap
-  var MAX_DEPTH = 6;          // folder import depth
-  var BATCH = 500;            // records written per transaction
+  var COUNT_AFTER = 30, PAGE = 200, MAX_SCAN = 20000, MAX_DEPTH = 6, BATCH = 500;
+  var UNK_ARTIST = 'Unknown artist', UNK_ALBUM = 'Unknown album';
+  var SORTS = {
+    title: ['Title', 1], artist: ['Artist', 1], album: ['Album', 1],
+    added: ['Recently added', -1], plays: ['Most played', -1], last: ['Recently played', -1],
+    length: ['Length', -1], quality: ['Quality', -1], year: ['Year', -1]
+  };
+  var BR1 = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0];
+  var BR2 = [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0];
+  var SR1 = [44100, 48000, 32000, 0], SR2 = [22050, 24000, 16000, 0], SR25 = [11025, 12000, 8000, 0];
 
   var M = {
     db: null, tracks: [], trackIndex: new Map(), playlists: [], plays: [],
     byTrack: new Map(), hours: new Array(24).fill(0), dayTotals: new Map(),
-    memFiles: new Map(),      // session-only File objects for browsers without handles
-    current: null, url: null, queue: [], pos: 0, ctxKind: 'library', ctxId: null,
-    session: null, tab: 'library', openPl: null, query: '', shown: PAGE, addFor: null,
-    status: '', busy: false, progress: null,
+    memFiles: new Map(), covers: new Map(), coverFailed: new Set(), visible: [], tagging: false,
+    current: null, url: null, queue: [], pos: 0, ctxKind: 'library', ctxId: null, session: null,
+    tab: 'songs', openPl: null, query: '', shown: PAGE, menuFor: null,
+    sort: { key: 'title', dir: 1 }, filter: null, status: '', busy: false, progress: null,
     canRemember: typeof window.showOpenFilePicker === 'function',
-    prefs: { shuffle: false, repeat: 'off' }
+    prefs: { shuffle: false, repeat: 'off', volume: 1 }
   };
 
   var audio = new Audio();
@@ -2334,14 +2339,18 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
     var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
     return (h ? h + ':' + String(m).padStart(2, '0') : String(m)) + ':' + String(x).padStart(2, '0');
   }
-  function fmtBytes(b) { return b >= 1e9 ? (b / 1e9).toFixed(2) + ' GB' : (b / 1e6).toFixed(1) + ' MB'; }
+  function fmtBytes(b) {
+    if (!b) return '0 KB';
+    return b >= 1e9 ? (b / 1e9).toFixed(2) + ' GB' : b >= 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.round(b / 1e3) + ' KB';
+  }
   function fmtHM(sec) { var m = Math.round((sec || 0) / 60); return Math.floor(m / 60) + 'h ' + (m % 60) + 'm'; }
   function dayKey(ms) { var d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); }
   function dayAgo(n) { var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - n); return d.getTime(); }
   function isMp3(name) { return /\.mp3$/i.test(String(name || '')); }
   function titleOf(name) { return (String(name).replace(/\.mp3$/i, '').replace(/_+/g, ' ').trim() || 'Untitled').slice(0, 200); }
   function keyOf(f) { return f.name + '|' + f.size + '|' + f.lastModified; }
-  function byTitle(a, b) { return a.title.localeCompare(b.title); }
+  function artistOf(t) { return t.artist || UNK_ARTIST; }
+  function albumOf(t) { return t.album || UNK_ALBUM; }
   function say(msg) { M.status = msg; if (typeof window.toast === 'function') window.toast(msg); }
   function onMusicPage() { return typeof window.nav === 'function' && window.nav() === 'music'; }
   function refreshView() { if (onMusicPage() && typeof window.render === 'function') window.render(); }
@@ -2358,9 +2367,12 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
       var p = JSON.parse(localStorage.getItem(PREF_KEY) || '{}');
       M.prefs.shuffle = !!p.shuffle;
       M.prefs.repeat = ['off', 'all', 'one'].indexOf(p.repeat) >= 0 ? p.repeat : 'off';
+      var v = Number(p.volume);
+      M.prefs.volume = isFinite(v) && v >= 0 && v <= 1 ? v : 1;
     } catch (e) { /* keep defaults */ }
   }
   function savePrefs() { try { localStorage.setItem(PREF_KEY, JSON.stringify(M.prefs)); } catch (e) { /* ignore */ } }
+  audio.volume = M.prefs.volume;
 
   // ---------- IndexedDB (metadata, handles and stats only) ----------
   function openDb() {
@@ -2401,6 +2413,9 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
     return tx(store, 'readonly', function (s) { return s[store].getAll(); })
       .then(function (v) { return Array.isArray(v) ? v : []; });
   }
+  function saveTracks(list) {
+    return tx('tracks', 'readwrite', function (s) { list.forEach(function (t) { s.tracks.put(t, t.id); }); });
+  }
 
   // ---------- validation of stored records (treated as untrusted) ----------
   function validTrack(t) { return !!t && typeof t.id === 'string' && typeof t.title === 'string' && typeof t.size === 'number'; }
@@ -2425,22 +2440,176 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
   function refresh() {
     return Promise.all([readAll('tracks'), readAll('playlists'), readAll('plays')]).then(function (r) {
       var session = M.tracks.filter(function (t) { return t.kind === 'session'; });
-      M.tracks = r[0].filter(validTrack).concat(session).sort(byTitle);
+      M.tracks = r[0].filter(validTrack).concat(session).sort(function (a, b) { return a.title.localeCompare(b.title); });
       M.playlists = r[1].filter(validPlaylist).sort(function (a, b) { return (b.created || 0) - (a.created || 0); });
       M.plays = r[2].filter(validPlay);
       rebuildIndex();
     }).catch(function (e) { say('Music storage unavailable: ' + e.message); });
   }
-  function saveTracks(list) {
-    return tx('tracks', 'readwrite', function (s) { list.forEach(function (t) { s.tracks.put(t, t.id); }); });
+
+  // ---------- tags and covers (read from the file, only when access is granted) ----------
+  function decodeText(bytes, enc) {
+    if (!bytes || !bytes.length) return '';
+    var s = '';
+    try {
+      if (enc === 0) s = new TextDecoder('windows-1252').decode(bytes);
+      else if (enc === 1) {
+        var be = bytes[0] === 0xFE && bytes[1] === 0xFF, le = bytes[0] === 0xFF && bytes[1] === 0xFE;
+        s = new TextDecoder(be ? 'utf-16be' : 'utf-16le').decode(be || le ? bytes.subarray(2) : bytes);
+      } else if (enc === 2) s = new TextDecoder('utf-16be').decode(bytes);
+      else s = new TextDecoder('utf-8').decode(bytes);
+    } catch (e) { return ''; }
+    return s.replace(/\u0000/g, '').trim().slice(0, 300);
+  }
+  function pictureOf(data) {
+    var enc = data[0], mimeEnd = data.indexOf(0, 1);
+    if (mimeEnd < 0) return null;
+    var mime = decodeText(data.subarray(1, mimeEnd), 0) || 'image/jpeg';
+    var p = mimeEnd + 2, start = -1;
+    if (enc === 1 || enc === 2) {
+      for (var i = p; i + 1 < data.length; i += 2) { if (data[i] === 0 && data[i + 1] === 0) { start = i + 2; break; } }
+    } else {
+      var z = data.indexOf(0, p);
+      if (z >= 0) start = z + 1;
+    }
+    if (start < 0 || start >= data.length) return null;
+    return { mime: /^image\//.test(mime) ? mime : 'image/jpeg', data: data.subarray(start) };
+  }
+  function parseId3(tag, major, out, wantCover) {
+    if (major < 3) return;
+    var pos = 0;
+    while (pos + 10 <= tag.length) {
+      if (tag[pos] === 0) break;
+      var id = String.fromCharCode(tag[pos], tag[pos + 1], tag[pos + 2], tag[pos + 3]);
+      var size = major === 4
+        ? ((tag[pos + 4] & 0x7f) << 21) | ((tag[pos + 5] & 0x7f) << 14) | ((tag[pos + 6] & 0x7f) << 7) | (tag[pos + 7] & 0x7f)
+        : ((tag[pos + 4] << 24) | (tag[pos + 5] << 16) | (tag[pos + 6] << 8) | tag[pos + 7]);
+      pos += 10;
+      if (size <= 0 || pos + size > tag.length) break;
+      var data = tag.subarray(pos, pos + size);
+      pos += size;
+      if (/^T[A-Z0-9]{3}$/.test(id)) {
+        var txt = decodeText(data.subarray(1), data[0]);
+        if (!txt) continue;
+        if (id === 'TIT2') out.title = txt;
+        else if (id === 'TPE1') out.artist = txt;
+        else if (id === 'TALB') out.album = txt;
+        else if (id === 'TYER' || id === 'TDRC') out.year = parseInt(txt, 10) || undefined;
+        else if (id === 'TRCK') out.trackNo = parseInt(txt, 10) || undefined;
+      } else if (id === 'APIC' && wantCover && !out.cover) {
+        out.cover = pictureOf(data);
+      }
+    }
+  }
+  function findFrame(b, out) {
+    for (var i = 0; i + 4 < b.length; i++) {
+      if (b[i] !== 0xFF || (b[i + 1] & 0xE0) !== 0xE0) continue;
+      var ver = (b[i + 1] >> 3) & 3, layer = (b[i + 1] >> 1) & 3;
+      if (layer !== 1 || ver === 1) continue;
+      var bri = b[i + 2] >> 4, sri = (b[i + 2] >> 2) & 3;
+      if (bri === 0 || bri === 15 || sri === 3) continue;
+      out.bitrate = ver === 3 ? BR1[bri] : BR2[bri];
+      out.sampleRate = ver === 3 ? SR1[sri] : ver === 2 ? SR2[sri] : SR25[sri];
+      out.channels = (b[i + 3] >> 6) === 3 ? 1 : 2;
+      return;
+    }
+  }
+  async function readTags(file, wantCover) {
+    var out = {};
+    var head = new Uint8Array(await file.slice(0, 10).arrayBuffer());
+    var off = 0;
+    if (head[0] === 0x49 && head[1] === 0x44 && head[2] === 0x33) {   // "ID3"
+      var size = ((head[6] & 0x7f) << 21) | ((head[7] & 0x7f) << 14) | ((head[8] & 0x7f) << 7) | (head[9] & 0x7f);
+      var tag = new Uint8Array(await file.slice(10, 10 + size).arrayBuffer());
+      parseId3(tag, head[3], out, wantCover);
+      off = 10 + size;
+    }
+    var probe = new Uint8Array(await file.slice(off, off + 8192).arrayBuffer());
+    findFrame(probe, out);
+    out.tagsRead = true;
+    return out;
+  }
+  async function readCover(file) {
+    var t = await readTags(file, true);
+    if (!t.cover) return null;
+    return URL.createObjectURL(new Blob([t.cover.data], { type: t.cover.mime }));
+  }
+  function applyTags(t, tags) {
+    if (tags.title) t.title = tags.title;
+    if (tags.artist) t.artist = tags.artist;
+    if (tags.album) t.album = tags.album;
+    if (tags.year) t.year = tags.year;
+    if (tags.trackNo) t.trackNo = tags.trackNo;
+    if (tags.bitrate) t.bitrate = tags.bitrate;
+    if (tags.sampleRate) t.sampleRate = tags.sampleRate;
+    if (tags.channels) t.channels = tags.channels;
+    t.tagsRead = true;
+  }
+  // Returns the File only if the browser already grants access. Never prompts.
+  async function grantedFile(t) {
+    if (t.kind === 'session') return M.memFiles.get(t.id) || null;
+    if (!t.handle || typeof t.handle.queryPermission !== 'function') return null;
+    if ((await t.handle.queryPermission({ mode: 'read' })) !== 'granted') return null;
+    return t.handle.getFile();
+  }
+  async function enrichTags(ids) {
+    if (M.tagging) return;
+    var todo = ids.map(function (id) { return M.trackIndex.get(id); })
+      .filter(function (t) { return t && t.kind !== 'session' && !t.tagsRead; });
+    if (!todo.length) return;
+    M.tagging = true;
+    var changed = [];
+    for (var i = 0; i < todo.length; i++) {
+      var t = todo[i];
+      var f = await grantedFile(t).catch(function () { return null; });
+      if (!f) continue;
+      try { applyTags(t, await readTags(f, false)); } catch (e) { t.tagsRead = true; }
+      changed.push(t);
+      if (changed.length >= 100) { await saveTracks(changed.splice(0)).catch(function () {}); rebuildIndex(); refreshView(); }
+    }
+    if (changed.length) await saveTracks(changed).catch(function () {});
+    M.tagging = false;
+    rebuildIndex();
+    refreshView();
+  }
+  var coverQueue = [], coverRunning = false;
+  function queueCovers(ids) {
+    ids.forEach(function (id) {
+      if (!M.covers.has(id) && !M.coverFailed.has(id) && coverQueue.indexOf(id) < 0) coverQueue.push(id);
+    });
+    if (!coverRunning) runCovers();
+  }
+  async function runCovers() {
+    coverRunning = true;
+    while (coverQueue.length) {
+      var id = coverQueue.shift();
+      var t = M.trackIndex.get(id);
+      if (!t) continue;
+      var f = await grantedFile(t).catch(function () { return null; });
+      if (!f) continue;   // no access yet: try again on a later render
+      try {
+        var url = await readCover(f);
+        if (url) { M.covers.set(id, url); updateCoverDom(id, url); } else M.coverFailed.add(id);
+      } catch (e) { M.coverFailed.add(id); }
+    }
+    coverRunning = false;
+  }
+  function updateCoverDom(id, url) {
+    document.querySelectorAll('[data-cover-for]').forEach(function (el) {
+      if (el.getAttribute('data-cover-for') === id) el.innerHTML = '<img alt="" src="' + esc(url) + '">';
+    });
+  }
+  function coverHtml(t, cls) {
+    var url = t ? M.covers.get(t.id) : null;
+    var ini = esc(((t && t.title) || '?').charAt(0).toUpperCase());
+    return '<div class="' + cls + '"' + (t ? ' data-cover-for="' + esc(t.id) + '"' : '') + '>' +
+      (url ? '<img alt="" src="' + esc(url) + '">' : '<span>' + ini + '</span>') + '</div>';
   }
 
   // ---------- adding music (references only) ----------
-  // Adds handles from the file picker or folder scan. Each handle is stored as a
-  // reference; the file itself is never read into storage.
   async function addHandles(handles) {
     var existing = new Set(M.tracks.map(function (t) { return t.key; }));
-    var added = 0, dupes = 0, failed = 0, batch = [], quota = false;
+    var added = 0, dupes = 0, failed = 0, batch = [], quota = false, addedIds = [];
     M.busy = true; M.progress = { done: 0, total: handles.length }; refreshView();
     for (var i = 0; i < handles.length && !quota; i++) {
       try {
@@ -2449,15 +2618,17 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
         if (existing.has(key)) { dupes++; }
         else {
           existing.add(key);
-          batch.push({ id: uid('trk'), title: titleOf(f.name), size: f.size, lastModified: f.lastModified,
-            key: key, added: Date.now(), duration: 0, kind: 'ref', handle: handles[i] });
+          var rec = { id: uid('trk'), title: titleOf(f.name), size: f.size, lastModified: f.lastModified,
+            key: key, added: Date.now(), duration: 0, kind: 'ref', handle: handles[i] };
+          batch.push(rec);
+          addedIds.push(rec.id);
           added++;
         }
       } catch (e) { failed++; }
       M.progress.done = i + 1;
       if (batch.length >= BATCH) {
         try { await saveTracks(batch); } catch (e) { quota = true; }
-        batch = [];
+        M.tracks = M.tracks.concat(batch.splice(0)); rebuildIndex();
       }
       if ((i + 1) % 100 === 0) refreshView();
     }
@@ -2467,9 +2638,10 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
     if (dupes) notes.push(dupes + ' already in your library');
     if (failed) notes.push(failed + ' could not be read');
     if (quota) say('Browser storage is full. Remove some tracks to add more.');
-    else say('Added ' + added + ' track' + (added === 1 ? '' : 's') + (notes.length ? ' · ' + notes.join(', ') : ''));
+    else say('Added ' + added + ' song' + (added === 1 ? '' : 's') + (notes.length ? ' · ' + notes.join(', ') : ''));
     await refresh();
     refreshView();
+    enrichTags(addedIds);
   }
   function addSessionFiles(list) {
     var files = [].slice.call(list || []).filter(function (f) { return isMp3(f.name) || f.type === 'audio/mpeg'; });
@@ -2486,10 +2658,11 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
         added: Date.now(), duration: 0, kind: 'session' });
       added++;
     });
-    M.tracks.sort(byTitle);
+    M.tracks.sort(function (a, b) { return a.title.localeCompare(b.title); });
     rebuildIndex();
     say('Added ' + added + ' for this session only. This browser cannot remember files, so use Chrome or Edge on desktop to keep your library.');
     refreshView();
+    enrichTags(M.tracks.filter(function (t) { return t.kind === 'session'; }).map(function (t) { return t.id; }));
   }
   function pickFiles() {
     if (!M.canRemember) {
@@ -2525,11 +2698,11 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
       return addHandles(found);
     }, ignoreAbort);
   }
-
   function removeTrack(id) {
     var t = M.trackIndex.get(id);
     if (!t) return Promise.resolve();
     if (!confirm('Remove "' + t.title + '" from your library? The file on your device is not touched. Its play history goes too.')) return Promise.resolve();
+    M.menuFor = null;
     return finishSession().then(function () {
       if (M.current === id) stopPlayback();
       var affected = M.plays.filter(function (p) { return p.trackId === id; }).map(function (p) { return p.id; });
@@ -2558,7 +2731,7 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
   function addToPlaylist(plId, trackId) {
     var p = M.playlists.find(function (x) { return x.id === plId; });
     if (!p || !M.trackIndex.has(trackId)) return;
-    M.addFor = null;
+    M.menuFor = null;
     if (p.trackIds.indexOf(trackId) >= 0) { say('Already in ' + p.name); refreshView(); return; }
     p.trackIds = p.trackIds.concat([trackId]);
     savePlaylist(p).then(function () { say('Added to ' + p.name); return refresh(); }).then(refreshView);
@@ -2570,7 +2743,7 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
     savePlaylist(p).then(refresh).then(refreshView);
   }
   function deletePlaylist(id) {
-    if (!confirm('Delete this playlist? Tracks stay in your library.')) return;
+    if (!confirm('Delete this playlist? Songs stay in your library.')) return;
     tx('playlists', 'readwrite', function (s) { s.playlists.delete(id); })
       .then(function () { if (M.openPl === id) M.openPl = null; return refresh(); })
       .then(refreshView);
@@ -2582,7 +2755,7 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
       var p = M.playlists.find(function (x) { return x.id === M.ctxId; });
       return p ? p.trackIds.filter(function (id) { return M.trackIndex.has(id); }) : [];
     }
-    return M.tracks.map(function (t) { return t.id; });
+    return songList().map(function (t) { return t.id; });
   }
   function buildQueue(startId) {
     var ids = contextIds();
@@ -2600,6 +2773,15 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
     var b = buildQueue(startId);
     M.queue = b.queue; M.pos = b.pos;
     return loadAndPlay(startId);
+  }
+  function playNext(id) {
+    M.menuFor = null;
+    if (!M.trackIndex.has(id)) return refreshView();
+    if (!M.current || !M.queue.length) return startContext('library', null, id);
+    M.queue = M.queue.filter(function (x) { return x !== id; });
+    M.queue.splice(M.pos + 1, 0, id);
+    say('Playing next: ' + M.trackIndex.get(id).title);
+    refreshView();
   }
   function stopPlayback() {
     audio.pause();
@@ -2630,6 +2812,8 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
       M.current = id;
       M.session = { trackId: id, start: Date.now(), listened: 0, lastT: 0, ended: false };
       audio.src = M.url;
+      if (!t.tagsRead) enrichTags([id]);
+      queueCovers([id]);
       return audio.play().catch(function () { say('Tap play to start playback'); });
     }).catch(function (e) {
       if (e && e.name === 'NotFoundError') say('This file was moved or deleted. Remove it or add it again.');
@@ -2648,8 +2832,9 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
   }
   function togglePlay() {
     if (!M.current) {
-      if (!M.tracks.length) { say('Add some MP3 files first.'); return; }
-      var first = M.prefs.shuffle ? M.tracks[Math.floor(Math.random() * M.tracks.length)] : M.tracks[0];
+      var list = songList();
+      if (!list.length) { say('Add some MP3 files first.'); return; }
+      var first = M.prefs.shuffle ? list[Math.floor(Math.random() * list.length)] : list[0];
       startContext('library', null, first.id);
       return;
     }
@@ -2685,7 +2870,7 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
     if (!('mediaSession' in navigator)) return;
     try {
       var t = M.current ? M.trackIndex.get(M.current) : null;
-      navigator.mediaSession.metadata = t ? new MediaMetadata({ title: t.title, artist: 'On this device', album: 'Music' }) : null;
+      navigator.mediaSession.metadata = t ? new MediaMetadata({ title: t.title, artist: artistOf(t), album: albumOf(t) }) : null;
       var handlers = {
         play: function () { audio.play().catch(function () {}); },
         pause: function () { audio.pause(); },
@@ -2700,11 +2885,11 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
 
   // Progress updates touch only the time and slider, not the whole view.
   function updateProgressDom() {
-    var p = document.getElementById('mu-prog'), tm = document.getElementById('mu-time');
+    var p = document.getElementById('mu-prog'), tm = document.getElementById('mu-time'), du = document.getElementById('mu-dur');
     if (!p || !tm || document.activeElement === p) return;
-    var t = M.current ? M.trackIndex.get(M.current) : null;
     p.value = audio.duration ? Math.round(audio.currentTime / audio.duration * 1000) : 0;
-    tm.textContent = timeText(t);
+    tm.textContent = fmtTime(audio.currentTime);
+    if (du) du.textContent = fmtTime(audio.duration || (M.current && M.trackIndex.get(M.current) ? M.trackIndex.get(M.current).duration : 0));
   }
   function onTime() {
     var s = M.session;
@@ -2732,102 +2917,171 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
   });
   audio.addEventListener('error', function () { say('This file could not be played'); refreshView(); });
 
-  // ---------- views ----------
-  function timeText(t) {
-    return t ? fmtTime(audio.currentTime) + ' / ' + fmtTime(audio.duration || t.duration) : 'Pick a track to start';
-  }
-  function progValue() { return audio.duration ? Math.round(audio.currentTime / audio.duration * 1000) : 0; }
-
-  function playerHtml() {
-    var t = M.current ? M.trackIndex.get(M.current) : null;
-    var playing = !!t && !audio.paused && !audio.ended;
-    var rep = { off: 'Repeat off', all: 'Repeat all', one: 'Repeat one' }[M.prefs.repeat];
-    return '<section class="panel mu-player" aria-label="Player">' +
-      '<div class="mu-now"><div class="mu-title">' + (t ? esc(t.title) : 'Nothing playing') + '</div>' +
-      '<div class="quiet" id="mu-time">' + esc(timeText(t)) + '</div></div>' +
-      '<input type="range" id="mu-prog" class="mu-range" min="0" max="1000" value="' + progValue() + '" aria-label="Seek position"' + (t ? '' : ' disabled') + '>' +
-      '<div class="mu-controls">' +
-        '<button class="btn" data-mu="prev" aria-label="Previous track">⏮</button>' +
-        '<button class="btn mu-play" data-mu="toggle" aria-label="' + (playing ? 'Pause' : 'Play') + '">' + (playing ? '❚❚' : '▶') + '</button>' +
-        '<button class="btn" data-mu="next" aria-label="Next track">⏭</button>' +
-        '<button class="btn' + (M.prefs.shuffle ? ' on' : '') + '" data-mu="shuffle" aria-pressed="' + M.prefs.shuffle + '">Shuffle ' + (M.prefs.shuffle ? 'on' : 'off') + '</button>' +
-        '<button class="btn' + (M.prefs.repeat !== 'off' ? ' on' : '') + '" data-mu="repeat">' + rep + '</button>' +
-      '</div></section>';
-  }
-
-  function rowHtml(t) {
-    var st = M.byTrack.get(t.id), plays = st ? st.count : 0;
-    var id = esc(t.id), name = esc(t.title);
-    var box = '';
-    if (M.addFor === t.id) {
-      box = '<div class="mu-addbox">' + (M.playlists.length
-        ? M.playlists.map(function (p) { return '<button class="btn ghost" data-mu="addTo" data-id="' + id + '" data-id2="' + esc(p.id) + '">' + esc(p.name) + '</button>'; }).join('')
-        : '<span class="quiet">Create a playlist first.</span>') + '</div>';
+  // ---------- sorting, filtering, grouping ----------
+  function cmp(a, b, key) {
+    switch (key) {
+      case 'artist': return artistOf(a).localeCompare(artistOf(b));
+      case 'album': return albumOf(a).localeCompare(albumOf(b));
+      case 'added': return (a.added || 0) - (b.added || 0);
+      case 'plays': return (M.byTrack.get(a.id) ? M.byTrack.get(a.id).count : 0) - (M.byTrack.get(b.id) ? M.byTrack.get(b.id).count : 0);
+      case 'last': return (M.byTrack.get(a.id) ? M.byTrack.get(a.id).last : 0) - (M.byTrack.get(b.id) ? M.byTrack.get(b.id).last : 0);
+      case 'length': return (a.duration || 0) - (b.duration || 0);
+      case 'quality': return (a.bitrate || 0) - (b.bitrate || 0);
+      case 'year': return (a.year || 0) - (b.year || 0);
+      default: return a.title.localeCompare(b.title);
     }
-    var where = t.kind === 'session' ? ' · this session only' : '';
-    return '<div class="mu-row' + (M.current === t.id ? ' now' : '') + '">' +
-      '<button class="mu-play-btn" data-mu="play" data-id="' + id + '" aria-label="Play ' + name + '">▶</button>' +
-      '<div class="mu-row-main"><div class="mu-row-title">' + name + '</div>' +
-      '<div class="quiet">' + plays + ' play' + (plays === 1 ? '' : 's') + ' · ' + fmtBytes(t.size) + (t.duration ? ' · ' + fmtTime(t.duration) : '') + where + '</div></div>' +
-      '<button class="btn ghost" data-mu="add" data-id="' + id + '" aria-expanded="' + (M.addFor === t.id) + '" aria-label="Add ' + name + ' to a playlist">+ list</button>' +
-      '<button class="btn ghost" data-mu="remove" data-id="' + id + '" aria-label="Remove ' + name + ' from library">Remove</button></div>' + box;
   }
-  function libraryRows() {
+  function songList() {
     var q = M.query.trim().toLowerCase();
-    var list = q ? M.tracks.filter(function (t) { return t.title.toLowerCase().indexOf(q) >= 0; }) : M.tracks;
-    if (!list.length) return '<div class="quiet">' + (M.tracks.length ? 'No tracks match.' : 'No tracks yet. Add MP3 files to start.') + '</div>';
-    var shown = list.slice(0, M.shown);
-    var more = list.length > shown.length
-      ? '<button class="btn ghost" data-mu="more">Show more (' + (list.length - shown.length) + ' left)</button>' : '';
-    return shown.map(rowHtml).join('') + more;
+    var list = M.tracks.filter(function (t) {
+      if (M.filter && M.filter.type === 'artist' && artistOf(t) !== M.filter.value) return false;
+      if (M.filter && M.filter.type === 'album' && (albumOf(t) !== M.filter.value || artistOf(t) !== M.filter.artist)) return false;
+      if (q && ((t.title || '') + ' ' + (t.artist || '') + ' ' + (t.album || '')).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+    var key = M.sort.key, dir = M.sort.dir;
+    list.sort(function (a, b) { return dir * cmp(a, b, key) || a.title.localeCompare(b.title); });
+    return list;
   }
-  function libraryHtml() {
-    var total = M.tracks.reduce(function (a, t) { return a + (t.size || 0); }, 0);
-    var prog = M.busy ? '<div class="quiet" role="status">' + (M.progress
-      ? 'Adding ' + M.progress.done + ' of ' + M.progress.total + '…' : 'Working…') + '</div>' +
-      (M.progress ? '<progress class="mu-progress" max="' + M.progress.total + '" value="' + M.progress.done + '"></progress>' : '') : '';
-    var note = M.canRemember
-      ? 'Files stay where they are on your device. Nothing is copied or uploaded.'
-      : 'This browser cannot remember files between visits. Use Chrome or Edge on desktop to keep your library.';
-    return '<section class="panel">' +
-      '<div class="mu-head"><div><b>' + M.tracks.length + ' track' + (M.tracks.length === 1 ? '' : 's') + '</b>' +
-      '<div class="quiet">' + fmtBytes(total) + ' in total · ' + esc(note) + '</div></div>' +
-      '<div class="mu-actions"><button class="btn" data-mu="playAll">Play all</button>' +
-      '<button class="btn" data-mu="pickFiles">Add MP3s</button>' +
-      (typeof window.showDirectoryPicker === 'function' ? '<button class="btn" data-mu="pickFolder">Add folder</button>' : '') +
-      '</div></div>' + prog +
-      '<input id="mu-file" class="mu-file" type="file" accept=".mp3,audio/mpeg" multiple aria-label="Choose MP3 files">' +
-      '<input id="mu-q" class="input" type="search" placeholder="Search tracks" aria-label="Search tracks" value="' + esc(M.query) + '">' +
-      '</section><div id="mu-list" class="mu-list">' + libraryRows() + '</div>';
+  function groups(keyFn) {
+    var m = new Map();
+    M.tracks.forEach(function (t) {
+      var k = keyFn(t);
+      var g = m.get(k.id) || { id: k.id, name: k.name, sub: k.sub, tracks: [] };
+      g.tracks.push(t);
+      m.set(k.id, g);
+    });
+    return Array.from(m.values());
+  }
+  function albumGroups() {
+    return groups(function (t) { return { id: albumOf(t) + '\u0001' + artistOf(t), name: albumOf(t), sub: artistOf(t) }; })
+      .sort(function (a, b) { return a.name.localeCompare(b.name); });
+  }
+  function artistGroups() {
+    return groups(function (t) { return { id: artistOf(t), name: artistOf(t), sub: '' }; })
+      .sort(function (a, b) { return a.name.localeCompare(b.name); });
+  }
+
+  // ---------- views ----------
+  function timeOf(t) { return t && t.duration ? fmtTime(t.duration) : '–'; }
+  function qualityOf(t) {
+    if (!t || !t.bitrate) return '–';
+    return t.bitrate + ' kbps' + (t.sampleRate ? ' · ' + (t.sampleRate / 1000).toFixed(1) + ' kHz' : '');
+  }
+  function menuHtml(t) {
+    var id = esc(t.id);
+    var lists = M.playlists.length
+      ? M.playlists.map(function (p) { return '<button class="mu-chip" data-mu="addTo" data-id="' + id + '" data-id2="' + esc(p.id) + '">' + esc(p.name) + '</button>'; }).join('')
+      : '<span class="quiet">No playlists yet. Create one in Playlists.</span>';
+    return '<div class="mu-menu" role="group" aria-label="Actions for ' + esc(t.title) + '">' +
+      '<div class="mu-menu-row"><button class="btn ghost" data-mu="playNext" data-id="' + id + '">Play next</button>' +
+      '<button class="btn ghost mu-danger" data-mu="remove" data-id="' + id + '">Remove from library</button></div>' +
+      '<div class="quiet mu-menu-label">Add to playlist</div><div class="mu-chips">' + lists + '</div></div>';
+  }
+  function songRow(t, n) {
+    var st = M.byTrack.get(t.id), plays = st ? st.count : 0;
+    var id = esc(t.id), name = esc(t.title), now = M.current === t.id;
+    return '<div class="mu-row' + (now ? ' now' : '') + '" role="row">' +
+      '<div class="mu-c-n"><span class="mu-num">' + n + '</span><button class="mu-play-btn" data-mu="play" data-id="' + id + '" aria-label="Play ' + name + '">▶</button></div>' +
+      '<div class="mu-c-t mu-track">' + coverHtml(t, 'mu-thumb') +
+        '<div class="mu-track-text"><div class="mu-row-title">' + name + '</div><div class="quiet mu-sub">' + esc(artistOf(t)) + '</div></div></div>' +
+      '<div class="mu-c-al quiet">' + esc(albumOf(t)) + '</div>' +
+      '<div class="mu-c-p">' + plays + '</div>' +
+      '<div class="mu-c-q quiet">' + esc(qualityOf(t)) + '</div>' +
+      '<div class="mu-c-d">' + timeOf(t) + '</div>' +
+      '<div class="mu-c-m"><button class="mu-more" data-mu="menu" data-id="' + id + '" aria-expanded="' + (M.menuFor === t.id) + '" aria-label="More actions for ' + name + '">⋯</button></div>' +
+      (M.menuFor === t.id ? menuHtml(t) : '') + '</div>';
+  }
+  function sortButton(key, label, cls) {
+    var on = M.sort.key === key;
+    return '<button class="mu-th ' + cls + (on ? ' on' : '') + '" data-mu="sort" data-id="' + key + '" aria-label="Sort by ' + label + '">' +
+      label + (on ? (M.sort.dir > 0 ? ' ↑' : ' ↓') : '') + '</button>';
+  }
+  function songsHtml() {
+    var list = songList();
+    var shown = list.slice(0, M.shown);
+    M.visible = shown.map(function (t) { return t.id; });
+    var filt = M.filter ? '<div class="mu-filter"><span>' + esc(M.filter.type === 'album' ? 'Album: ' + M.filter.value : 'Artist: ' + M.filter.value) +
+      '</span><button class="btn ghost" data-mu="clearFilter" aria-label="Clear filter">Clear</button></div>' : '';
+    var sortOpts = Object.keys(SORTS).map(function (k) {
+      return '<option value="' + k + '"' + (M.sort.key === k ? ' selected' : '') + '>' + SORTS[k][0] + '</option>';
+    }).join('');
+    var head = '<div class="mu-thead" role="row"><span class="mu-c-n">#</span>' +
+      sortButton('title', 'Title', 'mu-c-t') + sortButton('album', 'Album', 'mu-c-al') +
+      sortButton('plays', 'Plays', 'mu-c-p') + sortButton('quality', 'Quality', 'mu-c-q') +
+      sortButton('length', 'Time', 'mu-c-d') + '<span class="mu-c-m"></span></div>';
+    var rows = shown.map(function (t, i) { return songRow(t, i + 1); }).join('');
+    var more = list.length > shown.length
+      ? '<button class="btn ghost mu-more-page" data-mu="more">Show more (' + (list.length - shown.length) + ' left)</button>' : '';
+    var empty = M.tracks.length ? '<div class="quiet mu-empty">No songs match.</div>' : '<div class="quiet mu-empty">No songs yet. Add MP3 files to start.</div>';
+    return '<div class="mu-toolbar">' +
+      '<input id="mu-q" class="mu-search" type="search" placeholder="Search songs, artists, albums" aria-label="Search songs" value="' + esc(M.query) + '">' +
+      '<label class="mu-sort"><span class="quiet">Sort</span><select id="mu-sort" aria-label="Sort songs">' + sortOpts + '</select></label>' +
+      '<span class="quiet mu-count">' + list.length + ' of ' + M.tracks.length + '</span></div>' + filt +
+      (shown.length ? '<div class="mu-table" role="table">' + head + '<div id="mu-list">' + rows + '</div></div>' : empty) + more;
+  }
+  function albumsHtml() {
+    var gs = albumGroups();
+    M.visible = gs.map(function (g) { return g.tracks[0].id; });
+    if (!gs.length) return '<div class="quiet mu-empty">No albums yet.</div>';
+    return '<div class="mu-cards">' + gs.map(function (g) {
+      var first = g.tracks[0];
+      return '<button class="mu-card" data-mu="filter" data-id="album" data-value="' + esc(g.name) + '" data-artist="' + esc(g.sub) + '">' +
+        coverHtml(first, 'mu-art') + '<div class="mu-card-title">' + esc(g.name) + '</div>' +
+        '<div class="quiet">' + esc(g.sub) + ' · ' + g.tracks.length + '</div></button>';
+    }).join('') + '</div>';
+  }
+  function artistsHtml() {
+    var gs = artistGroups();
+    if (!gs.length) return '<div class="quiet mu-empty">No artists yet.</div>';
+    return '<div class="mu-list-plain">' + gs.map(function (g) {
+      return '<button class="mu-artist" data-mu="filter" data-id="artist" data-value="' + esc(g.name) + '">' +
+        '<span class="mu-avatar">' + esc(g.name.charAt(0).toUpperCase()) + '</span>' +
+        '<span class="mu-artist-name">' + esc(g.name) + '</span><span class="quiet">' + g.tracks.length + ' song' + (g.tracks.length === 1 ? '' : 's') + '</span></button>';
+    }).join('') + '</div>';
   }
   function playlistsHtml() {
-    var form = '<form class="mu-newpl" data-mu-form="newpl"><input id="mu-plname" class="input" maxlength="60" placeholder="New playlist name" aria-label="New playlist name">' +
+    var form = '<form class="mu-newpl" data-mu-form="newpl"><input id="mu-plname" class="mu-search" maxlength="60" placeholder="New playlist name" aria-label="New playlist name">' +
       '<button class="btn" type="submit">Create</button></form>';
     var open = M.openPl ? M.playlists.find(function (x) { return x.id === M.openPl; }) : null;
     if (open) {
       var pid = esc(open.id);
-      var rows = open.trackIds.map(function (id) { return M.trackIndex.get(id); }).filter(Boolean).map(function (t) {
-        return '<div class="mu-row"><button class="mu-play-btn" data-mu="playPl" data-id="' + pid + '" data-id2="' + esc(t.id) + '" aria-label="Play ' + esc(t.title) + '">▶</button>' +
-          '<div class="mu-row-main"><div class="mu-row-title">' + esc(t.title) + '</div></div>' +
-          '<button class="btn ghost" data-mu="rmFromPl" data-id="' + pid + '" data-id2="' + esc(t.id) + '" aria-label="Remove ' + esc(t.title) + ' from playlist">Remove</button></div>';
+      var rows = open.trackIds.map(function (id) { return M.trackIndex.get(id); }).filter(Boolean).map(function (t, i) {
+        return '<div class="mu-row" role="row"><div class="mu-c-n"><span class="mu-num">' + (i + 1) + '</span>' +
+          '<button class="mu-play-btn" data-mu="playPl" data-id="' + pid + '" data-id2="' + esc(t.id) + '" aria-label="Play ' + esc(t.title) + '">▶</button></div>' +
+          '<div class="mu-c-t mu-track">' + coverHtml(t, 'mu-thumb') + '<div class="mu-track-text"><div class="mu-row-title">' + esc(t.title) + '</div>' +
+          '<div class="quiet mu-sub">' + esc(artistOf(t)) + '</div></div></div><div class="mu-c-d">' + timeOf(t) + '</div>' +
+          '<div class="mu-c-m"><button class="btn ghost" data-mu="rmFromPl" data-id="' + pid + '" data-id2="' + esc(t.id) + '" aria-label="Remove ' + esc(t.title) + ' from playlist">Remove</button></div></div>';
       }).join('');
-      return '<section class="panel"><div class="mu-head"><div><button class="btn ghost" data-mu="closePl">← Playlists</button>' +
-        '<div class="mu-title">' + esc(open.name) + '</div></div><div class="mu-actions">' +
-        '<button class="btn" data-mu="playPlAll" data-id="' + pid + '">Play all</button>' +
-        '<button class="btn ghost" data-mu="delPl" data-id="' + pid + '">Delete</button></div></div>' +
-        (rows || '<div class="quiet">Empty. Use "+ list" on a track in the Library.</div>') + '</section>';
+      M.visible = open.trackIds.slice(0, 50);
+      return '<div class="mu-head-row"><button class="btn ghost" data-mu="closePl">← All playlists</button>' +
+        '<div class="mu-actions"><button class="btn" data-mu="playPlAll" data-id="' + pid + '">Play</button>' +
+        '<button class="btn ghost mu-danger" data-mu="delPl" data-id="' + pid + '">Delete playlist</button></div></div>' +
+        '<h2 class="mu-h2">' + esc(open.name) + '</h2>' +
+        (rows ? '<div class="mu-table">' + rows + '</div>' : '<div class="quiet mu-empty">Empty. Use ⋯ on a song in Songs to add it here.</div>');
     }
     var list = M.playlists.length
-      ? M.playlists.map(function (p) {
+      ? '<div class="mu-cards">' + M.playlists.map(function (p) {
         var n = p.trackIds.length;
-        return '<button class="mu-pl" data-mu="openPl" data-id="' + esc(p.id) + '"><b>' + esc(p.name) + '</b><span class="quiet">' + n + ' track' + (n === 1 ? '' : 's') + '</span></button>';
-      }).join('')
-      : '<div class="quiet">No playlists yet.</div>';
-    return '<section class="panel">' + form + list + '</section>';
+        return '<button class="mu-card mu-card-pl" data-mu="openPl" data-id="' + esc(p.id) + '"><div class="mu-art mu-art-pl">♫</div>' +
+          '<div class="mu-card-title">' + esc(p.name) + '</div><div class="quiet">' + n + ' song' + (n === 1 ? '' : 's') + '</div></button>';
+      }).join('') + '</div>'
+      : '<div class="quiet mu-empty">No playlists yet.</div>';
+    return form + list;
   }
-
+  function queueHtml() {
+    var cur = M.queue[M.pos] ? M.trackIndex.get(M.queue[M.pos]) : null;
+    var next = M.queue.slice(M.pos + 1, M.pos + 201).map(function (id) { return M.trackIndex.get(id); }).filter(Boolean);
+    M.visible = next.map(function (t) { return t.id; });
+    if (!M.queue.length) return '<div class="quiet mu-empty">Nothing queued. Press play on a song.</div>';
+    return '<div class="mu-head-row"><h2 class="mu-h2">Queue</h2><button class="btn ghost" data-mu="clearQueue">Clear upcoming</button></div>' +
+      (cur ? '<div class="mu-sec">Now playing</div>' + '<div class="mu-table">' + songRow(cur, 0) + '</div>' : '') +
+      '<div class="mu-sec">Next up</div>' +
+      (next.length ? '<div class="mu-table">' + next.map(function (t, i) { return songRow(t, i + 1); }).join('') + '</div>'
+        : '<div class="quiet mu-empty">Nothing next. Turn on Repeat all or add songs.</div>');
+  }
   function barRow(label, value, ratio) {
-    return '<div class="mu-bar-row"><span class="mu-bl">' + label + '</span><div class="mu-bar"><i style="width:' +
+    return '<div class="mu-bar-row"><span class="mu-bl">' + label + '</span><div class="mu-meter"><i style="width:' +
       Math.max(3, Math.round(ratio * 100)) + '%"></i></div><b>' + value + '</b></div>';
   }
   function statsHtml() {
@@ -2854,50 +3108,115 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
     var hours = M.hours.map(function (v, h) {
       return '<div class="mu-hour" title="' + h + ':00 · ' + Math.round(v / 60) + ' min"><i style="height:' + Math.round(v / maxHour * 100) + '%"></i></div>';
     }).join('');
-    var empty = '<div class="quiet">Play a track for 30 seconds to start the stats.</div>';
+    var empty = '<div class="quiet">Play a song for 30 seconds to start the stats.</div>';
     return '<div class="mu-stats">' +
       '<section class="mu-grid">' + card('Total listening', fmtHM(total)) + card('Plays', M.plays.length) +
       card('Last 7 days', fmtHM(week)) + card('Day streak', streak + ' d') +
-      card('Tracks played', M.byTrack.size + ' / ' + M.tracks.length) + '</section>' +
-      '<section class="panel"><div class="mu-sec">Last 14 days</div>' +
+      card('Songs played', M.byTrack.size + ' / ' + M.tracks.length) + '</section>' +
+      '<section class="mu-panel"><div class="mu-sec">Last 14 days</div>' +
       days.map(function (x) { return barRow(esc(x.label), Math.round(x.sec / 60) + ' min', x.sec / maxDay); }).join('') + '</section>' +
-      '<section class="panel"><div class="mu-sec">Listening by hour</div><div class="mu-hours">' + hours + '</div>' +
+      '<section class="mu-panel"><div class="mu-sec">Listening by hour</div><div class="mu-hours">' + hours + '</div>' +
       '<div class="quiet mu-hl"><span>0h</span><span>12h</span><span>23h</span></div></section>' +
-      '<section class="panel"><div class="mu-sec">Most played</div>' +
+      '<section class="mu-panel"><div class="mu-sec">Most played</div>' +
       (top.length ? top.map(function (e, i) {
         return barRow((i + 1) + '. ' + esc(M.trackIndex.get(e[0]).title), e[1].count + ' plays', e[1].count / top[0][1].count);
       }).join('') : empty) + '</section>' +
-      '<section class="panel"><div class="mu-sec">Recently played</div>' +
+      '<section class="mu-panel"><div class="mu-sec">Recently played</div>' +
       (recent.length ? recent.map(function (e) {
-        return '<div class="mu-row"><div class="mu-row-main"><div class="mu-row-title">' + esc(M.trackIndex.get(e[0]).title) + '</div>' +
+        return '<div class="mu-row"><div class="mu-track-text"><div class="mu-row-title">' + esc(M.trackIndex.get(e[0]).title) + '</div>' +
           '<div class="quiet">' + esc(new Date(e[1].last).toLocaleString()) + '</div></div></div>';
       }).join('') : empty) + '</section>' +
-      '<div class="mu-actions"><button class="btn ghost" data-mu="clearStats">Clear listening history</button></div></div>';
+      '<div class="mu-actions"><button class="btn ghost mu-danger" data-mu="clearStats">Clear listening history</button></div></div>';
   }
 
-  function viewMusic() {
-    var tabs = [['library', 'Library'], ['playlists', 'Playlists'], ['stats', 'Stats']];
-    var tabBar = '<div class="mu-tabs" role="group" aria-label="Music sections">' + tabs.map(function (t) {
+  function playerBarHtml() {
+    var t = M.current ? M.trackIndex.get(M.current) : null;
+    var playing = !!t && !audio.paused && !audio.ended;
+    var rep = M.prefs.repeat;
+    var repLabel = rep === 'one' ? 'Repeat one' : rep === 'all' ? 'Repeat all' : 'Repeat off';
+    return '<section class="mu-dock" aria-label="Player">' +
+      '<div class="mu-bar-now">' + coverHtml(t, 'mu-bar-art') +
+        '<div class="mu-track-text"><div class="mu-title">' + (t ? esc(t.title) : 'Nothing playing') + '</div>' +
+        '<div class="quiet mu-sub">' + (t ? esc(artistOf(t)) : 'Pick a song to start') + '</div></div></div>' +
+      '<div class="mu-bar-ctl">' +
+        '<button class="mu-ib" data-mu="shuffle" aria-pressed="' + M.prefs.shuffle + '" aria-label="Shuffle">⤮</button>' +
+        '<button class="mu-ib" data-mu="prev" aria-label="Previous">⏮</button>' +
+        '<button class="mu-ib mu-big-play" data-mu="toggle" aria-label="' + (playing ? 'Pause' : 'Play') + '">' + (playing ? '❚❚' : '▶') + '</button>' +
+        '<button class="mu-ib" data-mu="next" aria-label="Next">⏭</button>' +
+        '<button class="mu-ib' + (rep !== 'off' ? ' on' : '') + '" data-mu="repeat" aria-label="' + repLabel + '">' + (rep === 'one' ? '↻1' : '↻') + '</button>' +
+      '</div>' +
+      '<div class="mu-bar-prog"><span class="quiet" id="mu-time">' + fmtTime(audio.currentTime) + '</span>' +
+        '<input type="range" id="mu-prog" class="mu-range" min="0" max="1000" value="' + (audio.duration ? Math.round(audio.currentTime / audio.duration * 1000) : 0) + '" aria-label="Seek position"' + (t ? '' : ' disabled') + '>' +
+        '<span class="quiet" id="mu-dur">' + fmtTime(audio.duration || (t ? t.duration : 0)) + '</span></div>' +
+      '<label class="mu-bar-vol"><span class="quiet">Vol</span><input type="range" id="mu-vol" min="0" max="100" value="' + Math.round(M.prefs.volume * 100) + '" aria-label="Volume"></label>' +
+      '</section>';
+  }
+
+  function header() {
+    var songs = M.tracks.length, albums = albumGroups().length, artists = artistGroups().length;
+    var total = M.tracks.reduce(function (a, t) { return a + (t.size || 0); }, 0);
+    var tagged = M.tracks.filter(function (t) { return t.tagsRead; }).length;
+    var prog = M.busy ? '<div class="quiet" role="status">' + (M.progress ? 'Adding ' + M.progress.done + ' of ' + M.progress.total + '…' : 'Working…') + '</div>' +
+      (M.progress ? '<progress class="mu-progress" max="' + M.progress.total + '" value="' + M.progress.done + '"></progress>' : '') : '';
+    var note = M.canRemember
+      ? 'Files stay where they are. Nothing is copied or uploaded.'
+      : 'This browser cannot remember files between visits. Use Chrome or Edge on desktop to keep your library.';
+    var titles = { songs: 'Songs', albums: 'Albums', artists: 'Artists', playlists: 'Playlists', queue: 'Queue', stats: 'Listening' };
+    var heroArt = coverHtml(songs ? M.tracks[0] : null, 'mu-hero-art');
+    return '<header class="mu-hero">' + heroArt +
+      '<div class="mu-hero-text"><div class="mu-eyebrow">Your library</div><h1 class="mu-h1">' + titles[M.tab] + '</h1>' +
+      '<div class="quiet">' + songs + ' song' + (songs === 1 ? '' : 's') + ' · ' + albums + ' album' + (albums === 1 ? '' : 's') + ' · ' +
+      artists + ' artist' + (artists === 1 ? '' : 's') + ' · ' + fmtBytes(total) + '</div>' +
+      '<div class="quiet mu-note">' + esc(note) + (songs && tagged < songs ? ' Tags read for ' + tagged + ' of ' + songs + '.' : '') + '</div>' +
+      '<div class="mu-actions">' +
+        '<button class="btn mu-primary" data-mu="playAll">Play</button>' +
+        '<button class="btn" data-mu="shuffleAll">Shuffle</button>' +
+        '<button class="btn" data-mu="pickFiles">Add MP3s</button>' +
+        (typeof window.showDirectoryPicker === 'function' ? '<button class="btn" data-mu="pickFolder">Add folder</button>' : '') +
+        (songs ? '<button class="btn ghost" data-mu="readTags">Read details</button>' : '') +
+      '</div>' + prog + '</div></header>';
+  }
+  function tabsHtml() {
+    var tabs = [['songs', 'Songs'], ['albums', 'Albums'], ['artists', 'Artists'], ['playlists', 'Playlists'], ['queue', 'Queue'], ['stats', 'Stats']];
+    return '<nav class="mu-tabs" aria-label="Music sections">' + tabs.map(function (t) {
       return '<button class="mu-tab' + (M.tab === t[0] ? ' on' : '') + '" data-mu="tab" data-id="' + t[0] + '" aria-pressed="' + (M.tab === t[0]) + '">' + t[1] + '</button>';
-    }).join('') + '</div>';
-    var body = M.tab === 'stats' ? statsHtml() : M.tab === 'playlists' ? playlistsHtml() : libraryHtml();
-    return '<div class="page mu-page"><div class="eyebrow">Music</div><div class="h1">Your MP3s, played in place</div>' +
-      '<div class="lead">Music plays from where it already is on your device. Only references and listening stats are kept.</div>' +
-      playerHtml() + tabBar + body +
-      (M.status ? '<div class="quiet mu-status" role="status">' + esc(M.status) + '</div>' : '') + '</div>';
+    }).join('') + '</nav>';
+  }
+  function viewMusic() {
+    M.visible = [];
+    var body;
+    if (M.tab === 'albums') body = albumsHtml();
+    else if (M.tab === 'artists') body = artistsHtml();
+    else if (M.tab === 'playlists') body = playlistsHtml();
+    else if (M.tab === 'queue') body = queueHtml();
+    else if (M.tab === 'stats') body = statsHtml();
+    else body = songsHtml();
+    queueCovers(M.visible.slice(0, 200));
+    return '<div class="page mu-page">' + header() + tabsHtml() + body +
+      (M.status ? '<div class="quiet mu-status" role="status">' + esc(M.status) + '</div>' : '') +
+      playerBarHtml() + '</div>';
   }
   window.viewMusic = viewMusic;
 
   // ---------- actions (delegated; no inline handlers, no user text in JS) ----------
   function validId(id) { return M.trackIndex.has(id) ? id : null; }
-  function act(a, id, id2) {
+  function act(a, el) {
+    var id = el.getAttribute('data-id'), id2 = el.getAttribute('data-id2');
     switch (a) {
-      case 'tab': M.tab = id; M.status = ''; return refreshView();
+      case 'tab': M.tab = id; M.status = ''; M.menuFor = null; return refreshView();
       case 'play': return startContext('library', null, validId(id));
-      case 'playAll':
-        if (!M.tracks.length) { say('Add some MP3 files first.'); return; }
-        var pick = M.prefs.shuffle ? M.tracks[Math.floor(Math.random() * M.tracks.length)] : M.tracks[0];
+      case 'playAll': {
+        var list = songList();
+        if (!list.length) { say('Add some MP3 files first.'); return; }
+        var pick = M.prefs.shuffle ? list[Math.floor(Math.random() * list.length)] : list[0];
         return startContext('library', null, pick.id);
+      }
+      case 'shuffleAll': {
+        if (!M.prefs.shuffle) { M.prefs.shuffle = true; savePrefs(); }
+        var all = songList();
+        if (!all.length) { say('Add some MP3 files first.'); return; }
+        return startContext('library', null, all[Math.floor(Math.random() * all.length)].id);
+      }
       case 'toggle': return togglePlay();
       case 'next': return nextTrack(false);
       case 'prev': return prevTrack();
@@ -2906,23 +3225,43 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
         M.prefs.repeat = { off: 'all', all: 'one', one: 'off' }[M.prefs.repeat];
         savePrefs(); return refreshView();
       case 'more': M.shown += PAGE; return refreshView();
+      case 'sort': {
+        if (M.sort.key === id) M.sort.dir = -M.sort.dir;
+        else M.sort = { key: id, dir: SORTS[id] ? SORTS[id][1] : 1 };
+        return refreshView();
+      }
+      case 'menu': M.menuFor = M.menuFor === id ? null : id; return refreshView();
+      case 'playNext': return playNext(id);
       case 'pickFiles': return pickFiles();
       case 'pickFolder': return pickFolder();
+      case 'readTags': return enrichTags(M.tracks.map(function (t) { return t.id; })).then(function () {
+        say('Details read for songs with access granted. Use Play on others to grant access.');
+      });
       case 'remove': return removeTrack(id);
-      case 'add': M.addFor = M.addFor === id ? null : id; return refreshView();
       case 'addTo': return addToPlaylist(id2, validId(id));
+      case 'filter':
+        M.filter = el.getAttribute('data-id') === 'album'
+          ? { type: 'album', value: el.getAttribute('data-value'), artist: el.getAttribute('data-artist') }
+          : { type: 'artist', value: el.getAttribute('data-value') };
+        M.tab = 'songs'; M.shown = PAGE; return refreshView();
+      case 'clearFilter': M.filter = null; return refreshView();
       case 'openPl': M.openPl = id; return refreshView();
       case 'closePl': M.openPl = null; return refreshView();
       case 'delPl': return deletePlaylist(id);
-      case 'playPl':
+      case 'playPl': {
         var pl = M.playlists.find(function (x) { return x.id === id; });
         return pl && startContext('playlist', pl.id, validId(id2));
-      case 'playPlAll':
+      }
+      case 'playPlAll': {
         var pa = M.playlists.find(function (x) { return x.id === id; });
         var firstId = pa && pa.trackIds.find(function (x) { return M.trackIndex.has(x); });
         if (!firstId) { say('Nothing to play in this playlist yet.'); return; }
         return startContext('playlist', pa.id, firstId);
+      }
       case 'rmFromPl': return removeFromPlaylist(id, id2);
+      case 'clearQueue':
+        M.queue = M.queue.slice(0, M.pos + 1);
+        return refreshView();
       case 'clearStats':
         if (!confirm('Clear all listening history? Your library and playlists stay.')) return;
         return tx('plays', 'readwrite', function (s) { s.plays.clear(); })
@@ -2937,7 +3276,7 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
   document.addEventListener('click', function (e) {
     var el = e.target && e.target.closest ? e.target.closest('[data-mu]') : null;
     if (!el || !el.closest('.mu-page')) return;
-    act(el.getAttribute('data-mu'), el.getAttribute('data-id'), el.getAttribute('data-id2'));
+    act(el.getAttribute('data-mu'), el);
   });
   document.addEventListener('change', function (e) {
     if (e.target && e.target.id === 'mu-file') {
@@ -2945,15 +3284,27 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
       addSessionFiles(input.files);
       input.value = '';
     }
+    if (e.target && e.target.id === 'mu-sort') {
+      var k = e.target.value;
+      if (SORTS[k]) M.sort = { key: k, dir: SORTS[k][1] };
+      refreshView();
+    }
   });
   document.addEventListener('input', function (e) {
     var t = e.target;
     if (!t) return;
     if (t.id === 'mu-prog') seekTo(t.value);
+    if (t.id === 'mu-vol') {
+      M.prefs.volume = Math.max(0, Math.min(1, Number(t.value) / 100));
+      audio.volume = M.prefs.volume;
+      savePrefs();
+    }
     if (t.id === 'mu-q') {
       M.query = t.value; M.shown = PAGE;
       var list = document.getElementById('mu-list');
-      if (list) list.innerHTML = libraryRows();
+      if (list) list.innerHTML = songList().slice(0, M.shown).map(function (s, i) { return songRow(s, i + 1); }).join('');
+      var count = document.querySelector('.mu-count');
+      if (count) count.textContent = songList().length + ' of ' + M.tracks.length;
     }
   });
   document.addEventListener('submit', function (e) {
@@ -2963,51 +3314,129 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
     var input = document.getElementById('mu-plname');
     createPlaylist(input ? input.value : '');
   });
+  // Keyboard: space play/pause, arrows seek, N/P next/previous (not while typing).
+  document.addEventListener('keydown', function (e) {
+    if (!onMusicPage()) return;
+    var tag = (e.target && e.target.tagName) || '';
+    if (/INPUT|TEXTAREA|SELECT|BUTTON/.test(tag) || (e.target && e.target.isContentEditable)) return;
+    if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+    else if (e.key === 'ArrowRight' && audio.duration) audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+    else if (e.key === 'ArrowLeft' && audio.duration) audio.currentTime = Math.max(0, audio.currentTime - 5);
+    else if (e.key === 'n' || e.key === 'N') nextTrack(false);
+    else if (e.key === 'p' || e.key === 'P') prevTrack();
+  });
 
   // ---------- start ----------
   window.addEventListener('pagehide', function () { finishSession(); });
   var style = document.createElement('style');
   style.id = 'music-css';
-  style.textContent =
-    '.mu-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}' +
-    '.mu-page{display:grid;gap:12px}' +
-    '.mu-tabs{display:flex;gap:6px;flex-wrap:wrap}' +
-    '.mu-tab{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;cursor:pointer}' +
-    '.mu-tab.on{color:var(--text);background:var(--panel);border-color:var(--accent)}' +
-    '.mu-player{display:grid;gap:10px}' +
-    '.mu-now{min-width:0}' +
-    '.mu-title{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-    '.mu-range{width:100%;accent-color:var(--accent);min-height:44px}' +
-    '.mu-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}' +
-    '.mu-controls .btn{min-height:44px}' +
-    '.mu-play{min-width:56px}' +
-    '.mu-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}' +
-    '.mu-actions{display:flex;gap:8px;flex-wrap:wrap}' +
-    '.mu-progress{width:100%;height:8px}' +
-    '.mu-list{display:grid;margin-top:8px}' +
-    '.mu-row{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);flex-wrap:wrap}' +
-    '.mu-row.now .mu-row-title{color:var(--accent)}' +
-    '.mu-play-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer;flex:0 0 44px}' +
-    '.mu-row-main{flex:1 1 180px;min-width:0}' +
-    '.mu-row-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-    '.mu-addbox{display:flex;gap:6px;flex-wrap:wrap;width:100%;padding:6px 0 8px 54px}' +
-    '.mu-pl{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:48px;padding:0 12px;margin-top:8px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--text);font:inherit;cursor:pointer}' +
-    '.mu-newpl{display:flex;gap:8px;flex-wrap:wrap}' +
-    '.mu-newpl .input{flex:1 1 200px;min-height:44px}' +
-    '.mu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}' +
-    '.mu-stat{padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}' +
-    '.mu-big{font-size:22px;font-weight:700}' +
-    '.mu-sec{font-weight:650;margin-bottom:8px}' +
-    '.mu-bar-row{display:grid;grid-template-columns:minmax(0,1fr) 2fr auto;gap:8px;align-items:center;padding:4px 0;font-size:13px}' +
-    '.mu-bl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-    '.mu-bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}' +
-    '.mu-bar i{display:block;height:100%;background:var(--accent)}' +
-    '.mu-hours{display:flex;align-items:flex-end;gap:3px;height:90px}' +
-    '.mu-hour{flex:1;height:100%;display:flex;align-items:flex-end}' +
-    '.mu-hour i{display:block;width:100%;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px}' +
-    '.mu-hl{font-size:12px;display:flex;justify-content:space-between}' +
-    '.mu-status{font-size:13px}' +
-    '@media (max-width:480px){.mu-bar-row{grid-template-columns:minmax(0,1fr) auto}.mu-bar{grid-column:1/-1;order:3}}';
+  style.textContent = [
+    '.mu-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}',
+    '.mu-page{display:grid;gap:14px;padding-bottom:104px;transform:none;animation:none}',
+    '.mu-hero{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;padding:8px 0}',
+    '.mu-hero-art{width:168px;height:168px;flex:0 0 168px;border-radius:14px;overflow:hidden}',
+    '.mu-hero-text{min-width:0;flex:1 1 260px;display:grid;gap:6px}',
+    '.mu-eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}',
+    '.mu-h1{margin:0;font-size:clamp(28px,4vw,44px);line-height:1.1;font-weight:750}',
+    '.mu-h2{margin:6px 0;font-size:22px;font-weight:700}',
+    '.mu-note{font-size:12px}',
+    '.mu-art,.mu-thumb,.mu-bar-art,.mu-hero-art{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 55%,#000),var(--panel));display:flex;align-items:center;justify-content:center;color:var(--text);font-weight:700;overflow:hidden;flex:0 0 auto}',
+    '.mu-art img,.mu-thumb img,.mu-bar-art img,.mu-hero-art img{width:100%;height:100%;object-fit:cover;display:block}',
+    '.mu-art{width:100%;aspect-ratio:1/1;border-radius:12px;font-size:40px}',
+    '.mu-thumb{width:44px;height:44px;border-radius:6px;font-size:16px}',
+    '.mu-bar-art{width:52px;height:52px;border-radius:8px;font-size:18px}',
+    '.mu-tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:8px}',
+    '.mu-tab{min-height:40px;padding:0 14px;border-radius:999px;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;cursor:pointer}',
+    '.mu-tab.on{color:var(--bg);background:var(--text)}',
+    '.mu-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}',
+    '.mu-search{flex:1 1 220px;min-height:42px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit}',
+    '.mu-sort{display:flex;gap:6px;align-items:center}',
+    '.mu-sort select{min-height:42px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit}',
+    '.mu-count{font-size:12px}',
+    '.mu-filter{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:12px;background:var(--panel);border:1px solid var(--line)}',
+    '.mu-table{display:grid;border-top:1px solid var(--line)}',
+    '.mu-thead,.mu-row{display:grid;grid-template-columns:64px minmax(0,3fr) minmax(0,2fr) 64px 150px 64px 44px;gap:10px;align-items:center;padding:6px 8px;position:relative}',
+    '.mu-thead{font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}',
+    '.mu-th{all:unset;cursor:pointer;font-weight:600}',
+    '.mu-th.on{color:var(--text)}',
+    '.mu-row{border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent);min-height:56px}',
+    '.mu-row:hover{background:color-mix(in srgb,var(--panel) 70%,transparent)}',
+    '.mu-row.now{color:var(--accent)}',
+    '.mu-row.now .mu-row-title{color:var(--accent)}',
+    '.mu-c-n{display:flex;align-items:center;gap:8px}',
+    '.mu-num{width:22px;text-align:right;color:var(--muted);font-size:13px}',
+    '.mu-play-btn{width:34px;height:34px;border-radius:50%;border:0;background:var(--accent);color:var(--bg);cursor:pointer;font-size:12px;flex:0 0 34px}',
+    '.mu-c-t.mu-track{display:flex;gap:12px;align-items:center;min-width:0}',
+    '.mu-track-text{min-width:0}',
+    '.mu-row-title,.mu-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.mu-sub{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.mu-c-al,.mu-c-q{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}',
+    '.mu-c-p,.mu-c-d{font-size:13px;color:var(--muted)}',
+    '.mu-more{width:36px;height:36px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer}',
+    '.mu-menu{grid-column:1/-1;display:grid;gap:8px;padding:12px;border-radius:12px;background:var(--panel);border:1px solid var(--line)}',
+    '.mu-menu-row{display:flex;gap:8px;flex-wrap:wrap}',
+    '.mu-menu-label{font-size:12px}',
+    '.mu-chips{display:flex;gap:6px;flex-wrap:wrap}',
+    '.mu-chip{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--text);font:inherit;cursor:pointer}',
+    '.mu-danger{color:var(--red,#e5484d)}',
+    '.mu-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}',
+    '.mu-card{all:unset;cursor:pointer;display:grid;gap:4px;padding:10px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}',
+    '.mu-card:hover{border-color:var(--accent)}',
+    '.mu-card-title{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.mu-art-pl{background:linear-gradient(135deg,var(--accent),var(--panel))}',
+    '.mu-list-plain{display:grid;border-top:1px solid var(--line)}',
+    '.mu-artist{all:unset;cursor:pointer;display:flex;gap:12px;align-items:center;min-height:56px;padding:8px;border-bottom:1px solid var(--line)}',
+    '.mu-artist:hover{background:var(--panel)}',
+    '.mu-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 55%,#000),var(--panel));display:flex;align-items:center;justify-content:center;font-weight:700}',
+    '.mu-artist-name{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.mu-newpl{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}',
+    '.mu-newpl .mu-search{flex:1 1 220px}',
+    '.mu-head-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}',
+    '.mu-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}',
+    '.mu-primary{background:var(--accent);color:var(--bg);border-color:transparent}',
+    '.mu-sec{font-weight:700;margin:12px 0 6px}',
+    '.mu-empty{padding:24px 0}',
+    '.mu-stats{display:grid;gap:14px}',
+    '.mu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}',
+    '.mu-stat{padding:14px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}',
+    '.mu-big{font-size:24px;font-weight:750}',
+    '.mu-panel{padding:14px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}',
+    '.mu-bar-row{display:grid;grid-template-columns:minmax(0,1fr) 2fr auto;gap:8px;align-items:center;padding:4px 0;font-size:13px}',
+    '.mu-bl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '.mu-meter{height:8px;border-radius:99px;background:var(--line);overflow:hidden}',
+    '.mu-meter i{display:block;height:100%;background:var(--accent)}',
+    '.mu-hours{display:flex;align-items:flex-end;gap:3px;height:90px}',
+    '.mu-hour{flex:1;height:100%;display:flex;align-items:flex-end}',
+    '.mu-hour i{display:block;width:100%;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px}',
+    '.mu-hl{font-size:12px;display:flex;justify-content:space-between}',
+    '.mu-status{font-size:13px}',
+    '.mu-dock{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:center;padding:10px 16px;background:color-mix(in srgb,var(--panel) 92%,#000);border-top:1px solid var(--line);backdrop-filter:blur(8px)}',
+    '.mu-bar-now{display:flex;gap:12px;align-items:center;min-width:0}',
+    '.mu-bar-ctl{display:flex;gap:6px;align-items:center;justify-content:center}',
+    '.mu-ib{width:40px;height:40px;border-radius:50%;border:0;background:transparent;color:var(--text);font-size:16px;cursor:pointer}',
+    '.mu-ib[aria-pressed="true"],.mu-ib.on{color:var(--accent)}',
+    '.mu-big-play{width:46px;height:46px;background:var(--text);color:var(--bg)}',
+    '.mu-bar-prog{grid-column:1/-1;display:flex;gap:10px;align-items:center;font-size:12px}',
+    '.mu-range{flex:1;width:100%;accent-color:var(--accent);min-height:28px}',
+    '.mu-bar-vol{grid-column:3;grid-row:1;display:flex;gap:8px;align-items:center;justify-content:flex-end}',
+    '@media (min-width:900px){.mu-dock{left:240px}}',
+    '.mu-bar-vol input{width:110px;accent-color:var(--accent)}',
+    '.mu-progress{width:100%;height:8px}',
+    '@media (max-width:900px){.mu-c-q{display:none}.mu-thead,.mu-row{grid-template-columns:56px minmax(0,3fr) minmax(0,2fr) 56px 64px 44px}}',
+    '@media (max-width:640px){',
+      '.mu-hero-art{width:112px;height:112px;flex-basis:112px}',
+      '.mu-c-al,.mu-c-p{display:none}',
+      '.mu-thead,.mu-row{grid-template-columns:50px minmax(0,1fr) 56px 36px;gap:8px;padding:6px 4px}',
+      '.mu-num{display:none}',
+      '.mu-thead .mu-c-d{display:none}',
+      '.mu-dock{grid-template-columns:minmax(0,1fr) auto;padding:8px 10px}',
+      '.mu-bar-vol{display:none}',
+      '.mu-bar-ctl .mu-ib[data-mu="shuffle"],.mu-bar-ctl .mu-ib[data-mu="repeat"]{display:none}',
+      '.mu-bar-ctl{justify-content:flex-end}',
+      '.mu-bar-now{grid-column:1/2}',
+      '.mu-cards{grid-template-columns:repeat(2,minmax(0,1fr))}',
+    '}'
+  ].join('');
   document.head.appendChild(style);
 
   loadPrefs();
