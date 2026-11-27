@@ -301,7 +301,7 @@ html[data-theme="light"] .grid > *{min-width:0}
 .appearance-control{min-width:0;max-width:100%;width:min(100%,560px)}.ambient-controls{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px 12px;align-items:center;min-width:0;max-width:100%;width:100%}.ambient-select{min-width:0;width:100%}.ambient-control{display:grid;grid-template-columns:auto minmax(0,1fr) 42px;gap:8px;align-items:center;min-width:0;width:100%}.ambient-control input[type=range]{width:100%;min-width:0;max-width:100%;accent-color:var(--accent)}.ambient-output{min-width:42px;text-align:right;font-size:11px;color:var(--muted2);font-variant-numeric:tabular-nums}.focus-sound-controls{display:grid;grid-template-columns:minmax(130px,160px) minmax(0,110px) auto minmax(0,1fr);gap:7px;align-items:center;min-width:0;max-width:100%;width:min(100%,560px)}.focus-sound-controls select,.focus-sound-controls input{min-width:0;max-width:100%;width:100%}.focus-sound-state{font-size:11px;color:var(--muted2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:860px){.appearance-control{width:100%}.ambient-controls{grid-template-columns:1fr}.focus-sound-controls{grid-template-columns:minmax(0,1fr) minmax(0,100px);}.focus-sound-controls button{justify-self:start}.focus-sound-state{grid-column:1 / -1}}
 @media (max-width:620px){.ambient-control{grid-template-columns:auto minmax(0,1fr) 42px}.focus-sound-controls{grid-template-columns:1fr 90px}.focus-sound-controls button{width:100%}}
-\n/* Unified dropdown polish: consistent compact controls everywhere without changing native option behavior. */
+/* Unified dropdown polish: consistent compact controls everywhere without changing native option behavior. */
 select{
   -webkit-appearance:none !important;
   appearance:none !important;
@@ -312,12 +312,11 @@ select{
   border:1px solid #2b3038 !important;
   border-radius:10px !important;
   background-color:#111419 !important;
-  background-image:
-    linear-gradient(45deg,transparent 50%,#8f97a4 50%),
-    linear-gradient(135deg,#8f97a4 50%,transparent 50%) !important;
-  background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50% !important;
-  background-size:5px 5px !important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238f97a4' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-position:right 13px center !important;
+  background-size:12px 8px !important;
   background-repeat:no-repeat !important;
+  color-scheme:dark;
   color:#f0eee8 !important;
   line-height:1.2;
   box-shadow:0 1px 0 rgba(255,255,255,.02) inset;
@@ -345,12 +344,18 @@ html[data-theme="light"] select{
   background-color:#fff !important;
   color:#20242a !important;
   border-color:#cfd5dd !important;
-  background-image:
-    linear-gradient(45deg,transparent 50%,#66707d 50%),
-    linear-gradient(135deg,#66707d 50%,transparent 50%) !important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2366707d' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  color-scheme:light;
 }
 html[data-theme="light"] select:hover{background-color:#f7f8fa !important;border-color:#bcc4ce !important}
 html[data-theme="light"] select option{background:#fff;color:#20242a}
+
+/* Professional controls: primary actions use a neutral ink, not the theme accent. Accent stays on .btn.accent. */
+.btn.primary,html .btn.primary{background:#e9e8e3;color:#16181c;border-color:#e9e8e3;box-shadow:none}
+.btn.primary:hover{background:#ffffff;border-color:#ffffff;box-shadow:none}
+html[data-theme="light"] .btn.primary,html[data-theme="light"] .btn.primary:hover{background:#1d2129;color:#ffffff;border-color:#1d2129;box-shadow:none}
+html[data-theme="light"] .btn.primary:hover{background:#2c313b;border-color:#2c313b}
+html[data-theme="light"] select[style*="background:#0f1216"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2366707d' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;background-position:right 13px center !important;background-size:12px 8px !important;background-repeat:no-repeat !important}
 
 /* Requested UI fixes — scoped to planning, habits, goals, calendar, legal and notes. */
 .plan-row .row-actions{align-items:center;justify-content:flex-end;min-width:170px}
