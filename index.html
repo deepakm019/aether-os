@@ -2518,11 +2518,11 @@ html[data-theme="light"] .row-title{color:#0f1216;font-weight:700}
     tab: 'songs', openPl: null, query: '', shown: PAGE, menuFor: null,
     sort: { key: 'title', dir: 1 }, filter: null, status: '', busy: false, progress: null,
     canRemember: typeof window.showOpenFilePicker === 'function',
-    prefs: { shuffle: false, repeat: 'off', volume: 1, eq: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], preset: 'flat', crossfade: 0 }
+    prefs: { shuffle: false, repeat: 'off', volume: 1, eq: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], preset: 'flat', crossfade: 0, viz: 'bars' }
   };
   // Playback deck: cur plays now, nxt is already scheduled on the audio clock.
   var DECK = { cur: null, nxt: null, playing: false, pausedPos: 0, timer: null, silent: null };
-  var ctx = null, eqIn = null, master = null, eqNodes = [];
+  var ctx = null, eqIn = null, master = null, eqNodes = [], analyser = null;
 
   // ---------- helpers ----------
   function esc(s) {
@@ -3047,9 +3047,56 @@ html[data-theme="light"] .row-title{color:#0f1216;font-weight:700}
       last = b;
       return b;
     });
-    last.connect(master);
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.8;
+    last.connect(analyser);
+    analyser.connect(master);
     master.connect(ctx.destination);
     return ctx;
+  }
+  // ---------- Visualiser: Winamp-style spectrum bars with falling peaks, or an oscilloscope ----------
+  var vizPeaks = new Float32Array(48), vizRaf = 0;
+  function drawViz() {
+    vizRaf = requestAnimationFrame(drawViz);
+    var c = document.getElementById('mu-viz');
+    if (!c) return;
+    var mode = M.prefs.viz || 'bars';
+    if (mode === 'off') return;
+    var dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+    if (!w || !h) return;
+    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+    var g = c.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = '#07090b'; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(255,255,255,0.035)';
+    for (var y = 0; y < h; y += 3) g.fillRect(0, y, w, 1);
+    if (mode === 'scope') {
+      var td = new Uint8Array(analyser ? analyser.fftSize : 1024);
+      if (analyser) analyser.getByteTimeDomainData(td); else td.fill(128);
+      g.beginPath();
+      for (var i = 0; i < td.length; i++) {
+        var x = i / (td.length - 1) * w, yy = (1 - td[i] / 255) * h;
+        if (i === 0) g.moveTo(x, yy); else g.lineTo(x, yy);
+      }
+      g.strokeStyle = '#3ddc84'; g.lineWidth = 1.6; g.shadowColor = '#3ddc84'; g.shadowBlur = 6; g.stroke(); g.shadowBlur = 0;
+      return;
+    }
+    var BARS = 48, fd = new Uint8Array(analyser ? analyser.frequencyBinCount : BARS);
+    if (analyser) analyser.getByteFrequencyData(fd);
+    var gap = 2, bw = (w - gap * (BARS - 1)) / BARS;
+    var grad = g.createLinearGradient(0, h, 0, 0);
+    grad.addColorStop(0, '#3ddc84'); grad.addColorStop(0.6, '#f5c542'); grad.addColorStop(1, '#ff4d4d');
+    for (var b = 0; b < BARS; b++) {
+      // log-spaced bands, so the low end gets narrow bars of its own
+      var lo = Math.floor(Math.pow(b / BARS, 2) * fd.length * 0.8);
+      var hi = Math.max(lo + 1, Math.floor(Math.pow((b + 1) / BARS, 2) * fd.length * 0.8));
+      var sum = 0; for (var k = lo; k < hi; k++) sum += fd[k];
+      var bh = Math.max(1, sum / (hi - lo) / 255 * h), bx = b * (bw + gap);
+      g.fillStyle = grad; g.fillRect(bx, h - bh, bw, bh);
+      vizPeaks[b] = Math.max(bh, vizPeaks[b] - 0.6);
+      g.fillStyle = '#ffffff'; g.fillRect(bx, h - vizPeaks[b] - 2, bw, 2);
+    }
   }
   async function getBuffer(t) {
     if (M.buffers.has(t.id)) { var hit = M.buffers.get(t.id); M.buffers.delete(t.id); M.buffers.set(t.id, hit); return hit; }
@@ -3502,7 +3549,7 @@ html[data-theme="light"] .row-title{color:#0f1216;font-weight:700}
     var st = M.byTrack.get(t.id), plays = st ? st.count : 0;
     var id = esc(t.id), name = esc(t.title), now = M.current === t.id;
     return '<div class="mu-row' + (now ? ' now' : '') + '" role="row">' +
-      '<div class="mu-c-n"><span class="mu-num">' + n + '</span><button class="mu-play-btn" data-mu="play" data-id="' + id + '" aria-label="Play ' + name + '">▶</button></div>' +
+      '<div class="mu-c-n"><span class="mu-num">' + n + '</span><button class="mu-play-btn" data-mu="play" data-id="' + id + '" aria-label="Play ' + name + '">' + ico('play') + '</button></div>' +
       '<div class="mu-c-t mu-track">' + coverHtml(t, 'mu-thumb') +
         '<div class="mu-track-text"><div class="mu-row-title">' + name + '</div><div class="quiet mu-sub">' + esc(artistOf(t)) + '</div></div></div>' +
       '<div class="mu-c-al quiet">' + esc(albumOf(t)) + '</div>' +
@@ -3582,7 +3629,7 @@ html[data-theme="light"] .row-title{color:#0f1216;font-weight:700}
       var pid = esc(open.id);
       var rows = open.trackIds.map(trackById).filter(Boolean).map(function (t, i) {
         return '<div class="mu-row" role="row"><div class="mu-c-n"><span class="mu-num">' + (i + 1) + '</span>' +
-          '<button class="mu-play-btn" data-mu="playPl" data-id="' + pid + '" data-id2="' + esc(t.id) + '" aria-label="Play ' + esc(t.title) + '">▶</button></div>' +
+          '<button class="mu-play-btn" data-mu="playPl" data-id="' + pid + '" data-id2="' + esc(t.id) + '" aria-label="Play ' + esc(t.title) + '">' + ico('play') + '</button></div>' +
           '<div class="mu-c-t mu-track">' + coverHtml(t, 'mu-thumb') + '<div class="mu-track-text"><div class="mu-row-title">' + esc(t.title) + '</div>' +
           '<div class="quiet mu-sub">' + esc(artistOf(t)) + '</div></div></div><div class="mu-c-d">' + timeOf(t) + '</div>' +
           '<div class="mu-c-m"><button class="btn ghost" data-mu="rmFromPl" data-id="' + pid + '" data-id2="' + esc(t.id) + '" aria-label="Remove ' + esc(t.title) + ' from playlist">Remove</button></div></div>';
@@ -3689,6 +3736,18 @@ html[data-theme="light"] .row-title{color:#0f1216;font-weight:700}
       '<label class="mu-xf"><span>Crossfade: ' + (M.prefs.crossfade ? M.prefs.crossfade + ' s' : 'off (gapless)') + '</span>' +
       '<input type="range" id="mu-xf" min="0" max="12" step="1" value="' + M.prefs.crossfade + '" aria-label="Crossfade seconds"></label></section>';
   }
+  var MU_ICON_PATHS = {
+    play: '<path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/>',
+    pause: '<path d="M6.5 5h4v14h-4zM13.5 5h4v14h-4z" fill="currentColor"/>',
+    prev: '<path d="M6 5.5h2.2v13H6zM19 6.2v11.6L10.4 12z" fill="currentColor"/>',
+    next: '<path d="M15.8 5.5H18v13h-2.2zM5 6.2v11.6L13.6 12z" fill="currentColor"/>',
+    shuffle: '<path d="M3 6h3.5c3 0 4.5 2 6 5s3 6 6 6H21M3 18h3.5c2.2 0 3.6-1 4.7-2.6M14.2 8.6C15.3 7 16.7 6 18.5 6H21M18.5 3.5L21 6l-2.5 2.5M18.5 15.5L21 18l-2.5 2.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+    repeat: '<path d="M4 12V10a3 3 0 0 1 3-3h11M15 4l3 3-3 3M20 12v2a3 3 0 0 1-3 3H6M9 21l-3-3 3-3" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+    repeatOne: '<path d="M4 12V10a3 3 0 0 1 3-3h11M15 4l3 3-3 3M20 12v2a3 3 0 0 1-3 3H6M9 21l-3-3 3-3" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><text x="12" y="15" font-size="8" font-weight="700" text-anchor="middle" fill="currentColor" font-family="system-ui,sans-serif">1</text>',
+    eq: '<path d="M5 4v16M12 4v16M19 4v16M3 15h4M10 8h4M17 12h4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+    viz: '<path d="M3 12h2l2-6 3 12 3-9 2 5 2-2h4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>'
+  };
+  function ico(name) { return '<svg class="mu-ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">' + MU_ICON_PATHS[name] + '</svg>'; }
   function playerBarHtml() {
     var t = M.current ? trackById(M.current) : null;
     var state = DECK.playing ? 'playing' : (DECK.cur ? 'paused' : 'idle');
@@ -3700,17 +3759,19 @@ html[data-theme="light"] .row-title{color:#0f1216;font-weight:700}
         '<div class="mu-track-text"><div class="mu-title">' + (t ? esc(t.title) : 'Nothing playing') + '</div>' +
         '<div class="quiet mu-sub">' + (t ? esc(artistOf(t)) : 'Pick a song to start') + '</div></div></div>' +
       '<div class="mu-bar-ctl">' +
-        '<button class="mu-ib" data-mu="shuffle" aria-pressed="' + M.prefs.shuffle + '" aria-label="Shuffle">⤮</button>' +
-        '<button class="mu-ib" data-mu="prev" aria-label="Previous">⏮</button>' +
-        '<button class="mu-ib mu-big-play" data-mu="toggle" aria-label="' + (DECK.playing ? 'Pause' : 'Play') + '">' + (DECK.playing ? '❚❚' : '▶') + '</button>' +
-        '<button class="mu-ib" data-mu="next" aria-label="Next">⏭</button>' +
-        '<button class="mu-ib' + (rep !== 'off' ? ' on' : '') + '" data-mu="repeat" aria-label="' + repLabel + '">' + (rep === 'one' ? '↻1' : '↻') + '</button>' +
-        '<button class="mu-ib' + (M.eqOpen ? ' on' : '') + '" data-mu="eqToggle" aria-pressed="' + M.eqOpen + '" aria-label="Equalizer">EQ</button>' +
+        '<button class="mu-ib" data-mu="shuffle" aria-pressed="' + M.prefs.shuffle + '" aria-label="Shuffle">' + ico('shuffle') + '</button>' +
+        '<button class="mu-ib" data-mu="prev" aria-label="Previous">' + ico('prev') + '</button>' +
+        '<button class="mu-ib mu-big-play" data-mu="toggle" aria-label="' + (DECK.playing ? 'Pause' : 'Play') + '">' + (DECK.playing ? ico('pause') : ico('play')) + '</button>' +
+        '<button class="mu-ib" data-mu="next" aria-label="Next">' + ico('next') + '</button>' +
+        '<button class="mu-ib' + (rep !== 'off' ? ' on' : '') + '" data-mu="repeat" aria-label="' + repLabel + '">' + (rep === 'one' ? ico('repeatOne') : ico('repeat')) + '</button>' +
+        '<button class="mu-ib' + (M.prefs.viz !== 'off' ? ' on' : '') + '" data-mu="viz" aria-label="Visualiser: ' + (M.prefs.viz === 'scope' ? 'oscilloscope' : M.prefs.viz === 'off' ? 'off' : 'spectrum bars') + '">' + ico('viz') + '</button>' +
+        '<button class="mu-ib' + (M.eqOpen ? ' on' : '') + '" data-mu="eqToggle" aria-pressed="' + M.eqOpen + '" aria-label="Equalizer">' + ico('eq') + '</button>' +
       '</div>' +
       '<div class="mu-bar-prog"><span class="quiet" id="mu-time">' + fmtTime(cur) + '</span>' +
         '<input type="range" id="mu-prog" class="mu-range" min="0" max="1000" value="' + (d ? Math.round(cur / d * 1000) : 0) + '" aria-label="Seek position"' + (t ? '' : ' disabled') + '>' +
         '<span class="quiet" id="mu-dur">' + fmtTime(d || (t ? t.duration : 0)) + '</span></div>' +
       '<label class="mu-bar-vol"><span class="quiet">Vol</span><input type="range" id="mu-vol" min="0" max="100" value="' + Math.round(M.prefs.volume * 100) + '" aria-label="Volume"></label>' +
+      (M.prefs.viz === 'off' ? '' : '<div class="mu-viz-row"><canvas id="mu-viz" class="mu-viz" role="img" aria-label="Audio visualiser"></canvas></div>') +
       '</section>';
   }
   function header() {
@@ -3744,6 +3805,7 @@ html[data-theme="light"] .row-title{color:#0f1216;font-weight:700}
   }
   function viewMusic() {
     M.visible = [];
+    if (!vizRaf) vizRaf = requestAnimationFrame(drawViz);
     var body;
     if (M.tab === 'albums') body = albumsHtml();
     else if (M.tab === 'artists') body = artistsHtml();
@@ -3786,6 +3848,7 @@ html[data-theme="light"] .row-title{color:#0f1216;font-weight:700}
         M.prefs.repeat = { off: 'all', all: 'one', one: 'off' }[M.prefs.repeat];
         savePrefs(); return refreshView();
       case 'eqToggle': M.eqOpen = !M.eqOpen; return refreshView();
+      case 'viz': M.prefs.viz = { bars: 'scope', scope: 'off', off: 'bars' }[M.prefs.viz || 'bars']; savePrefs(); return refreshView();
       case 'eqReset': applyPreset('flat'); return refreshView();
       case 'more': M.shown += PAGE; return refreshView();
       case 'sort': {
@@ -4017,6 +4080,10 @@ html[data-theme="light"] .row-title{color:#0f1216;font-weight:700}
     '.mu-ib{width:40px;height:40px;border-radius:50%;border:0;background:transparent;color:var(--text);font-size:15px;cursor:pointer}',
     '.mu-ib[aria-pressed="true"],.mu-ib.on{color:var(--accent)}',
     '.mu-big-play{width:46px;height:46px;background:var(--text);color:var(--bg)}',
+    '.mu-ib .mu-ico{display:block;margin:auto}',
+    '.mu-viz-row{grid-column:1 / -1;height:56px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}',
+    '.mu-viz{display:block;width:100%;height:100%}',
+    '@media (max-width:700px){.mu-viz-row{height:44px}}',
     '.mu-bar-prog{grid-column:1/-1;display:flex;gap:10px;align-items:center;font-size:12px}',
     '.mu-range{flex:1;width:100%;accent-color:var(--accent);min-height:28px}',
     '.mu-bar-vol{grid-column:3;grid-row:1;display:flex;gap:8px;align-items:center;justify-content:flex-end}',
