@@ -57,6 +57,8 @@ def test_minimal_matches_main_theme_and_font_and_returns_cleanly(app_server):
         assert back["bg"] == normal["bg"] and back["font"] == normal["font"], back
         page.evaluate("() => setNav('today')")
         page.wait_for_timeout(300)
-        assert page.locator(".top3-row").count() == 3, "saved tasks should be back after returning"
+        page.evaluate("() => setNav('work')")
+        page.wait_for_timeout(300)
+        assert page.locator(".task-card").count() > 0, "saved tasks should be back after returning"
         assert errors == [], errors
         browser.close()

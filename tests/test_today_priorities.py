@@ -1,4 +1,4 @@
-"""Today's Top 3 reads as one ranked list: numbered rows, one 'Next' task, priority colour and friendly due dates."""
+"""Today's morning card lists the day's priorities: numbered rows, the first one highlighted, each with a Focus action."""
 from playwright.sync_api import sync_playwright
 
 
@@ -18,29 +18,28 @@ def _open_today(browser, url):
     return page, errors
 
 
-def test_top3_is_numbered_marks_one_next_task_and_uses_friendly_due_labels(app_server):
+def test_priorities_are_numbered_first_is_marked_and_each_has_focus(app_server):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
         page, errors = _open_today(browser, app_server)
-        section = page.locator("section", has=page.locator("#top-today-title"))
-        rows = section.locator(".top3-row")
+        assert page.locator("#top-today-title").count() == 0, "the Top 3 panel should be gone"
+
+        # Save today's check-in with the wizard's default priorities.
+        page.click("button[onclick*='morningWizard']")
+        page.wait_for_selector("#modal form")
+        page.evaluate("() => document.querySelector('#modal form').requestSubmit()")
+        page.wait_for_selector(".plan-priority")
+
+        rows = page.locator(".plan-priority")
         count = rows.count()
         assert 1 <= count <= 3, count
 
-        ranks = [rows.nth(i).locator(".top3-rank").text_content().strip() for i in range(count)]
+        ranks = [rows.nth(i).locator(".plan-rank").text_content().strip() for i in range(count)]
         assert ranks == [str(i + 1) for i in range(count)], ranks
 
-        assert section.locator(".top3-next").count() == 1, "exactly one task should be marked Next"
-
-        metas = [rows.nth(i).locator(".row-meta").text_content().strip() for i in range(count)]
-        for meta in metas:
-            assert meta.split(" · ")[0] in ("High", "Medium", "Low"), meta
-        joined = " | ".join(metas)
-        assert "Due today" in joined or "Overdue" in joined or "Due " in joined, joined
-        assert "2026-" not in joined, f"raw ISO dates should not show: {joined}"
+        assert page.locator(".plan-priority.is-first").count() == 1, "exactly one priority should be marked first"
 
         for i in range(count):
-            label = rows.nth(i).get_by_role("button", name="Start focus on")
-            assert label.count() == 1, "each row should have a labelled Start focus action"
+            assert rows.nth(i).locator("button", has_text="Focus").count() == 1, "each priority needs a Focus action"
         assert errors == [], errors
         browser.close()
