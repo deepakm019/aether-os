@@ -114,3 +114,34 @@ def test_reset_all_expenses_and_new_category(app_server):
         assert "prompt" not in dialogs, dialogs
         assert not errors, errors[:3]
         browser.close()
+
+
+def test_category_items_sort_by_due_date_with_overdue_red(app_server):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
+        page, errors, dialogs = _open_money(browser, app_server)
+        page.locator(".budget-row").first.click()
+        page.wait_for_selector("#modal .budget-popup")
+
+        def add(title, due):
+            page.fill("#modal input[name=title]", title)
+            page.fill("#modal input[name=amount]", "100")
+            page.fill("#modal input[name=next]", due)
+            page.get_by_role("button", name="Add item").click()
+            page.wait_for_selector(f"#modal .bp-item:has-text('{title}')")
+
+        # Added out of order on purpose: far future, then overdue, then near future.
+        add("Far future bill", "2027-03-01")
+        add("Overdue bill", "2026-11-10")
+        add("Soon bill", "2026-12-03")
+
+        names = page.locator("#modal .bp-item .bp-name").all_inner_texts()
+        order = [n for n in names if n in ("Overdue bill", "Soon bill", "Far future bill")]
+        assert order == ["Overdue bill", "Soon bill", "Far future bill"], names
+
+        overdue_tag = page.locator("#modal .bp-item", has_text="Overdue bill").locator(".due-overdue")
+        assert overdue_tag.count() == 1
+        assert "Overdue" in overdue_tag.inner_text()
+        assert overdue_tag.evaluate("e => getComputedStyle(e).color") == "rgb(229, 72, 77)"
+        assert not errors, errors[:3]
+        browser.close()

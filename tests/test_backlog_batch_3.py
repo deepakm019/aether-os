@@ -68,11 +68,12 @@ PRIO = {"High": 0, "Medium": 1, "Low": 2}
 
 def expected_order(tasks, status):
     rows = [t for t in tasks if t.get("status") == status]
+    # Due date ascending first (undated last), then urgency, importance and priority.
     rows.sort(key=lambda t: (
+        t.get("due") or "9999-12-31",
         0 if t.get("urgent") else 1,
         0 if t.get("important") else 1,
         PRIO.get(t.get("priority"), 1),
-        t.get("due") or "9999-12-31",
     ))
     return [t["title"] for t in rows]
 
