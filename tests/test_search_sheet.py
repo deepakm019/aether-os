@@ -94,8 +94,8 @@ def run():
         page.wait_for_timeout(150)
         page.locator("[data-action=search-open]").first.click()
         page.wait_for_timeout(300)
-        check("Open on a result opens the task inspector",
-              "Finish proposal" in page.locator("#drawer").inner_text())
+        check("Open on a result opens the task popup",
+              "Finish proposal" in page.locator("#modal .task-popup").inner_text())
         open_sheet(page)
         most = page.locator(".search-row .row-title").all_inner_texts()
         check("'Most used' lists the opened task first", bool(most) and most[0] == "Finish proposal", str(most))

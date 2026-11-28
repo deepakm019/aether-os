@@ -62,8 +62,8 @@ with sync_playwright() as p:
     pg.evaluate("globalSearch()"); pg.wait_for_timeout(250); pg.fill("#search-input","proposal"); pg.wait_for_timeout(250)
     check("search finds task", pg.get_by_text("Finish proposal").count()>=1)
     pg.locator("[data-action=search-open]").first.click(); pg.wait_for_timeout(300)
-    check("search result opens inspector", "Finish proposal" in pg.locator("#drawer").inner_text())
-    pg.evaluate("closeDrawer()")
+    check("search result opens the task popup", "Finish proposal" in pg.locator("#modal .task-popup").inner_text())
+    pg.evaluate("closeModal()")
     # Calendar
     nav(pg,"calendar"); h1=pg.locator(".panel-header h2").first.inner_text()
     pg.get_by_role("button",name="Next month").click(); pg.wait_for_timeout(200)
@@ -80,7 +80,7 @@ with sync_playwright() as p:
     check("reminder created and snoozed", r and r[0]["status"]=="scheduled" and r[0].get("snoozedUntil"))
     # Task completion
     nav(pg,"work"); pg.evaluate("inspect('task','tsk_docs')"); pg.wait_for_timeout(250)
-    xp0=ws(pg)["xp"]; pg.locator("#drawer").get_by_role("button",name="Complete",exact=True).click(); pg.wait_for_timeout(300)
+    xp0=ws(pg)["xp"]; pg.locator("#modal .task-popup").get_by_role("button",name="Complete",exact=True).click(); pg.wait_for_timeout(300)
     s=ws(pg); t=[x for x in s["tasks"] if x["id"]=="tsk_docs"][0]
     check("task completed with XP", t["status"]=="Completed" and s["xp"]>xp0, f"xp {xp0}->{s['xp']}")
     # Settings: hide amounts, theme, accent
