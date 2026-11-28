@@ -3996,6 +3996,340 @@ html[data-theme="light"] .row-title{color:#0f1216;font-weight:700}
   refresh().then(refreshView);
 })();
 </script>
+<script id="diet-module">
+(() => {
+'use strict';
+// Diet reference: static, local-only food notes. Figures are approximate; no network, no storage.
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CATEGORIES = [
+  'Everyday Indian Staples', 'Dry Fruits & Nuts', 'Fruits, Vegetables & Spices', 'Spices & Herbs',
+  'Daily Foods & Drinks', 'Fast Food & Street Snacks', 'Occasional Treats', 'Dairy & Desserts'
+];
+const ITEMS = [
+  {id:'food_001',name:'Roti (Chapati)',cat:'Everyday Indian Staples',portion:'1 piece (40g)',kcal:120,protein:3.1,
+   benefits:['Complex carbs and B vitamins for sustained energy.','Jowar/Bajra variations add fiber and aid digestion.'],
+   watch:['Refined wheat (maida) versions can spike blood sugar.'],
+   dos:['Use the katori method for portion control.','Opt for multigrain when possible.'],
+   donts:['Avoid heavily layering with ghee (adds ~45 kcal per tsp) if managing weight.'],
+   tags:['carbs','energy','staple'],aliases:['chapati','phulka','roti']},
+  {id:'food_002',name:'Steamed White Rice',cat:'Everyday Indian Staples',portion:'1 katori (150g)',kcal:195,protein:4.0,
+   benefits:['Quick-digesting energy.','Easily tolerated during illness or stomach upset.'],
+   watch:['High glycemic index can cause blood sugar spikes if eaten alone.'],
+   dos:['Pair with fiber-rich sabzis and protein to balance blood sugar.'],
+   donts:["Don't overconsume if living a highly sedentary lifestyle."],
+   tags:['carbs','quick energy'],aliases:['rice','chawal','steamed rice']},
+  {id:'food_003',name:'Dals (Toor, Moong)',cat:'Everyday Indian Staples',portion:'1 katori (150g)',kcal:130,protein:6.0,
+   benefits:['Excellent source of plant protein and folic acid.','Aids in cell repair and muscle recovery.'],
+   watch:['Can cause bloating in some if not soaked properly before cooking.'],
+   dos:['Eat dal first during a meal to promote satiety.','Soak before boiling.'],
+   donts:['Avoid heavy tadka (tempering) with excessive oil.'],
+   tags:['protein','recovery','staple'],aliases:['dal','daal','toor','moong','lentils']},
+  {id:'food_004',name:'Lauki / Bhindi Sabzi',cat:'Everyday Indian Staples',portion:'1 katori (150g)',kcal:100,protein:2.5,
+   benefits:['High water content and dietary fiber.','Promotes gut health and prevents constipation.'],
+   watch:['Nutrients can be lost if overcooked or deep-fried (like kurkuri bhindi).'],
+   dos:['Cook lightly with minimal oil to retain micronutrients.'],
+   donts:["Don't deep fry."],
+   tags:['fiber','gut health','vitamins'],aliases:['lauki','bottle gourd','bhindi','okra','sabzi']},
+  {id:'food_005',name:'Palak Paneer',cat:'Everyday Indian Staples',portion:'1 katori (150g)',kcal:280,protein:13.0,
+   benefits:['Iron from spinach.','Casein protein and calcium from paneer for bone health.'],
+   watch:['Can be heavy and calorie-dense if made with excess cream/cashew paste.'],
+   dos:['Add a dash of lemon juice to improve iron absorption from the spinach.'],
+   donts:['Avoid adding heavy cream for everyday meals.'],
+   tags:['protein','iron','bone health'],aliases:['spinach paneer','palak','paneer']},
+  {id:'food_006',name:'Almonds & Walnuts',cat:'Dry Fruits & Nuts',portion:'5-7 almonds, 2 walnut halves',kcal:90,protein:3.0,
+   benefits:['Rich in Omega-3s and zinc.','Improves blood flow and testosterone production.','Directly enhances sexual stamina and cardiovascular endurance.'],
+   watch:['Very calorie-dense; easy to overeat.'],
+   dos:['Soak almonds overnight to remove phytic acid and improve digestion.'],
+   donts:["Don't consume salted or roasted varieties daily to avoid sodium spikes."],
+   tags:['stamina','sexual wellness','omega-3','zinc'],aliases:['almond','walnut','badam','akhrot','nuts']},
+  {id:'food_007',name:'Dates (Khajoor) & Figs (Anjeer)',cat:'Dry Fruits & Nuts',portion:'2-3 pieces',kcal:60,protein:1.0,
+   benefits:['High in iron, potassium, and natural sugars.','Acts as a rapid energy booster and combats chronic fatigue.'],
+   watch:['High in concentrated natural sugars; diabetics should monitor intake.'],
+   dos:['Consume as a pre-workout snack or afternoon energy lift.'],
+   donts:['Avoid processed dates soaked in sugar syrup.'],
+   tags:['energy','iron','stamina'],aliases:['dates','khajoor','figs','anjeer']},
+  {id:'food_008',name:'Pistachios',cat:'Dry Fruits & Nuts',portion:'1 small handful (unsalted)',kcal:160,protein:6.0,
+   benefits:['Contains L-arginine, converting to nitric oxide.','Relaxes blood vessels, improving circulation and supporting erectile function/sexual wellness.'],
+   watch:['Commercially available ones are often heavily salted.'],
+   dos:['Opt for unsalted in-shell pistachios (shells help control portion size).'],
+   donts:["Don't consume salted varieties before bed."],
+   tags:['sexual wellness','circulation','protein'],aliases:['pista','nuts']},
+  {id:'food_009',name:'Watermelon & Pomegranate',cat:'Fruits, Vegetables & Spices',portion:'1 medium bowl (150g)',kcal:60,protein:1.0,
+   benefits:['Watermelon contains citrulline (natural vasodilator for sexual wellness).','Pomegranate reduces oxidative stress and improves blood circulation.'],
+   watch:['Juicing removes beneficial fiber and concentrates sugar.'],
+   dos:['Eat whole fruits rather than juices.'],
+   donts:["Don't add salt or sugar."],
+   tags:['sexual wellness','blood flow','hydration'],aliases:['watermelon','tarbooj','pomegranate','anar']},
+  {id:'food_010',name:'Garlic & Onion',cat:'Fruits, Vegetables & Spices',portion:'As used in cooking',kcal:15,protein:0.5,
+   benefits:['Rich in allicin.','Thins blood slightly, lowers cholesterol, and improves overall and sexual circulation.'],
+   watch:['Can cause acid reflux or bad breath in large raw quantities.'],
+   dos:['Crush garlic and let it sit for 10 mins before cooking to maximize allicin.'],
+   donts:["Don't overcook until burnt, as it destroys active compounds."],
+   tags:['heart health','circulation','immunity'],aliases:['garlic','lehsun','onion','pyaaz']},
+  {id:'food_011',name:'Ashwagandha (Winter Cherry)',cat:'Fruits, Vegetables & Spices',portion:'1/2 to 1 tsp powder',kcal:10,protein:0.0,
+   benefits:['Adaptogen that lowers cortisol (stress hormone).','Indirectly boosts libido, energy, and sexual stamina by reducing systemic stress.'],
+   watch:['Can cause drowsiness if taken in the morning; interacts with thyroid meds.'],
+   dos:['Mix with warm milk before bed for optimal absorption.'],
+   donts:['Avoid high doses without consulting a physician.'],
+   tags:['stamina','stress relief','libido'],aliases:['ashwagandha','winter cherry','withania']},
+  {id:'food_012',name:'KFC Smoky Grilled Chicken',cat:'Fast Food & Street Snacks',portion:'1 piece',kcal:171,protein:21.0,
+   benefits:['High protein, low carb.','Excellent for muscle retention compared to fried options.'],
+   watch:['High in sodium.'],
+   dos:['Choose this over deep-fried options when eating out.'],
+   donts:["Don't pair with sugary sodas."],
+   tags:['protein','fast food'],aliases:['kfc','grilled chicken']},
+  {id:'food_013',name:"KFC Hot & Crispy / McDonald's McAloo Tikki",cat:'Fast Food & Street Snacks',portion:'1 piece/burger',kcal:350,protein:12.0,
+   benefits:['High palatability and quick calories.'],
+   watch:['Deep-fried batter adds excess saturated fat, trans fats, and empty carbs.','Clogs arteries over time, reducing blood flow and negatively impacting cardiovascular/sexual stamina.'],
+   dos:['Limit consumption to once a week or twice a month.','Drink water instead of soda.'],
+   donts:['Do not make it a daily habit.'],
+   tags:['junk','high calorie','low nutrition'],aliases:['kfc','mcdonalds','mcaloo tikki','aloo tikki burger','fried chicken']},
+  {id:'food_014',name:'Curd (Dahi)',cat:'Dairy & Desserts',portion:'1 katori (150g)',kcal:90,protein:5.0,
+   benefits:['Probiotic powerhouse.','Aids gut health, digestion, and immunity.','Provides calcium.'],
+   watch:['Full-fat versions can be calorie-dense.'],
+   dos:['Eat fresh, homemade curd.','Include in daytime meals.'],
+   donts:['Avoid heavily sweetened commercial yogurts.'],
+   tags:['probiotics','gut health','protein'],aliases:['dahi','yogurt','yoghurt','curd']},
+  {id:'food_015',name:'Ice Cream',cat:'Dairy & Desserts',portion:'2-3 tablespoons (60-70g)',kcal:140,protein:2.0,
+   benefits:['Minor amounts of calcium and phosphorus.','Provides a rapid psychological and energy boost.'],
+   watch:['High in saturated fat and added sugars.','Leads to lethargy, weight gain, and insulin resistance if overconsumed.'],
+   dos:['Treat as an occasional indulgence (1-2 times a week).',"Check labels to ensure it's made from real milk fat, not vegetable oil."],
+   donts:["Avoid 'frozen desserts' made with cheap palm/vegetable oils.","Don't eat directly from the tub to prevent bingeing."],
+   tags:['dessert','sugar','high calorie'],aliases:['icecream','kulfi','frozen dessert']},
+
+  // Spices & herbs (daily, small amounts)
+  {id:'spice_jeera',name:'Jeera (Cumin)',cat:'Spices & Herbs',portion:'1 tsp seeds (2g)',kcal:8,protein:0.4,
+   benefits:['Adds flavour with very few calories.','Traditionally used to aid digestion; a small source of iron.'],
+   watch:['Used in small amounts, so it adds little nutrition by bulk.'],
+   dos:['Dry roast before tempering to bring out the aroma.','Add to buttermilk, dal or raita.'],
+   donts:["Don't use it as a substitute for medical care if digestive symptoms persist."],
+   tags:['digestion','spice','iron'],aliases:['cumin','jira','jeera','zeera']},
+  {id:'spice_laung',name:'Laung (Clove)',cat:'Spices & Herbs',portion:'1-2 whole cloves (1g)',kcal:3,protein:0.1,
+   benefits:['Contains eugenol, an antioxidant compound studied for antimicrobial effects.','Traditionally used for toothache and digestion.'],
+   watch:['Clove oil is concentrated and harmful if swallowed.','Large amounts can irritate the mouth or stomach.'],
+   dos:['Add 1-2 cloves to chai, rice or biryani.','Remove whole cloves before serving.'],
+   donts:["Don't put clove oil on gums or swallow it.",'Use caution with blood thinners or before surgery; ask a doctor.'],
+   tags:['spice','digestion','oral care'],aliases:['clove','cloves','lavang','laung']},
+  {id:'spice_haldi',name:'Haldi (Turmeric)',cat:'Spices & Herbs',portion:'1/2 tsp (3g)',kcal:9,protein:0.3,
+   benefits:['Contains curcumin, studied for anti-inflammatory effects.','Adds colour and flavour to everyday cooking.'],
+   watch:['Curcumin is poorly absorbed on its own.','High-dose supplements can affect blood thinners and gallbladder conditions.'],
+   dos:['Add with a pinch of black pepper and a little fat (ghee or oil) to help absorption.'],
+   donts:["Don't take concentrated turmeric supplements without advice if you take medication."],
+   tags:['anti-inflammatory','spice','immunity'],aliases:['turmeric','haldi','haldee']},
+  {id:'spice_ajwain',name:'Ajwain (Carom seeds)',cat:'Spices & Herbs',portion:'1/2 tsp (2g)',kcal:6,protein:0.4,
+   benefits:['Traditionally used to ease bloating and gas.','Contains thymol and some fiber.'],
+   watch:['Strong flavour; a little goes a long way.'],
+   dos:['Add to parathas or dal, or steep in hot water for a simple tea.'],
+   donts:['Avoid large medicinal amounts during pregnancy without advice.'],
+   tags:['digestion','spice'],aliases:['carom','carom seeds','ajwain','omum']},
+  {id:'spice_methi',name:'Methi (Fenugreek seeds & leaves)',cat:'Spices & Herbs',portion:'1 tsp seeds (3g)',kcal:10,protein:0.7,
+   benefits:['Soluble fiber that slows sugar absorption.','Leaves add iron and vitamins.'],
+   watch:['Can cause bloating or loose stools in large amounts.','Can add to blood-sugar lowering medicines; check with a doctor if diabetic.'],
+   dos:['Soak seeds overnight, or add leaves to dal and sabzi.'],
+   donts:["Don't take large doses of seeds without advice if you take diabetes medicines."],
+   tags:['fiber','blood sugar','iron'],aliases:['fenugreek','methi','kasuri methi']},
+  {id:'spice_tulsi',name:'Tulsi (Holy basil)',cat:'Spices & Herbs',portion:'5-8 fresh leaves or 1 cup tea',kcal:2,protein:0.1,
+   benefits:['Traditionally used as a calming herbal tea.','Contains antioxidant compounds.'],
+   watch:['Concentrated extracts are not well studied in pregnancy or alongside blood thinners.'],
+   dos:['Steep fresh leaves in hot water for a simple tea.'],
+   donts:["Don't rely on tulsi in place of prescribed medicine."],
+   tags:['herbal','calm','antioxidant'],aliases:['holy basil','tulsi','tulasi']},
+
+  // Daily foods & drinks
+  {id:'daily_egg',name:'Egg (boiled)',cat:'Daily Foods & Drinks',portion:'1 large (50g)',kcal:72,protein:6.3,
+   benefits:['Complete protein with all essential amino acids.','Source of choline and vitamin B12.'],
+   watch:['Contains dietary cholesterol; people with specific cholesterol advice should check with a doctor.'],
+   dos:['Boil or scramble with minimal oil.','Pair with vegetables or whole-wheat roti.'],
+   donts:["Don't deep-fry in repeatedly used oil."],
+   tags:['protein','breakfast','vitamins'],aliases:['anda','eggs','boiled egg']},
+  {id:'daily_chicken',name:'Chicken breast (skinless, cooked)',cat:'Daily Foods & Drinks',portion:'100g',kcal:165,protein:31,
+   benefits:['Lean, high-protein food for muscle repair.','Low in fat when skinless.'],
+   watch:['Fried or heavily spiced restaurant versions add oil and salt.'],
+   dos:['Grill, bake or cook in a light masala.'],
+   donts:["Don't eat fried chicken every day."],
+   tags:['protein','muscle','lean'],aliases:['chicken','murgh','grilled chicken']},
+  {id:'daily_paneer',name:'Paneer (cottage cheese)',cat:'Daily Foods & Drinks',portion:'50g',kcal:135,protein:9,
+   benefits:['Good source of protein and calcium.'],
+   watch:['Calorie-dense; fried paneer snacks add a lot of oil.'],
+   dos:['Use in sabzi, or grill it lightly.'],
+   donts:['Avoid deep-fried paneer tikka every day.'],
+   tags:['protein','calcium'],aliases:['cottage cheese','chhena']},
+  {id:'daily_oats',name:'Oats (cooked, plain)',cat:'Daily Foods & Drinks',portion:'1 katori (150g cooked)',kcal:150,protein:5,
+   benefits:['Beta-glucan fiber helps keep you full and supports healthy cholesterol levels.'],
+   watch:['Flavoured instant packets are high in sugar.'],
+   dos:['Choose plain oats and add fruit or nuts.'],
+   donts:["Don't rely on sugary instant sachets as a regular breakfast."],
+   tags:['fiber','breakfast','heart health'],aliases:['oatmeal','oat porridge']},
+  {id:'daily_banana',name:'Banana',cat:'Daily Foods & Drinks',portion:'1 medium (118g)',kcal:105,protein:1.3,
+   benefits:['Quick energy from natural sugars.','Good source of potassium.'],
+   watch:['Ripe bananas are higher in sugar.'],
+   dos:['Eat as a pre-workout or mid-morning snack.'],
+   donts:["Don't pair with sugary drinks."],
+   tags:['energy','potassium'],aliases:['kela','banana']},
+  {id:'daily_sprouts',name:'Moong sprouts',cat:'Daily Foods & Drinks',portion:'1 katori (100g)',kcal:30,protein:3,
+   benefits:['Light, fiber-rich, and a source of vitamin C.'],
+   watch:['Raw sprouts carry a risk of food-borne illness, especially for pregnant people, young children and older adults.'],
+   dos:['Steam or lightly sauté; wash thoroughly.'],
+   donts:['Avoid raw sprouts if you are in a high-risk group.'],
+   tags:['fiber','protein','light'],aliases:['sprouts','ankurit','moong']},
+  {id:'daily_chaas',name:'Chaas (buttermilk, unsweetened)',cat:'Daily Foods & Drinks',portion:'1 glass (200ml)',kcal:40,protein:3,
+   benefits:['Probiotic and hydrating.','Easy on digestion, especially after spicy meals.'],
+   watch:['Salted or flavoured versions can be high in sodium.'],
+   dos:['Make with plain curd and add roasted jeera.'],
+   donts:["Don't add extra sugar."],
+   tags:['probiotics','hydration','digestion'],aliases:['buttermilk','chaas','chhach']},
+  {id:'daily_chai',name:'Chai (milk tea with sugar)',cat:'Daily Foods & Drinks',portion:'1 cup (150ml)',kcal:90,protein:2.5,
+   benefits:['Warm and comforting; milk adds calcium.'],
+   watch:['Sugar and full-fat milk add up over several cups a day.'],
+   dos:['Use less sugar, or half milk and half water, and add ginger, cardamom or clove.'],
+   donts:["Don't drink more than 3 cups a day with sugar."],
+   tags:['drink','calcium','caffeine'],aliases:['tea','milk tea','masala chai','chai']},
+  {id:'daily_coffee',name:'Black coffee',cat:'Daily Foods & Drinks',portion:'1 cup (240ml)',kcal:5,protein:0.3,
+   benefits:['Alertness, and some antioxidant compounds.'],
+   watch:['About 80-100 mg caffeine per cup; too much can disturb sleep and cause jitteriness.'],
+   dos:['Stop by mid-afternoon if you sleep poorly.'],
+   donts:['Pregnant people should keep total caffeine within medical guidance.'],
+   tags:['caffeine','drink'],aliases:['coffee','kaapi','filter coffee']},
+  {id:'daily_honey',name:'Honey',cat:'Daily Foods & Drinks',portion:'1 tsp (7g)',kcal:21,protein:0.1,
+   benefits:['Natural sugar; traditionally used to soothe cough and sore throat.'],
+   watch:['Still sugar; it counts toward your daily sugar intake.'],
+   dos:['Use a teaspoon in warm water or on toast.'],
+   donts:['Never give honey to babies under 1 year old (botulism risk).'],
+   tags:['sugar','cough','natural sweetener'],aliases:['shahad','madh']},
+  {id:'daily_lemon',name:'Lemon (juice)',cat:'Daily Foods & Drinks',portion:'1 lemon (about 30ml juice)',kcal:8,protein:0.2,
+   benefits:['Vitamin C, which helps absorb iron from plant foods.'],
+   watch:['Acidic; can erode tooth enamel if sipped often.'],
+   dos:['Squeeze over dal, sabzi or salad.'],
+   donts:['Rinse your mouth after lemon water; avoid sipping it all day.'],
+   tags:['vitamin C','iron','hydration'],aliases:['nimbu','lime','lemon']},
+  {id:'daily_jaggery',name:'Jaggery (gud)',cat:'Daily Foods & Drinks',portion:'1 tsp (5g)',kcal:19,protein:0,
+   benefits:['Small amounts of minerals such as iron and magnesium.'],
+   watch:['Still mostly sucrose; not a healthy sugar substitute in quantity.'],
+   dos:['Use in small amounts in place of sugar.'],
+   donts:["Don't assume it is low in calories or sugar."],
+   tags:['sugar','minerals'],aliases:['gud','gur','jaggery']},
+  {id:'daily_coconut',name:'Coconut (fresh, grated)',cat:'Daily Foods & Drinks',portion:'2 tbsp (20g)',kcal:70,protein:0.7,
+   benefits:['Fiber and minerals such as manganese and copper.'],
+   watch:['High in saturated fat; calorie-dense.'],
+   dos:['Use a spoonful in chutney or sabzi.'],
+   donts:["Don't use coconut oil as your only cooking oil every day."],
+   tags:['fiber','fat','south indian'],aliases:['nariyal','coconut']},
+
+  // Occasional treats (weekly or less)
+  {id:'treat_samosa',name:'Samosa (fried, 1 medium)',cat:'Occasional Treats',portion:'1 piece (about 80g)',kcal:260,protein:4,
+   benefits:['Enjoyable; the potato and peas add some fiber.'],
+   watch:['Deep-fried, made with refined flour, and often high in oil and sodium.'],
+   dos:['Have one as a snack, not as a meal.','Pair with a salad or curd.'],
+   donts:["Don't eat one every day."],
+   tags:['fried','snack','street food'],aliases:['samosa']},
+  {id:'treat_panipuri',name:'Pani puri (6 pieces)',cat:'Occasional Treats',portion:'6 pieces',kcal:180,protein:3,
+   benefits:['Light, and the tangy water is refreshing.'],
+   watch:['Hygiene of water and stalls varies; the filling can be high in salt and sugar.'],
+   dos:['Choose stalls with clean water and freshly made puris.'],
+   donts:["Don't make it a daily snack."],
+   tags:['street food','chaat'],aliases:['pani puri','golgappa','puchka','gol gappa']},
+  {id:'treat_gulabjamun',name:'Gulab jamun (1 piece)',cat:'Occasional Treats',portion:'1 piece (40g)',kcal:150,protein:2,
+   benefits:['A festive treat; enjoyable in moderation.'],
+   watch:['Very high in sugar and fat.'],
+   dos:['Share one, or have it after a light meal.'],
+   donts:['Avoid more than one or two at a time.'],
+   tags:['sweet','sugar','festival'],aliases:['gulab jamun','gulabjamun','jamun']},
+  {id:'treat_jalebi',name:'Jalebi (1 medium)',cat:'Occasional Treats',portion:'1 piece (40g)',kcal:130,protein:1,
+   benefits:['A small treat that satisfies a craving.'],
+   watch:['Deep-fried and soaked in sugar syrup.'],
+   dos:['Have a small piece after a meal.'],
+   donts:['Avoid as a regular sweet.'],
+   tags:['sweet','sugar','fried'],aliases:['jalebi','imarti']},
+  {id:'treat_biryani',name:'Chicken biryani (1 restaurant plate)',cat:'Occasional Treats',portion:'about 350g',kcal:550,protein:25,
+   benefits:['Chicken adds protein, and it is a full meal on one plate.'],
+   watch:['Often oil-heavy, with refined rice and high salt.'],
+   dos:['Choose a smaller portion, and add raita and salad.'],
+   donts:["Don't follow it with a sugary drink and dessert in the same meal."],
+   tags:['rice','meal','restaurant'],aliases:['biryani','biriyani']},
+  {id:'treat_chole',name:'Chole bhature (1 plate)',cat:'Occasional Treats',portion:'1 bhatura with chole',kcal:600,protein:15,
+   benefits:['Chickpeas add protein and fiber.'],
+   watch:['Bhatura is deep-fried, so the calorie load is large.'],
+   dos:['Share a plate, or have one bhatura.'],
+   donts:["Don't eat it as a weekly habit."],
+   tags:['chickpea','fried','meal'],aliases:['chole','chhole','bhature','chole bhature']},
+  {id:'treat_vadapav',name:'Vada pav (1)',cat:'Occasional Treats',portion:'1 vada pav',kcal:290,protein:6,
+   benefits:['Filling and affordable.'],
+   watch:['A deep-fried potato patty in a refined bun.'],
+   dos:['Have occasionally, with a salad or buttermilk.'],
+   donts:['Avoid as a daily lunch.'],
+   tags:['street food','fried','potato'],aliases:['vada pav','vadapav','batata vada']},
+  {id:'treat_kheer',name:'Kheer (1 katori)',cat:'Occasional Treats',portion:'150g',kcal:250,protein:5,
+   benefits:['Milk provides calcium and protein.'],
+   watch:['Sugar and cream make it calorie-dense.'],
+   dos:['Have a small bowl after a meal.'],
+   donts:["Don't have it every day."],
+   tags:['dessert','milk','sugar'],aliases:['kheer','payasam','rice pudding']},
+  {id:'treat_kulfi',name:'Kulfi (1 stick)',cat:'Occasional Treats',portion:'80g',kcal:200,protein:4,
+   benefits:['Made from milk, so it adds calcium.'],
+   watch:['High in sugar and saturated fat.'],
+   dos:['Share, or choose a lower-sugar version.'],
+   donts:['Avoid as a daily dessert.'],
+   tags:['dessert','milk','sugar'],aliases:['kulfi','malai kulfi']},
+  {id:'treat_pakora',name:'Pakora (6 pieces)',cat:'Occasional Treats',portion:'about 100g',kcal:300,protein:6,
+   benefits:['Vegetables inside add some fiber and vitamins.'],
+   watch:['Deep-fried in batter; high in oil and sodium.'],
+   dos:['Choose fewer pieces and pair with a salad.'],
+   donts:['Avoid as a daily snack.'],
+   tags:['fried','snack','monsoon'],aliases:['pakora','bhajiya','pakoda']}
+];
+
+const state = {q: '', cat: 'All'};
+const haystack = i => [i.name, i.cat, ...(i.tags || []), ...(i.aliases || [])].join(' ').toLowerCase();
+function matches() {
+  const words = state.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  return ITEMS.filter(i => (state.cat === 'All' || i.cat === state.cat) && words.every(w => haystack(i).includes(w)));
+}
+function similar(item) {
+  return ITEMS.filter(o => o.id !== item.id && (o.tags || []).some(t => (item.tags || []).includes(t))).slice(0, 3);
+}
+const list = a => a.map(x => `<li>${esc(x)}</li>`).join('');
+function card(i) {
+  const sim = similar(i);
+  return `<article class="panel pad diet-card" data-id="${esc(i.id)}">` +
+    `<div class="split"><div><b>${esc(i.name)}</b><div class="quiet">${esc(i.cat)} · ${esc(i.portion)}</div></div>` +
+    `<span class="chip">${esc(i.kcal)} kcal · ${esc(i.protein)} g protein</span></div>` +
+    `<div class="grid grid-2" style="margin-top:12px"><div><b>Benefits</b><ul>${list(i.benefits)}</ul></div>` +
+    `<div><b>Watch out for</b><ul>${list(i.watch)}</ul></div>` +
+    `<div><b>Do</b><ul>${list(i.dos)}</ul></div><div><b>Don't</b><ul>${list(i.donts)}</ul></div></div>` +
+    (sim.length ? `<div class="quiet" style="margin-top:8px">Similar: ${sim.map(s => esc(s.name)).join(', ')}</div>` : '') +
+    `</article>`;
+}
+function resultsHtml() {
+  const r = matches();
+  return r.length
+    ? `<div class="grid grid-2">${r.map(card).join('')}</div>`
+    : '<div class="panel pad">No foods match. Try a shorter word, such as "fiber", "jeera" or "stamina".</div>';
+}
+const FILTERS = ['All', ...CATEGORIES];
+function view() {
+  const chips = FILTERS.map((c, idx) =>
+    `<button class="chip ${c === state.cat ? 'good' : ''}" aria-pressed="${c === state.cat}" onclick="DietModule.setCat(${idx})">${esc(c)}</button>`
+  ).join(' ');
+  return `<div class="page"><div class="eyebrow">More · Diet</div><div class="h1">Food & diet notes</div>` +
+    `<div class="lead">Search by name or keyword, such as "clove", "stamina" or "gut health". Portions and calories are approximate; check labels.</div>` +
+    `<section class="section panel pad"><div class="field"><label for="diet-q">Search foods</label>` +
+    `<input id="diet-q" type="search" autocomplete="off" value="${esc(state.q)}" oninput="DietModule.search(this.value)" style="min-height:44px"></div>` +
+    `<div class="chips" style="margin-top:10px">${chips}</div></section>` +
+    `<section class="section" id="diet-results">${resultsHtml()}</section>` +
+    `<div class="footer-note">General information only, not medical advice. Check with a doctor or dietitian about conditions or medicines.</div></div>`;
+}
+function search(q) {
+  state.q = String(q).slice(0, 60);
+  const el = document.getElementById('diet-results');
+  if (el) el.innerHTML = resultsHtml();
+}
+function setCat(idx) {
+  state.cat = FILTERS[idx] || 'All';
+  if (typeof window.render === 'function') window.render();
+}
+window.DietModule = {view, search, setCat};
+})();
+</script>
 <script>
 (() => {
 'use strict';
@@ -5357,7 +5691,7 @@ function searchOpen(type,id){closeModal();if(type==='Task')inspect('task',id);el
 function navIcon(id){const p={today:'<circle cx="10" cy="10" r="7"></circle><circle cx="10" cy="10" r="2"></circle>',work:'<path d="M4 5h12M4 10h12M4 15h8"></path><path d="m14 14 2 2 3-4"></path>',focus:'<circle cx="10" cy="10" r="7"></circle><circle cx="10" cy="10" r="2.5"></circle>',plan:'<rect x="3" y="4" width="14" height="13" rx="2"></rect><path d="M6 2v4M14 2v4M3 8h14"></path>',more:'<circle cx="5" cy="10" r="1"></circle><circle cx="10" cy="10" r="1"></circle><circle cx="15" cy="10" r="1"></circle>'};return `<span class="bottom-nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20">${p[id]}</svg></span>`}
 function navItems(){return [['today','Today'],['work','Work'],['focus','Focus'],['plan','Plan'],['more','More']]}
 function renderShell(content){const n=nav();const grp=['calendar','reminders','timer','convert'].includes(n)?'plan':['today','work','focus','plan'].includes(n)?n:'more';return `<div class="app ${state.settings.density==='Minimal'?'dens-min':''}"><aside class="sidebar"><div class="brand"><div class="brand-mark">AS</div><div><b>AstralSurge OS <i style="font-style:normal;font-size:9px;color:var(--amber);border:1px solid #473a25;border-radius:99px;padding:1px 5px;margin-left:4px">BETA</i></b><span>private operating system</span></div></div><nav class="nav">${navItems().map(([id,label])=>`<button class="${grp===id?'active':''}" onclick="setNav('${id}')">${navIcon(id)}${label}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="status"><div class="status-top"><span><i class="dot"></i>Local</span><span>${state.mode==='demo'?'Demo':'Private'}</span></div><div style="font-size:12px;margin-top:8px">${facts().openCount} open · Lv ${levelInfo().lvl} · ${state.xp} XP</div><div class="bar xp"><i style="width:${levelInfo().pct}%"></i></div><div class="quiet" style="margin-top:5px">${levelInfo().left} XP to next level</div><button class="btn mini" style="width:100%;margin-top:10px" onclick="setNav('vault')">Vault health</button></div></div></aside><main class="main"><header class="topbar"><div class="topbar-left"><div class="crumb">AstralSurge OS / ${esc(n.charAt(0).toUpperCase()+n.slice(1))}</div><button class="btn icon-btn" onclick="globalSearch()" aria-label="Search">⌕</button><span class="chip" id="clock"></span>${focusPill()}</div><div class="top-actions"><button class="btn icon-btn mobile-search" type="button" onclick="globalSearch()" aria-label="Search">⌕ Search</button><div class="search"><input aria-label="Search workspace" placeholder="Search workspace" onclick="globalSearch()"><span>⌘K</span></div><button class="btn primary" onclick="globalCreate()" aria-label="Create">＋<span> Create</span></button><button class="btn icon-btn" onclick="setNav('settings')">⚙</button></div></header>${content}<footer class="app-footer">Local-first app · <a href="#/legal">Privacy & Terms</a> · Data stays under your browser/device controls</footer><nav class="mobile-nav">${navItems().map(([id,label])=>`<button class="${grp===id?'active':''}" onclick="setNav('${id}')">${navIcon(id)}<span>${label}</span></button>`).join('')}</nav></main></div>`}
-function moreIndex(){return `<div class="page"><div class="eyebrow">More</div><div class="h1">The rest, when you need it.</div><div class="lead">Secondary contexts keep the primary experience calm without removing any capability.</div><section class="section grid grid-3">${[...workspaceTiles(),['goals','Goals','Roadmaps & milestones'],['life','Life','Fitness, habits, reminders'],['money','Money','Budgets, decisions, reality'],['split','Split','Shared expenses & settle up'],['memory','Memory','Notes, history, recovery'],['journal','Journal','Daily pages and reflection'],['progress','Progress','XP, streaks, weekly review'],['rules','Agent activity','Suggestions & rule inspector'],['vault','Vault','Backup, checkpoints, restore'],['calendar','Calendar','Month view & aggregation'],['reminders','Reminders','Alarms & notifications'],['timer','Time tools','Countdown & stopwatch'],['convert','Converter','Length, weight, volume, speed, area, time, data, temperature'],['prompts','Prompt builder','Structured prompts from a short form'],['settings','Settings','Preferences & data controls'],['legal','Legal','Source-of-truth legal copy']].map(x=>`<button class="btn" style="text-align:left;min-height:106px" onclick="setNav('${x[0]}')"><b style="font-size:14px">${x[1]}</b><span class="muted-line" style="display:block;margin-top:7px">${x[2]}</span></button>`).join('')}</section><div class="footer-note">THE USER BRINGS INTENT · THE SYSTEM UNDERSTANDS CONTEXT · THE USER REMAINS IN CONTROL.</div></div>`}
+function moreIndex(){return `<div class="page"><div class="eyebrow">More</div><div class="h1">The rest, when you need it.</div><div class="lead">Secondary contexts keep the primary experience calm without removing any capability.</div><section class="section grid grid-3">${[...workspaceTiles(),['goals','Goals','Roadmaps & milestones'],['life','Life','Fitness, habits, reminders'],['diet','Diet','Food notes, keyword search, portions'],['money','Money','Budgets, decisions, reality'],['split','Split','Shared expenses & settle up'],['memory','Memory','Notes, history, recovery'],['journal','Journal','Daily pages and reflection'],['progress','Progress','XP, streaks, weekly review'],['rules','Agent activity','Suggestions & rule inspector'],['vault','Vault','Backup, checkpoints, restore'],['calendar','Calendar','Month view & aggregation'],['reminders','Reminders','Alarms & notifications'],['timer','Time tools','Countdown & stopwatch'],['convert','Converter','Length, weight, volume, speed, area, time, data, temperature'],['prompts','Prompt builder','Structured prompts from a short form'],['settings','Settings','Preferences & data controls'],['legal','Legal','Source-of-truth legal copy']].map(x=>`<button class="btn" style="text-align:left;min-height:106px" onclick="setNav('${x[0]}')"><b style="font-size:14px">${x[1]}</b><span class="muted-line" style="display:block;margin-top:7px">${x[2]}</span></button>`).join('')}</section><div class="footer-note">THE USER BRINGS INTENT · THE SYSTEM UNDERSTANDS CONTEXT · THE USER REMAINS IN CONTROL.</div></div>`}
 let lastRoute=null;
 window.addEventListener('paste',e=>{if(!document.getElementById('img-zone'))return;const f=[...(e.clipboardData?.items||[])].filter(i=>i.type.startsWith('image/')).map(i=>i.getAsFile());if(f.length){e.preventDefault();addImgFiles(f)}});window.addEventListener('hashchange',()=>{closeModal();closeDrawer();render()});window.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();globalSearch()}if(e.key==='Escape'){closeModal();closeDrawer()}if(e.key==='Tab'&&isModalOpen()){const m=document.getElementById('modal'),f=modalFocusables(m);if(!f.length){e.preventDefault();return}const first=f[0],last=f[f.length-1];if(e.shiftKey&&(document.activeElement===first||!m.contains(document.activeElement))){e.preventDefault();last.focus()}else if(!e.shiftKey&&(document.activeElement===last||!m.contains(document.activeElement))){e.preventDefault();first.focus()}}});syncInert();document.addEventListener('DOMContentLoaded',syncInert);
 
@@ -6422,7 +6756,7 @@ function bindDelegatedInteractions(){
  document.addEventListener('click',e=>{const el=e.target.closest?.('[data-action]');if(!el)return;const a=el.dataset.action;if(a==='delete-sub')delSub(el.dataset.id,el.dataset.subId);else if(a==='search-open'){recordSearchUsage(el.dataset.type,el.dataset.id);searchOpen(el.dataset.type,el.dataset.id)}else if(a==='search-shortcut')runSearchShortcut(el.dataset.id)});
  document.addEventListener('change',e=>{const el=e.target.closest?.('[data-action]');if(!el)return;if(el.dataset.action==='toggle-sub')toggleSub(el.dataset.id,el.dataset.subId)});
 }
-function workspaceTiles(){return [['dog','Dog training','Care, training, health'],['music','Music','MP3s played in place, stats']]}function viewDog(){if(!window.DogCompanion)return '<div class="page"><div class="lead">The dog training module did not load.</div></div>';try{return window.DogCompanion.view()}catch(e){console.error('dog view failed',e);return '<div class="page"><div class="eyebrow">Dog training</div><div class="h1">This page could not be shown.</div><div class="lead">Switch to Existing setup in Settings, or reload the page. Details are in the browser console.</div></div>'}}function initDogCompanion(){if(window.DogCompanion)window.DogCompanion.init({getState:()=>state,commit:()=>{persist();render()},refresh:()=>render(),toast:toast,isActive:()=>true,openModal:openModal,closeModal:closeModal})}function render(){if(isMinimalMode()){renderMinimal();return}applyTypographyAndTimezone();applyTheme();saveAppearanceSnapshot();const n=nav();const y=lastRoute===n?window.scrollY:0;let c='';if(n==='today')c=viewToday();else if(n==='work')c=viewWork();else if(n==='focus')c=viewFocus();else if(n==='plan')c=viewPlan();else if(n==='more')c=moreIndex();else if(n==='goals')c=viewGoals();else if(n==='life')c=viewLife();else if(n==='money')c=viewMoney();else if(n==='loans')c=viewLoans();else if(n==='music')c=(typeof window.viewMusic==='function'?window.viewMusic():'<div class="page"><div class="lead">Music did not load.</div></div>');else if(n==='journal')c=viewJournal();else if(n==='memory')c=viewMemory();else if(n==='progress')c=viewProgress();else if(n==='rules')c=viewRules();else if(n==='vault')c=viewVault();else if(n==='calendar')c=viewCalendar();else if(n==='reminders')c=viewReminders();else if(n==='timer')c=viewTimer();else if(n==='convert')c=viewConvert();else if(n==='prompts')c=viewPrompts();else if(n==='dog')c=viewDog();else if(n==='split'||n.startsWith('split/'))c=splitViewRoute(n);else if(n==='settings')c=viewSettings();else if(n==='legal')c=viewLegal();else c=viewToday();document.getElementById('app').innerHTML=!betaAck()?betaScreen():state.vault.locked?lockScreen():renderShell(c);bindDelegatedInteractions();if(!state.focus.active)document.title='AstralSurge OS';lastRoute=n;window.scrollTo(0,y);tickClock();if(document.querySelectorAll)document.querySelectorAll('.heat-wrap').forEach(e=>e.scrollLeft=e.scrollWidth);if(timerHandle)clearInterval(timerHandle);if(state.focus.active)timerHandle=setInterval(tick,1000);refreshStorageHealth()}
+function workspaceTiles(){return [['dog','Dog training','Care, training, health'],['music','Music','MP3s played in place, stats']]}function viewDog(){if(!window.DogCompanion)return '<div class="page"><div class="lead">The dog training module did not load.</div></div>';try{return window.DogCompanion.view()}catch(e){console.error('dog view failed',e);return '<div class="page"><div class="eyebrow">Dog training</div><div class="h1">This page could not be shown.</div><div class="lead">Switch to Existing setup in Settings, or reload the page. Details are in the browser console.</div></div>'}}function initDogCompanion(){if(window.DogCompanion)window.DogCompanion.init({getState:()=>state,commit:()=>{persist();render()},refresh:()=>render(),toast:toast,isActive:()=>true,openModal:openModal,closeModal:closeModal})}function render(){if(isMinimalMode()){renderMinimal();return}applyTypographyAndTimezone();applyTheme();saveAppearanceSnapshot();const n=nav();const y=lastRoute===n?window.scrollY:0;let c='';if(n==='today')c=viewToday();else if(n==='work')c=viewWork();else if(n==='focus')c=viewFocus();else if(n==='plan')c=viewPlan();else if(n==='more')c=moreIndex();else if(n==='goals')c=viewGoals();else if(n==='life')c=viewLife();else if(n==='money')c=viewMoney();else if(n==='loans')c=viewLoans();else if(n==='music')c=(typeof window.viewMusic==='function'?window.viewMusic():'<div class="page"><div class="lead">Music did not load.</div></div>');else if(n==='journal')c=viewJournal();else if(n==='memory')c=viewMemory();else if(n==='progress')c=viewProgress();else if(n==='rules')c=viewRules();else if(n==='vault')c=viewVault();else if(n==='calendar')c=viewCalendar();else if(n==='reminders')c=viewReminders();else if(n==='timer')c=viewTimer();else if(n==='convert')c=viewConvert();else if(n==='prompts')c=viewPrompts();else if(n==='dog')c=viewDog();else if(n==='diet')c=(window.DietModule?window.DietModule.view():'<div class="page"><div class="lead">Diet did not load.</div></div>');else if(n==='split'||n.startsWith('split/'))c=splitViewRoute(n);else if(n==='settings')c=viewSettings();else if(n==='legal')c=viewLegal();else c=viewToday();document.getElementById('app').innerHTML=!betaAck()?betaScreen():state.vault.locked?lockScreen():renderShell(c);bindDelegatedInteractions();if(!state.focus.active)document.title='AstralSurge OS';lastRoute=n;window.scrollTo(0,y);tickClock();if(document.querySelectorAll)document.querySelectorAll('.heat-wrap').forEach(e=>e.scrollLeft=e.scrollWidth);if(timerHandle)clearInterval(timerHandle);if(state.focus.active)timerHandle=setInterval(tick,1000);refreshStorageHealth()}
 
 
 // Preserve legacy restore UI but support encrypted backups.
