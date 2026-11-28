@@ -40,10 +40,15 @@ def test_diet_is_reachable_from_more_and_searchable(app_server):
         page.wait_for_timeout(150)
         assert "Jeera (Cumin)" in _titles(page), _titles(page)
 
-        page.fill("#diet-q", "stamina")
+        page.fill("#diet-q", "stress")
         page.wait_for_timeout(150)
         titles = _titles(page)
-        assert "Ashwagandha (Winter Cherry)" in titles and "Almonds & Walnuts" in titles, titles
+        assert "Ashwagandha (Winter Cherry)" in titles, titles
+
+        # Claims were corrected: a search for an unsupported claim no longer returns the herb.
+        page.fill("#diet-q", "stamina")
+        page.wait_for_timeout(150)
+        assert "Ashwagandha (Winter Cherry)" not in _titles(page), _titles(page)
 
         page.fill("#diet-q", "zzzz-no-such-food")
         page.wait_for_timeout(150)

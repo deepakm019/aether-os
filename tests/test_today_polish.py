@@ -45,7 +45,9 @@ def run():
         check("greeting has no waving-hand emoji", "👋" not in h1, h1)
         expected = page.evaluate("""() => { const h=new Date().getHours();
             return h<5?'🌙':h<12?'🌅':h<17?'☀️':h<22?'🌇':'🌙' }""")
-        check("greeting emoji matches time of day", expected in h1, f"{expected!r} not in {h1!r}")
+        emoji = page.locator(".page .greet-emoji").first.inner_text().strip()
+        check("greeting emoji matches time of day", emoji == expected, f"{emoji!r} vs {expected!r}")
+        check("greeting emoji sits outside the gradient heading", expected not in h1, h1)
 
         # Quick capture on phone: input and button stack full width at the same height.
         cap = page.evaluate("""() => { const i=document.querySelector('.quick-capture input').getBoundingClientRect();

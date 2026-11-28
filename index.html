@@ -1023,6 +1023,55 @@ html .minimal-app input.minimal-control[type=date]{height:50px;min-height:50px;p
  .quick-capture-btn{height:48px;width:100%;padding:0 16px}
 }
 </style>
+<style id="budget-popup">
+/* Budget popup: fixed frame so only the line-item list scrolls. Mirrors the task popup. */
+.modal[style*="display: block"]:has(.budget-popup){display:flex !important;flex-direction:column;overflow:hidden !important;max-height:min(88dvh,780px) !important;width:min(560px,calc(100vw - 24px))}
+.budget-popup{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;max-height:100%;overflow:hidden;min-width:0}
+.budget-popup > *{flex-shrink:0}
+.budget-popup h2{overflow-wrap:anywhere;min-width:0}
+.budget-popup .bp-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:2px 2px 4px 0}
+.budget-popup .bp-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}
+.budget-popup .bp-summary > div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.budget-popup .bp-summary .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.budget-popup .bp-summary .value{font-size:16px;font-weight:700;overflow-wrap:anywhere}
+.budget-popup .bp-eyebrow{margin:16px 0 6px}
+.budget-popup .bp-list{display:grid}
+.budget-popup .bp-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);min-width:0}
+.budget-popup .bp-check{display:flex;gap:10px;align-items:flex-start;min-width:0;cursor:pointer;line-height:1.4}
+.budget-popup .bp-check input{margin-top:3px;width:18px;height:18px;flex:0 0 auto}
+.budget-popup .bp-name{min-width:0;overflow-wrap:anywhere}
+.budget-popup .bp-actions{display:flex;gap:6px;flex:0 0 auto}
+.budget-popup .bp-actions .btn{min-height:38px;height:38px;padding:0 10px}
+.budget-popup .bp-meta{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding-left:28px;color:var(--muted);font-size:12px}
+.budget-popup .bp-empty{padding:12px 0}
+.budget-popup .bp-form{margin-top:12px}
+.budget-popup .bp-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;min-width:0}
+.budget-popup .bp-fields .field{min-width:0}
+.budget-popup .bp-fields input,.budget-popup .bp-fields select{width:100%;min-width:0;max-width:100%;box-sizing:border-box;min-height:44px}
+.budget-popup .bp-wide{grid-column:1 / -1}
+.budget-popup .form-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:14px}
+.budget-popup .form-actions .btn{min-height:44px}
+.budget-popup .bp-foot{display:flex;flex-wrap:wrap;gap:8px;padding-top:14px;border-top:1px solid var(--line);margin-top:12px}
+.budget-popup .bp-foot .btn{flex:1 1 150px;min-height:44px}
+.budget-row{width:100%;text-align:left;background:transparent;border:0;color:inherit;font:inherit;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:15px 18px;border-bottom:1px solid var(--line)}
+.budget-row:hover{background:color-mix(in srgb,var(--panel) 70%,transparent)}
+.budget-row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.budget-row .row-main{min-width:0}
+.budget-row .row-title,.budget-row .row-meta{display:block;overflow-wrap:anywhere}
+.budget-row .bar{display:flex;margin-top:8px}
+.budget-row > .chip{white-space:nowrap;flex:0 0 auto}
+.budget-row .budget-go{font-size:22px;line-height:1;color:var(--muted);flex:0 0 auto}
+.greet-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.greet-emoji{font-size:clamp(28px,6vw,40px);line-height:1;flex:0 0 auto}
+@media (max-width:620px){
+ .budget-popup .bp-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .budget-popup .bp-fields{grid-template-columns:1fr}
+ .budget-popup .bp-item{grid-template-columns:minmax(0,1fr)}
+ .budget-popup .bp-actions{justify-self:start;padding-left:28px}
+ .budget-popup .bp-actions .btn{min-height:40px;height:40px}
+ .budget-popup .form-actions .btn{flex:1 1 120px}
+}
+</style>
 <style id="subtask-popup">
 /* Task popup: fixed frame. Only the subtask list scrolls, and only vertically. */
 .modal[style*="display: block"]:has(.task-popup){display:flex !important;flex-direction:column;overflow:hidden !important;max-height:min(88dvh,780px) !important}
@@ -4003,7 +4052,7 @@ html[data-theme="light"] .row-title{color:#0f1216;font-weight:700}
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const CATEGORIES = [
   'Everyday Indian Staples', 'Dry Fruits & Nuts', 'Fruits, Vegetables & Spices', 'Spices & Herbs',
-  'Daily Foods & Drinks', 'Fast Food & Street Snacks', 'Occasional Treats', 'Dairy & Desserts'
+  'Daily Foods & Drinks', 'Fast Food & Street Snacks', 'Occasional Treats', 'Dairy & Desserts', 'Easy to Miss'
 ];
 const ITEMS = [
   {id:'food_001',name:'Roti (Chapati)',cat:'Everyday Indian Staples',portion:'1 piece (40g)',kcal:120,protein:3.1,
@@ -4018,7 +4067,7 @@ const ITEMS = [
    dos:['Pair with fiber-rich sabzis and protein to balance blood sugar.'],
    donts:["Don't overconsume if living a highly sedentary lifestyle."],
    tags:['carbs','quick energy'],aliases:['rice','chawal','steamed rice']},
-  {id:'food_003',name:'Dals (Toor, Moong)',cat:'Everyday Indian Staples',portion:'1 katori (150g)',kcal:130,protein:6.0,
+  {id:'food_003',name:'Dals (Toor, Moong)',cat:'Everyday Indian Staples',portion:'1 katori (150g)',kcal:175,protein:10.0,
    benefits:['Excellent source of plant protein and folic acid.','Aids in cell repair and muscle recovery.'],
    watch:['Can cause bloating in some if not soaked properly before cooking.'],
    dos:['Eat dal first during a meal to promote satiety.','Soak before boiling.'],
@@ -4036,54 +4085,54 @@ const ITEMS = [
    dos:['Add a dash of lemon juice to improve iron absorption from the spinach.'],
    donts:['Avoid adding heavy cream for everyday meals.'],
    tags:['protein','iron','bone health'],aliases:['spinach paneer','palak','paneer']},
-  {id:'food_006',name:'Almonds & Walnuts',cat:'Dry Fruits & Nuts',portion:'5-7 almonds, 2 walnut halves',kcal:90,protein:3.0,
-   benefits:['Rich in Omega-3s and zinc.','Improves blood flow and testosterone production.','Directly enhances sexual stamina and cardiovascular endurance.'],
+  {id:'food_006',name:'Almonds & Walnuts',cat:'Dry Fruits & Nuts',portion:'5-7 almonds + 2 walnut halves',kcal:90,protein:3.0,
+   benefits:['Provides vitamin E, magnesium and unsaturated fats.','A small handful adds fiber and helps you feel full.'],
    watch:['Very calorie-dense; easy to overeat.'],
-   dos:['Soak almonds overnight to remove phytic acid and improve digestion.'],
-   donts:["Don't consume salted or roasted varieties daily to avoid sodium spikes."],
-   tags:['stamina','sexual wellness','omega-3','zinc'],aliases:['almond','walnut','badam','akhrot','nuts']},
-  {id:'food_007',name:'Dates (Khajoor) & Figs (Anjeer)',cat:'Dry Fruits & Nuts',portion:'2-3 pieces',kcal:60,protein:1.0,
-   benefits:['High in iron, potassium, and natural sugars.','Acts as a rapid energy booster and combats chronic fatigue.'],
-   watch:['High in concentrated natural sugars; diabetics should monitor intake.'],
-   dos:['Consume as a pre-workout snack or afternoon energy lift.'],
-   donts:['Avoid processed dates soaked in sugar syrup.'],
-   tags:['energy','iron','stamina'],aliases:['dates','khajoor','figs','anjeer']},
-  {id:'food_008',name:'Pistachios',cat:'Dry Fruits & Nuts',portion:'1 small handful (unsalted)',kcal:160,protein:6.0,
-   benefits:['Contains L-arginine, converting to nitric oxide.','Relaxes blood vessels, improving circulation and supporting erectile function/sexual wellness.'],
-   watch:['Commercially available ones are often heavily salted.'],
-   dos:['Opt for unsalted in-shell pistachios (shells help control portion size).'],
-   donts:["Don't consume salted varieties before bed."],
-   tags:['sexual wellness','circulation','protein'],aliases:['pista','nuts']},
-  {id:'food_009',name:'Watermelon & Pomegranate',cat:'Fruits, Vegetables & Spices',portion:'1 medium bowl (150g)',kcal:60,protein:1.0,
-   benefits:['Watermelon contains citrulline (natural vasodilator for sexual wellness).','Pomegranate reduces oxidative stress and improves blood circulation.'],
-   watch:['Juicing removes beneficial fiber and concentrates sugar.'],
-   dos:['Eat whole fruits rather than juices.'],
+   dos:['Choose plain, unsalted nuts and measure a handful.'],
+   donts:["Don't eat salted or heavily roasted nuts every day."],
+   tags:['healthy fats','vitamin E','snack'],aliases:['almond','walnut','badam','akhrot','nuts']},
+  {id:'food_007',name:'Dates (Khajoor) & Figs (Anjeer)',cat:'Dry Fruits & Nuts',portion:'2 medium dates (about 48g), or 2 dried figs',kcal:130,protein:1.0,
+   benefits:['Contains potassium and some iron.','Natural sugars give quick energy.'],
+   watch:['High in natural sugar; count it toward your daily sugar, especially if managing diabetes.'],
+   dos:['Have them as a snack rather than with sweet tea.'],
+   donts:['Avoid dates coated in sugar or syrup.'],
+   tags:['energy','potassium','fiber'],aliases:['dates','khajoor','figs','anjeer']},
+  {id:'food_008',name:'Pistachios',cat:'Dry Fruits & Nuts',portion:'1 small handful, unsalted (about 30g)',kcal:170,protein:6.0,
+   benefits:['Provides protein, fiber, potassium and healthy fats.','Shelling them slows down how fast you eat.'],
+   watch:['Calorie-dense; easy to overeat.','Salted versions add a lot of sodium.'],
+   dos:['Choose unsalted, and shell them yourself.'],
+   donts:["Don't buy heavily salted packs as an everyday snack."],
+   tags:['protein','healthy fats','snack'],aliases:['pista','nuts']},
+  {id:'food_009',name:'Watermelon & Pomegranate',cat:'Fruits, Vegetables & Spices',portion:'1 medium bowl (150g mixed)',kcal:85,protein:1.5,
+   benefits:['Watermelon is mostly water: a hydrating, low-calorie snack.','Pomegranate adds fiber and vitamin C.'],
+   watch:['Juice removes the fiber and concentrates the sugar.'],
+   dos:['Eat whole fruit rather than juice.'],
    donts:["Don't add salt or sugar."],
-   tags:['sexual wellness','blood flow','hydration'],aliases:['watermelon','tarbooj','pomegranate','anar']},
+   tags:['hydration','fiber','vitamin C'],aliases:['watermelon','tarbooj','pomegranate','anar']},
   {id:'food_010',name:'Garlic & Onion',cat:'Fruits, Vegetables & Spices',portion:'As used in cooking',kcal:15,protein:0.5,
-   benefits:['Rich in allicin.','Thins blood slightly, lowers cholesterol, and improves overall and sexual circulation.'],
-   watch:['Can cause acid reflux or bad breath in large raw quantities.'],
-   dos:['Crush garlic and let it sit for 10 mins before cooking to maximize allicin.'],
-   donts:["Don't overcook until burnt, as it destroys active compounds."],
-   tags:['heart health','circulation','immunity'],aliases:['garlic','lehsun','onion','pyaaz']},
-  {id:'food_011',name:'Ashwagandha (Winter Cherry)',cat:'Fruits, Vegetables & Spices',portion:'1/2 to 1 tsp powder',kcal:10,protein:0.0,
-   benefits:['Adaptogen that lowers cortisol (stress hormone).','Indirectly boosts libido, energy, and sexual stamina by reducing systemic stress.'],
-   watch:['Can cause drowsiness if taken in the morning; interacts with thyroid meds.'],
-   dos:['Mix with warm milk before bed for optimal absorption.'],
-   donts:['Avoid high doses without consulting a physician.'],
-   tags:['stamina','stress relief','libido'],aliases:['ashwagandha','winter cherry','withania']},
+   benefits:['Adds a lot of flavour with very few calories.','Everyday staples in most Indian cooking.'],
+   watch:['Large raw amounts can cause heartburn or bad breath.','Garlic supplements can affect blood thinners; ask a doctor first.'],
+   dos:['Crush or chop garlic and let it rest a few minutes before cooking.'],
+   donts:["Don't burn garlic; it turns bitter."],
+   tags:['flavour','everyday'],aliases:['garlic','lehsun','onion','pyaaz']},
+  {id:'food_011',name:'Ashwagandha (Winter Cherry)',cat:'Spices & Herbs',portion:'Follow the product label (powder or capsules)',kcal:10,protein:0.0,
+   benefits:['Studied as a herb used for stress; the evidence is limited and mixed.'],
+   watch:['Avoid it during pregnancy and breastfeeding.','Not recommended for people with thyroid or autoimmune conditions.','Can interact with sedatives, diabetes and blood pressure medicines, immunosuppressants, anti-seizure drugs and thyroid hormones.','Can cause drowsiness, stomach upset or diarrhoea. Liver injury is rare but has been reported.'],
+   dos:['Ask a doctor or pharmacist before starting, especially if you take any medicine.'],
+   donts:['Do not use it in place of prescribed medicine or medical care.'],
+   tags:['herbal','stress','supplement'],aliases:['ashwagandha','winter cherry','withania']},
   {id:'food_012',name:'KFC Smoky Grilled Chicken',cat:'Fast Food & Street Snacks',portion:'1 piece',kcal:171,protein:21.0,
    benefits:['High protein, low carb.','Excellent for muscle retention compared to fried options.'],
    watch:['High in sodium.'],
    dos:['Choose this over deep-fried options when eating out.'],
    donts:["Don't pair with sugary sodas."],
    tags:['protein','fast food'],aliases:['kfc','grilled chicken']},
-  {id:'food_013',name:"KFC Hot & Crispy / McDonald's McAloo Tikki",cat:'Fast Food & Street Snacks',portion:'1 piece/burger',kcal:350,protein:12.0,
-   benefits:['High palatability and quick calories.'],
-   watch:['Deep-fried batter adds excess saturated fat, trans fats, and empty carbs.','Clogs arteries over time, reducing blood flow and negatively impacting cardiovascular/sexual stamina.'],
-   dos:['Limit consumption to once a week or twice a month.','Drink water instead of soda.'],
-   donts:['Do not make it a daily habit.'],
-   tags:['junk','high calorie','low nutrition'],aliases:['kfc','mcdonalds','mcaloo tikki','aloo tikki burger','fried chicken']},
+  {id:'food_013',name:'Aloo tikki burger (fast food)',cat:'Fast Food & Street Snacks',portion:'1 burger (varies by outlet)',kcal:570,protein:10,
+   benefits:['Filling, quick and easy to find.'],
+   watch:['The deep-fried patty and bun add a lot of calories, fat and salt.'],
+   dos:['Have it occasionally, and pair it with water or a salad.'],
+   donts:["Don't make it a regular meal."],
+   tags:['fried','fast food','high calorie'],aliases:['mcaloo tikki','aloo tikki burger','tikki burger']},
   {id:'food_014',name:'Curd (Dahi)',cat:'Dairy & Desserts',portion:'1 katori (150g)',kcal:90,protein:5.0,
    benefits:['Probiotic powerhouse.','Aids gut health, digestion, and immunity.','Provides calcium.'],
    watch:['Full-fat versions can be calorie-dense.'],
@@ -4092,7 +4141,7 @@ const ITEMS = [
    tags:['probiotics','gut health','protein'],aliases:['dahi','yogurt','yoghurt','curd']},
   {id:'food_015',name:'Ice Cream',cat:'Dairy & Desserts',portion:'2-3 tablespoons (60-70g)',kcal:140,protein:2.0,
    benefits:['Minor amounts of calcium and phosphorus.','Provides a rapid psychological and energy boost.'],
-   watch:['High in saturated fat and added sugars.','Leads to lethargy, weight gain, and insulin resistance if overconsumed.'],
+   watch:['High in saturated fat and added sugars.','Large portions and frequent servings add up quickly in calories.'],
    dos:['Treat as an occasional indulgence (1-2 times a week).',"Check labels to ensure it's made from real milk fat, not vegetable oil."],
    donts:["Avoid 'frozen desserts' made with cheap palm/vegetable oils.","Don't eat directly from the tub to prevent bingeing."],
    tags:['dessert','sugar','high calorie'],aliases:['icecream','kulfi','frozen dessert']},
@@ -4154,7 +4203,7 @@ const ITEMS = [
    dos:['Use in sabzi, or grill it lightly.'],
    donts:['Avoid deep-fried paneer tikka every day.'],
    tags:['protein','calcium'],aliases:['cottage cheese','chhena']},
-  {id:'daily_oats',name:'Oats (cooked, plain)',cat:'Daily Foods & Drinks',portion:'1 katori (150g cooked)',kcal:150,protein:5,
+  {id:'daily_oats',name:'Oats (cooked, plain)',cat:'Daily Foods & Drinks',portion:'1 katori (150g cooked)',kcal:110,protein:4,
    benefits:['Beta-glucan fiber helps keep you full and supports healthy cholesterol levels.'],
    watch:['Flavoured instant packets are high in sugar.'],
    dos:['Choose plain oats and add fruit or nuts.'],
@@ -4182,7 +4231,7 @@ const ITEMS = [
    benefits:['Warm and comforting; milk adds calcium.'],
    watch:['Sugar and full-fat milk add up over several cups a day.'],
    dos:['Use less sugar, or half milk and half water, and add ginger, cardamom or clove.'],
-   donts:["Don't drink more than 3 cups a day with sugar."],
+   donts:["Keep sugar low, especially across several cups a day."],
    tags:['drink','calcium','caffeine'],aliases:['tea','milk tea','masala chai','chai']},
   {id:'daily_coffee',name:'Black coffee',cat:'Daily Foods & Drinks',portion:'1 cup (240ml)',kcal:5,protein:0.3,
    benefits:['Alertness, and some antioxidant compounds.'],
@@ -4234,7 +4283,7 @@ const ITEMS = [
    dos:['Share one, or have it after a light meal.'],
    donts:['Avoid more than one or two at a time.'],
    tags:['sweet','sugar','festival'],aliases:['gulab jamun','gulabjamun','jamun']},
-  {id:'treat_jalebi',name:'Jalebi (1 medium)',cat:'Occasional Treats',portion:'1 piece (40g)',kcal:130,protein:1,
+  {id:'treat_jalebi',name:'Jalebi (1 medium)',cat:'Occasional Treats',portion:'1 piece (40g)',kcal:160,protein:1,
    benefits:['A small treat that satisfies a craving.'],
    watch:['Deep-fried and soaked in sugar syrup.'],
    dos:['Have a small piece after a meal.'],
@@ -4275,7 +4324,241 @@ const ITEMS = [
    watch:['Deep-fried in batter; high in oil and sodium.'],
    dos:['Choose fewer pieces and pair with a salad.'],
    donts:['Avoid as a daily snack.'],
-   tags:['fried','snack','monsoon'],aliases:['pakora','bhajiya','pakoda']}
+   tags:['fried','snack','monsoon'],aliases:['pakora','bhajiya','pakoda']},
+  {id:'food_016',name:'Idli (2 pieces)',cat:'Everyday Indian Staples',portion:'2 medium pieces (about 120g)',kcal:130,protein:4,
+   benefits:['Steamed, so lighter than fried breakfasts.','Fermented batter is easy to digest for many people.'],
+   watch:['Made from refined rice; a lower-fiber base than millet versions.'],
+   dos:['Pair with sambar for protein and vegetables.'],
+   donts:['Avoid large amounts of coconut chutney every day.'],
+   tags:['breakfast','steamed','light'],aliases:['idly','idli','south indian breakfast']},
+  {id:'food_017',name:'Plain dosa (1 medium)',cat:'Everyday Indian Staples',portion:'1 medium (about 80g)',kcal:135,protein:3,
+   benefits:['Fermented batter; light when cooked with little oil.'],
+   watch:['Restaurant versions often use a lot of oil or ghee.'],
+   dos:['Ask for less oil and pair with sambar.'],
+   donts:["Don't stack it with butter-heavy fillings every day."],
+   tags:['breakfast','south indian'],aliases:['dosa','plain dosa','sada dosa']},
+  {id:'food_018',name:'Poha (1 katori)',cat:'Everyday Indian Staples',portion:'1 katori (about 150g cooked)',kcal:200,protein:4,
+   benefits:['Light and quick to make.'],
+   watch:['Made from refined rice flakes; adds little protein on its own.'],
+   dos:['Add peanuts, peas and lemon for protein, fiber and flavour.'],
+   donts:['Avoid sweetened versions as a daily breakfast.'],
+   tags:['breakfast','light'],aliases:['poha','kanda poha','flattened rice']},
+  {id:'food_019',name:'Upma (1 katori)',cat:'Everyday Indian Staples',portion:'1 katori (about 150g)',kcal:210,protein:4,
+   benefits:['A warm, filling breakfast when made with vegetables.'],
+   watch:['Made with refined semolina, and often finished with a lot of oil.'],
+   dos:['Add vegetables and a few peanuts or cashews.'],
+   donts:["Don't fry the base in large amounts of oil."],
+   tags:['breakfast','vegetables'],aliases:['upma','rava upma','sooji']},
+  {id:'food_020',name:'Rajma (1 katori)',cat:'Everyday Indian Staples',portion:'1 katori (about 150g cooked)',kcal:190,protein:11,
+   benefits:['Good source of plant protein and fiber.','Provides iron and folate.'],
+   watch:['Raw or undercooked kidney beans are toxic; they must be soaked and fully boiled.'],
+   dos:['Soak overnight, discard the water and boil until soft before cooking.'],
+   donts:["Don't serve rajma that was only warmed in a slow cooker or left undercooked."],
+   tags:['protein','fiber','iron'],aliases:['rajma','kidney beans','rajma chawal']},
+  {id:'food_021',name:'Chana (chickpeas, cooked)',cat:'Everyday Indian Staples',portion:'1 katori (about 150g cooked)',kcal:245,protein:13,
+   benefits:['Plant protein and fiber help you feel full for longer.'],
+   watch:['Can cause gas if not soaked and cooked well.'],
+   dos:['Add to salads, or make a chana masala with less oil.'],
+   donts:['Avoid deep-fried chana snacks as a daily habit.'],
+   tags:['protein','fiber'],aliases:['chana','chole','chickpeas','kabuli chana']},
+  {id:'food_022',name:'Sambar (1 katori)',cat:'Everyday Indian Staples',portion:'1 katori (about 150g)',kcal:110,protein:4,
+   benefits:['Dal and vegetables in one bowl.'],
+   watch:['Can be salty; restaurant versions vary a lot.'],
+   dos:['Have it with rice or idli for a balanced plate.'],
+   donts:['Avoid having it with extra fried sides every meal.'],
+   tags:['dal','vegetables','south indian'],aliases:['sambhar','sambar']},
+  {id:'food_023',name:'Khichdi (1 katori)',cat:'Everyday Indian Staples',portion:'1 katori (about 200g)',kcal:210,protein:6,
+   benefits:['Rice and dal together give a better protein mix than rice alone.','Soft and easy to eat.'],
+   watch:['Depends on how much ghee is added.'],
+   dos:['Add vegetables and a spoon of curd.'],
+   donts:['Avoid heavy ghee on every serving.'],
+   tags:['comfort food','dal','light'],aliases:['khichdi','khichri','moong khichdi']},
+  {id:'food_024',name:'Ragi (finger millet) porridge',cat:'Everyday Indian Staples',portion:'1 katori (about 200ml)',kcal:170,protein:4,
+   benefits:['Millet with more calcium and fiber than white rice.'],
+   watch:['Sweetened versions add sugar quickly.'],
+   dos:['Have it plain, or with a little jaggery.'],
+   donts:['Avoid adding a lot of sugar or sweetened milk.'],
+   tags:['millet','calcium','fiber'],aliases:['ragi','nachni','finger millet','ragi malt']},
+  {id:'food_025',name:'Bajra roti (1 piece)',cat:'Everyday Indian Staples',portion:'1 piece (about 40g)',kcal:120,protein:3.5,
+   benefits:['Pearl millet adds fiber and minerals.'],
+   watch:['Can be dry and hard to chew for some people.'],
+   dos:['Mix with wheat flour for a softer roti.'],
+   donts:['Avoid heavy ghee layered on each roti.'],
+   tags:['millet','fiber','roti'],aliases:['bajra roti','pearl millet','bajre ki roti']},
+  {id:'food_026',name:'Roasted peanuts, unsalted',cat:'Dry Fruits & Nuts',portion:'1 small handful (about 30g)',kcal:175,protein:7.5,
+   benefits:['Plant protein, fiber and healthy fats.'],
+   watch:['Calorie-dense; salted peanuts add sodium.'],
+   dos:['Choose unsalted and measure a handful.'],
+   donts:["Don't eat straight from the packet."],
+   tags:['protein','snack','healthy fats'],aliases:['peanuts','moongphali','groundnut','mungfali']},
+  {id:'food_027',name:'Flaxseed, ground (1 tbsp)',cat:'Dry Fruits & Nuts',portion:'1 tablespoon ground (about 10g)',kcal:55,protein:1.9,
+   benefits:['Contains alpha-linolenic acid, a plant omega-3.','Adds fiber when eaten ground.'],
+   watch:['Whole seeds can pass through the body undigested; grind them first.'],
+   dos:['Sprinkle on curd, oats or dal.'],
+   donts:['Store ground flaxseed in a cool place and use it within a few days.'],
+   tags:['omega-3','fiber'],aliases:['flax','alsi','flaxseed','linseed']},
+  {id:'food_028',name:'Chia seeds (1 tbsp)',cat:'Dry Fruits & Nuts',portion:'1 tablespoon (about 12g)',kcal:58,protein:2,
+   benefits:['Fiber and plant omega-3s; they swell in liquid.'],
+   watch:['Add gradually if you are not used to a lot of fiber.'],
+   dos:['Soak in milk or curd for a few minutes before eating.'],
+   donts:["Don't eat large amounts dry without enough water."],
+   tags:['fiber','omega-3'],aliases:['chia','chia seeds']},
+  {id:'food_029',name:'Sesame seeds, til (1 tbsp)',cat:'Dry Fruits & Nuts',portion:'1 tablespoon (about 9g)',kcal:52,protein:1.5,
+   benefits:['A useful source of calcium, iron and magnesium.'],
+   watch:['Calorie-dense; small amounts add up.'],
+   dos:['Toast lightly and sprinkle on sabzi or chutney.'],
+   donts:['Avoid sesame sweets as a regular source.'],
+   tags:['calcium','iron'],aliases:['til','sesame','tilkut']},
+  {id:'food_030',name:'Soya chunks, dry',cat:'Daily Foods & Drinks',portion:'30g dry (about 1 small katori cooked)',kcal:105,protein:16,
+   benefits:['Very high in plant protein for its calories.'],
+   watch:['Packaged masala versions can be high in sodium.'],
+   dos:['Soak, squeeze out the water and cook in a light masala.'],
+   donts:['Avoid heavy frying in lots of oil.'],
+   tags:['protein','vegetarian','muscle'],aliases:['soya chunks','soybean chunks','soya']},
+  {id:'food_031',name:'White fish, cooked plain',cat:'Daily Foods & Drinks',portion:'100g cooked',kcal:105,protein:23,
+   benefits:['Lean, high-protein food.'],
+   watch:['Batter-fried fish adds a lot of oil and calories.'],
+   dos:['Steam, bake or grill with light spices.'],
+   donts:["Don't deep-fry fish every week."],
+   tags:['protein','lean'],aliases:['fish','machli','cod','rohu']},
+  {id:'food_032',name:'Apple (1 medium)',cat:'Fruits, Vegetables & Spices',portion:'1 medium (about 180g)',kcal:95,protein:0.5,
+   benefits:['Fiber, and it keeps you full longer than juice does.'],
+   watch:['Juice removes most of the fiber.'],
+   dos:['Eat it with the skin on.'],
+   donts:['Avoid apple juice as a replacement for the whole fruit.'],
+   tags:['fruit','fiber'],aliases:['seb','apple']},
+  {id:'food_033',name:'Guava (1 medium)',cat:'Fruits, Vegetables & Spices',portion:'1 medium (about 100g)',kcal:68,protein:2.6,
+   benefits:['High in vitamin C and fiber.'],
+   watch:['Seeds can be hard to digest for some people.'],
+   dos:['Eat it fresh.'],
+   donts:['Avoid sugar-sprinkled cut guava left out for long periods.'],
+   tags:['vitamin C','fiber','fruit'],aliases:['amrood','guava']},
+  {id:'food_034',name:'Papaya (1 katori)',cat:'Fruits, Vegetables & Spices',portion:'1 katori (about 150g)',kcal:65,protein:0.9,
+   benefits:['Vitamin C and folate.','Fiber from the fruit.'],
+   watch:['Unripe papaya is not a snack; eat it ripe.'],
+   dos:['Eat ripe, fresh papaya.'],
+   donts:['Avoid large amounts during pregnancy without advice from a doctor.'],
+   tags:['fruit','vitamin C'],aliases:['papaya','papita']},
+  {id:'food_035',name:'Orange (1 medium)',cat:'Fruits, Vegetables & Spices',portion:'1 medium (about 130g)',kcal:62,protein:1.2,
+   benefits:['Vitamin C and fiber.'],
+   watch:['Juice has less fiber and more sugar per glass than the whole fruit.'],
+   dos:['Eat the whole fruit.'],
+   donts:["Don't drink several glasses of juice in place of water."],
+   tags:['vitamin C','fruit'],aliases:['orange','santra','narangi']},
+  {id:'food_036',name:'Sweet potato, boiled (1 medium)',cat:'Fruits, Vegetables & Spices',portion:'1 medium (about 130g)',kcal:115,protein:2,
+   benefits:['Fiber, and vitamin A from beta-carotene.'],
+   watch:['Fried sweet potato chips add a lot of oil.'],
+   dos:['Boil or roast it.'],
+   donts:["Don't deep-fry it."],
+   tags:['vegetables','fiber','vitamin A'],aliases:['shakarkand','sweet potato','shakarkandi']},
+  {id:'food_037',name:'Beetroot, cooked (1 katori)',cat:'Fruits, Vegetables & Spices',portion:'1 katori (about 100g)',kcal:43,protein:1.6,
+   benefits:['Fiber and folate.'],
+   watch:['Can turn urine and stool pink; this is harmless.'],
+   dos:['Add to salads, or steam it with a little cumin.'],
+   donts:['Avoid heavy oil or tempering every day.'],
+   tags:['vegetables','fiber'],aliases:['beetroot','chukandar','beet']},
+  {id:'food_038',name:'Instant noodles (1 pack, 70g dry)',cat:'Fast Food & Street Snacks',portion:'1 pack (about 70g dry)',kcal:315,protein:7,
+   benefits:['Quick to make.'],
+   watch:['Low in protein and fiber; high in sodium.'],
+   dos:['Add eggs, paneer or vegetables.'],
+   donts:['Do not make it a meal with no vegetables or protein.'],
+   tags:['instant','high sodium'],aliases:['maggi','instant noodles','noodles','ramen']},
+  {id:'food_039',name:'Cheese pizza (1 medium slice)',cat:'Fast Food & Street Snacks',portion:'1 medium slice (about 100g)',kcal:285,protein:12,
+   benefits:['Some protein and calcium from the cheese.'],
+   watch:['High in refined flour, fat and salt.'],
+   dos:['Pair with a salad or vegetables.'],
+   donts:["Don't eat a whole pizza as one meal every week."],
+   tags:['fast food','high calorie'],aliases:['pizza','cheese pizza']},
+  {id:'food_040',name:'Medu vada (1 piece)',cat:'Fast Food & Street Snacks',portion:'1 piece (about 40g)',kcal:150,protein:3,
+   benefits:['Made from lentils, so it has some protein.'],
+   watch:['Deep-fried.'],
+   dos:['Have it as a snack, not a daily breakfast.'],
+   donts:['Avoid soaking it in oil or ghee.'],
+   tags:['fried','snack','south indian'],aliases:['vada','medu vada','sambar vada']},
+  {id:'food_041',name:'Paratha, plain (1 piece)',cat:'Everyday Indian Staples',portion:'1 piece (about 60g)',kcal:190,protein:4,
+   benefits:['Wheat flour gives energy.'],
+   watch:['Cooked with oil or ghee; often served with butter or pickle.'],
+   dos:['Have one with dal or sabzi and a salad.'],
+   donts:["Don't eat several parathas with butter every day."],
+   tags:['wheat','fried','staple'],aliases:['paratha','parantha']},
+  {id:'miss_oil',name:'Cooking oil (1 tbsp)',cat:'Easy to Miss',portion:'1 tablespoon (about 13g)',kcal:120,protein:0,
+   benefits:['Provides energy and helps absorb fat-soluble vitamins.'],
+   watch:['Pure fat: it adds calories fast, and pouring it free-hand is easy to overdo.'],
+   dos:['Measure with a spoon instead of pouring.'],
+   donts:["Don't reuse frying oil again and again."],
+   tags:['hidden calories','fat'],aliases:['oil','tel','cooking oil','refined oil']},
+  {id:'miss_ghee',name:'Ghee (1 tsp)',cat:'Easy to Miss',portion:'1 teaspoon (about 5g)',kcal:45,protein:0,
+   benefits:['Adds flavour and is a source of fat-soluble vitamins.'],
+   watch:['Each teaspoon is about 40-45 kcal; a second spoon is easy to add without noticing.'],
+   dos:['Use a measured teaspoon.'],
+   donts:['Avoid putting ghee on every roti and every bowl of dal.'],
+   tags:['hidden calories','fat'],aliases:['ghee','clarified butter','desi ghee']},
+  {id:'miss_sugar',name:'Sugar (1 tsp)',cat:'Easy to Miss',portion:'1 teaspoon (about 4g)',kcal:16,protein:0,
+   benefits:['Quick energy, but no other nutrients.'],
+   watch:['Adds up across several cups of tea and coffee each day.'],
+   dos:['Cut it down gradually, one spoon at a time.'],
+   donts:['Avoid sugar added to every drink out of habit.'],
+   tags:['hidden sugar','sweetener'],aliases:['sugar','cheeni','chini']},
+  {id:'miss_milk',name:'Toned milk (1 glass, 200ml)',cat:'Easy to Miss',portion:'1 glass (200ml)',kcal:120,protein:6.6,
+   benefits:['Calcium and protein.'],
+   watch:['Adds calories if you have several glasses, or add it to chai and coffee several times a day.'],
+   dos:['Count milk in chai and coffee as food too.'],
+   donts:['Avoid sweetened milk drinks every day.'],
+   tags:['dairy','calcium','drink'],aliases:['milk','doodh','toned milk','full cream milk']},
+  {id:'miss_juice',name:'Packaged fruit juice (1 glass, 200ml)',cat:'Easy to Miss',portion:'1 glass (200ml, sweetened)',kcal:90,protein:0.5,
+   benefits:['Some vitamin C, depending on the brand.'],
+   watch:['Little fiber; the sugar is absorbed quickly and does not make you full.'],
+   dos:['Choose a whole fruit instead.'],
+   donts:['Avoid it as a daily drink.'],
+   tags:['hidden sugar','drink'],aliases:['juice','packaged juice','fruit drink']},
+  {id:'miss_cold_drink',name:'Cola soft drink (1 can, 330ml)',cat:'Easy to Miss',portion:'1 can (330ml)',kcal:140,protein:0,
+   benefits:['Refreshing when cold.'],
+   watch:['About 35g of sugar in a standard can, and it does not make you feel full.'],
+   dos:['Have water, soda water or chaas instead.'],
+   donts:['Avoid it with meals every day.'],
+   tags:['hidden sugar','drink'],aliases:['cold drink','soda','soft drink','cola']},
+  {id:'miss_chips',name:'Potato chips (1 small pack, 30g)',cat:'Easy to Miss',portion:'1 small pack (about 30g)',kcal:160,protein:2,
+   benefits:['Crunchy and satisfying in the moment.'],
+   watch:['Fried and salted; it is easy to finish a larger pack without noticing.'],
+   dos:['Pour a small portion into a bowl instead of eating from the pack.'],
+   donts:['Avoid it as a daily snack.'],
+   tags:['snack','fried','hidden calories'],aliases:['chips','wafers','crisps']},
+  {id:'miss_biscuits',name:'Tea biscuits (2 biscuits, 20g)',cat:'Easy to Miss',portion:'2 biscuits (about 20g)',kcal:90,protein:1.5,
+   benefits:['A convenient snack.'],
+   watch:['Refined flour and sugar; many small servings add up.'],
+   dos:['Have two with tea, not the whole packet.'],
+   donts:['Avoid keeping them within easy reach at your desk.'],
+   tags:['snack','sugar'],aliases:['biscuit','biscuits','cookies']},
+  {id:'miss_cake',name:'Cake (1 slice, 60g)',cat:'Easy to Miss',portion:'1 slice (about 60g)',kcal:230,protein:3,
+   benefits:['Enjoyable as an occasional treat.'],
+   watch:['High in sugar and fat; a slice can be a large share of a snack.'],
+   dos:['Share a slice, or have it as a dessert after a meal.'],
+   donts:['Avoid having cake as a daily snack.'],
+   tags:['dessert','sugar'],aliases:['cake','pastry']},
+  {id:'miss_papad',name:'Roasted papad (1 piece)',cat:'Easy to Miss',portion:'1 piece (about 10g)',kcal:35,protein:2,
+   benefits:['Light and crunchy with a meal.'],
+   watch:['Very high in salt; fried papad adds a lot of oil.'],
+   dos:['Roast it over a flame rather than frying it.'],
+   donts:['Avoid several papads with every meal.'],
+   tags:['sodium','snack'],aliases:['papad','papadum','appalam']},
+  {id:'miss_pickle',name:'Pickle, achar (1 tsp)',cat:'Easy to Miss',portion:'1 teaspoon (about 10g)',kcal:15,protein:0.2,
+   benefits:['Adds a lot of flavour with few calories.'],
+   watch:['Very high in salt, and often oil.'],
+   dos:['Use a small spoon.'],
+   donts:['Avoid using it with every meal.'],
+   tags:['sodium','condiment'],aliases:['pickle','achar','aachar']},
+  {id:'miss_chutney',name:'Peanut chutney (2 tbsp)',cat:'Easy to Miss',portion:'2 tablespoons (about 30g)',kcal:100,protein:3,
+   benefits:['Protein from peanuts.'],
+   watch:['Oil and peanuts make it calorie-dense.'],
+   dos:['Use a spoonful, not a bowl.'],
+   donts:['Avoid taking it with every snack.'],
+   tags:['condiment','hidden calories'],aliases:['chutney','peanut chutney']},
+  {id:'miss_beer',name:'Beer, regular (1 can, 330ml)',cat:'Easy to Miss',portion:'1 can (330ml)',kcal:150,protein:1.6,
+   benefits:['Social and enjoyable in moderation.'],
+   watch:['Alcohol adds calories and can disrupt sleep. Pregnant people should not drink alcohol.'],
+   dos:['Count drinks as part of your daily calories.'],
+   donts:['Do not combine alcohol with sedating medicines without advice.'],
+   tags:['alcohol','hidden calories'],aliases:['beer','alcohol','drink']},
 ];
 
 const state = {q: '', cat: 'All'};
@@ -4549,11 +4832,44 @@ function monthEndISO(){const d=new Date();return isoDate(new Date(d.getFullYear(
 function committed(b){const e=monthEndISO();return (b.items||[]).filter(i=>!i.done&&i.next&&i.next<=e).reduce((a,i)=>a+i.amount,0)}
 function budgetUse(b){return b.limit?(b.spent+committed(b))/b.limit:0}
 function addMonths(iso,n){const d=new Date(iso+'T12:00:00');d.setMonth(d.getMonth()+n);return isoDate(d)}
-function addItem(e,bid){e.preventDefault();const b=state.budgets.find(x=>x.id===bid),f=new FormData(e.target);if(!b)return;(b.items=b.items||[]).push({id:uid('i'),title:String(f.get('title')).trim(),amount:Number(f.get('amount')),repeat:f.get('repeat'),next:f.get('next')||today,done:false});openBud[bid]=true;persist();render()}
-function toggleItem(bid,iid){const b=state.budgets.find(x=>x.id===bid),i=b?.items.find(x=>x.id===iid);if(!i)return;openBud[bid]=true;if(i.done){b.spent=Math.max(0,b.spent-i.amount);state.transactions=state.transactions.filter(t=>t.id!==i.txId);i.done=false;i.txId=null;persist();render();return}const tx={id:uid('tx'),title:i.title,amount:i.amount,category:b.name,date:today};state.transactions.unshift(tx);b.spent+=i.amount;state.xp+=3;let msg='Paid ✓';if(i.repeat&&i.repeat!=='none'){let n=addMonths(i.next||today,PER[i.repeat]),g=0;while(n<=today&&g++<60)n=addMonths(n,PER[i.repeat]);i.next=n;msg='Paid · next due '+dateShort(n)}else{i.done=true;i.txId=tx.id}persist();render();toast(msg)}
-function delItem(bid,iid){const b=state.budgets.find(x=>x.id===bid);if(!b)return;b.items=b.items.filter(i=>i.id!==iid);openBud[bid]=true;persist();render()}
-function addBudget(){const name=(prompt('Category name')||'').trim();if(!name)return;const limit=Number(prompt('Monthly limit (₹)'));if(!(limit>0)){toast('Enter a valid limit');return}state.budgets.push({id:uid('b'),name,limit,spent:0,items:[]});persist();render()}
-function budgetRows(){return state.budgets.map(b=>{const com=committed(b),sp=Math.min(100,b.spent/b.limit*100),cp=Math.max(0,Math.min(100-sp,com/b.limit*100)),u=budgetUse(b)*100,its=b.items||[];return `<details class="row" style="display:block;padding:0" ${openBud[b.id]?'open':''} ontoggle="openBud[${jarg(b.id)}]=this.open"><summary style="list-style:none;cursor:pointer;padding:15px 18px;display:flex;justify-content:space-between;gap:12px;align-items:center"><div class="row-main" style="flex:1"><div class="row-title">${esc(b.name)} <span class="quiet">· ${its.length} items ▾</span></div><div class="row-meta">${money(b.spent)} spent${com?' + '+money(com)+' committed':''} / ${money(b.limit)} · ${money(Math.max(0,b.limit-b.spent-com))} left</div><div class="bar" style="margin-top:8px;display:flex"><i style="width:${sp}%"></i><i style="width:${cp}%;background:#4a4560;border-radius:0"></i></div></div><span class="chip ${u>=100?'danger':u>=85?'warn':'good'}">${Math.round(u)}%</span></summary><div style="padding:0 18px 16px"><div class="actions" style="margin:0 0 8px"><button class="btn mini" onclick="renameBudget(${jarg(b.id)})">Rename / limit</button><button class="btn mini" onclick="removeBudget(${jarg(b.id)})">Delete category</button></div>${its.map(i=>`<div class="row" style="padding:9px 0"><label class="check" style="cursor:pointer"><input type="checkbox" ${i.done?'checked':''} onchange="toggleItem(${jarg(b.id)},${jarg(i.id)})"><span class="${i.done?'done-text':''}">${esc(i.title)}</span></label><span class="quiet">${i.repeat&&i.repeat!=='none'?`<span class="chip accent">${i.repeat}</span> `:''}${i.next&&!i.done?'due '+dateShort(i.next):''}</span><span class="pill-value">${money(i.amount)}</span><button class="btn mini ghost" onclick="editItem(${jarg(b.id)},${jarg(i.id)})">✎</button><button class="btn mini ghost" onclick="delItem(${jarg(b.id)},${jarg(i.id)})">×</button></div>`).join('')||'<div class="quiet" style="padding:10px 0">No line items yet.</div>'}<form class="mini-form" onsubmit="addItem(event,${jarg(b.id)})"><input name="title" placeholder="Line item" required><input name="amount" type="number" min="0.01" step="0.01" placeholder="₹" required><select name="repeat"><option value="none">One-time</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><input name="next" type="date" value="${today}"><button class="btn mini primary">Add</button></form></div></details>`}).join('')}
+let bpMode={mode:null,itemId:null};
+const BP_REPEATS=[['none','One-time'],['monthly','Monthly'],['quarterly','Quarterly'],['yearly','Yearly']];
+const budgetOf=id=>state.budgets.find(x=>x.id===id);
+const bpCleanRepeat=v=>BP_REPEATS.some(r=>r[0]===v)?v:'none';
+const bpMoney=v=>state.settings.hideAmounts?'••••':money(v);
+function bpSet(bid,mode,iid){bpMode={mode:mode||null,itemId:iid||null};refreshBudgetPopup(bid)}
+function openBudgetPopup(bid){bpMode={mode:null,itemId:null};openModal(budgetPopupView,bid)}
+function bpOpen(bid){const m=document.getElementById('modal'),p=m&&m.querySelector('.budget-popup');return !!(p&&m.style.display==='block'&&p.dataset.budgetId===bid)}
+function refreshBudgetPopup(bid){const m=document.getElementById('modal');if(!m)return;if(bpOpen(bid)){const y=m.scrollTop;m.innerHTML=budgetPopupView(bid);associateFieldLabels(m);m.scrollTop=y}else openModal(budgetPopupView,bid)}
+function afterBudgetChange(bid){persist();render();if(bpOpen(bid))refreshBudgetPopup(bid)}
+function bpItemFields(v){const cur=v.repeat||'none';const opts=BP_REPEATS.map(([val,label])=>`<option value="${val}" ${cur===val?'selected':''}>${label}</option>`).join('');return `<div class="bp-fields"><div class="field bp-wide"><label for="bp-title">Item name</label><input id="bp-title" name="title" required maxlength="120" autocomplete="off" value="${esc(v.title||'')}"></div><div class="field"><label for="bp-amount">Amount (₹)</label><input id="bp-amount" name="amount" type="number" min="0.01" step="0.01" required value="${esc(v.amount||'')}"></div><div class="field"><label for="bp-repeat">Repeats</label><select id="bp-repeat" name="repeat">${opts}</select></div><div class="field bp-wide"><label for="bp-next">Next due</label><input id="bp-next" name="next" type="date" value="${esc(v.next||today)}"></div></div>`}
+function budgetPopupView(bid){
+ const b=budgetOf(bid);
+ if(!b)return '<div class="modal-inner"><div class="empty"><strong>Category not found</strong></div></div>';
+ const its=b.items||[],com=committed(b),left=Math.max(0,b.limit-b.spent-com),u=Math.round(budgetUse(b)*100),sp=Math.min(100,b.spent/b.limit*100),cp=Math.max(0,Math.min(100-sp,com/b.limit*100)),paid=its.filter(i=>i.done).length;
+ let edit=bpMode.mode==='item'?its.find(i=>i.id===bpMode.itemId):null;
+ if(edit&&edit.done)edit=null;
+ const mode=bpMode.mode==='cat'?'cat':edit?'item':'list';
+ const id=jarg(b.id);
+ let body;
+ if(mode==='cat'){
+  body=`<form class="bp-form" onsubmit="bpSaveCat(event,${id})"><div class="bp-fields"><div class="field bp-wide"><label for="bp-cat-name">Category name</label><input id="bp-cat-name" name="name" required maxlength="60" autocomplete="off" value="${esc(b.name)}"></div><div class="field bp-wide"><label for="bp-cat-limit">Monthly limit (₹)</label><input id="bp-cat-limit" name="limit" type="number" min="1" step="1" required value="${esc(b.limit)}"></div></div><div class="form-actions"><button type="button" class="btn" onclick="bpSet(${id},null)">Cancel</button><button class="btn primary" type="submit">Save category</button></div></form>`;
+ } else if(mode==='item'){
+  body=`<form class="bp-form" onsubmit="bpSaveItem(event,${id},${jarg(edit.id)})">${bpItemFields(edit)}<div class="form-actions"><button type="button" class="btn" onclick="bpSet(${id},null)">Cancel</button><button class="btn primary" type="submit">Save item</button></div></form>`;
+ } else {
+  const rows=its.map(i=>{const iid=jarg(i.id),nm=esc(i.title),rec=i.repeat&&i.repeat!=='none';return `<div class="bp-item" role="listitem"><label class="bp-check"><input type="checkbox" ${i.done?'checked':''} onchange="toggleItem(${id},${iid})"><span class="bp-name ${i.done?'done-text':''}">${nm}</span></label><div class="bp-actions"><button type="button" class="btn mini" ${i.done?'disabled title="Untick it to edit"':''} onclick="bpSet(${id},'item',${iid})">Edit</button><button type="button" class="btn mini ghost" aria-label="Delete ${nm}" onclick="delItem(${id},${iid})">Delete</button></div><div class="bp-meta">${rec?`<span class="chip accent">${esc(i.repeat)}</span>`:'<span class="chip">One-time</span>'}<span>${i.done?'Paid':(i.next?'Due '+dateShort(i.next):'No due date')}</span><b class="pill-value">${bpMoney(i.amount)}</b></div></div>`}).join('');
+  body=`<div class="eyebrow bp-eyebrow">Line items · ${paid} paid of ${its.length}</div><div class="bp-list" role="list">${rows||'<div class="quiet bp-empty">No line items yet. Add one below.</div>'}</div><form class="bp-form" onsubmit="addItem(event,${id})"><div class="eyebrow bp-eyebrow">Add a line item</div>${bpItemFields({repeat:'none'})}<div class="form-actions"><button class="btn primary" type="submit">Add item</button></div></form>`;
+ }
+ const summary=`<div class="bp-summary"><div><div class="label">Spent</div><div class="value">${bpMoney(b.spent)}</div></div><div><div class="label">Committed</div><div class="value">${bpMoney(com)}</div></div><div><div class="label">Left</div><div class="value">${bpMoney(left)}</div></div><div><div class="label">Limit</div><div class="value">${bpMoney(b.limit)}</div></div></div>`;
+ const foot=mode==='list'?`<div class="bp-foot"><button type="button" class="btn" onclick="bpSet(${id},'cat')">Rename / limit</button><button type="button" class="btn" onclick="resetBudgetSpend(${id})">Reset spending</button><button type="button" class="btn" onclick="bpDeleteCat(${id})">Delete category</button></div>`:'';
+ return `<div class="modal-inner budget-popup" data-budget-id="${esc(b.id)}"><div class="split"><div><div class="eyebrow">Budget · ${u}% used</div><h2 id="modal-title" style="margin:4px 0">${esc(b.name)}</h2></div><button class="btn icon-btn" type="button" onclick="closeModal()" aria-label="Close">×</button></div><div class="bar" style="margin-top:12px;display:flex"><i style="width:${sp}%"></i><i style="width:${cp}%;background:#4a4560;border-radius:0"></i></div>${summary}<div class="bp-scroll">${body}</div>${foot}</div>`;
+}
+function bpSaveItem(e,bid,iid){e.preventDefault();const b=budgetOf(bid),i=b?.items.find(x=>x.id===iid);if(!i||i.done)return;const f=new FormData(e.target),title=String(f.get('title')||'').trim().slice(0,120),amount=Number(f.get('amount'));if(!title)return toast('Name the item first');if(!(amount>0))return toast('Enter an amount above 0');i.title=title;i.amount=amount;i.repeat=bpCleanRepeat(String(f.get('repeat')||'none'));i.next=String(f.get('next')||today);bpMode={mode:null,itemId:null};afterBudgetChange(bid);toast('Line item updated')}
+function addItem(e,bid){e.preventDefault();const b=budgetOf(bid),f=new FormData(e.target);if(!b)return;const title=String(f.get('title')||'').trim().slice(0,120),amount=Number(f.get('amount'));if(!title)return toast('Name the item first');if(!(amount>0))return toast('Enter an amount above 0');(b.items=b.items||[]).push({id:uid('i'),title,amount,repeat:bpCleanRepeat(String(f.get('repeat')||'none')),next:String(f.get('next')||today),done:false});afterBudgetChange(bid);toast('Line item added')}
+function toggleItem(bid,iid){const b=budgetOf(bid),i=b?.items.find(x=>x.id===iid);if(!i)return;if(i.done){b.spent=Math.max(0,b.spent-i.amount);state.transactions=state.transactions.filter(t=>t.id!==i.txId);i.done=false;i.txId=null;afterBudgetChange(bid);return}const tx={id:uid('tx'),title:i.title,amount:i.amount,category:b.name,date:today};state.transactions.unshift(tx);b.spent+=i.amount;state.xp+=3;let msg='Paid ✓';if(i.repeat&&i.repeat!=='none'){let n=addMonths(i.next||today,PER[i.repeat]),g=0;while(n<=today&&g++<60)n=addMonths(n,PER[i.repeat]);i.next=n;msg='Paid · next due '+dateShort(n)}else{i.done=true;i.txId=tx.id}afterBudgetChange(bid);toast(msg)}
+function delItem(bid,iid){const b=budgetOf(bid),i=b?.items.find(x=>x.id===iid);if(!i)return;if(!confirm(`Delete "${i.title}" from ${b.name}? Payments already recorded stay in Transactions.`))return;b.items=b.items.filter(x=>x.id!==iid);afterBudgetChange(bid)}
+function addBudget(){openModal(newBudgetModal)}
+function budgetRows(){return state.budgets.map(b=>{const com=committed(b),sp=Math.min(100,b.spent/b.limit*100),cp=Math.max(0,Math.min(100-sp,com/b.limit*100)),u=budgetUse(b)*100,its=b.items||[],left=Math.max(0,b.limit-b.spent-com),open=its.filter(i=>!i.done).length;return `<button type="button" class="budget-row" onclick="openBudgetPopup(${jarg(b.id)})" aria-haspopup="dialog" aria-label="Manage ${esc(b.name)} budget"><span class="row-main"><span class="row-title">${esc(b.name)} <span class="quiet">· ${its.length} line item${its.length===1?'':'s'}${open?` · ${open} open`:''}</span></span><span class="row-meta">${money(b.spent)} spent${com?' + '+money(com)+' committed':''} of ${money(b.limit)} · ${money(left)} left</span><span class="bar"><i style="width:${sp}%"></i><i style="width:${cp}%;background:#4a4560;border-radius:0"></i></span></span><span class="chip ${u>=100?'danger':u>=85?'warn':'good'}">${Math.round(u)}%</span><span class="budget-go" aria-hidden="true">›</span></button>`}).join('')||'<div class="empty"><strong>No budget categories yet.</strong>Add one to start tracking.</div>'}
 function moneyAnalysis(){const income=Math.max(0,Number(state.settings.incomeBaseline??120000)||0),all=state.budgets.flatMap(b=>(b.items||[]).map(i=>({...i,cat:b.name}))),rec=all.filter(i=>i.repeat&&i.repeat!=='none'),mEq=rec.reduce((a,i)=>a+i.amount/PER[i.repeat],0),spent=state.transactions.reduce((a,t)=>a+(Number(t.amount)||0),0),com=state.budgets.reduce((a,b)=>a+committed(b),0),free=income-spent-com,n=new Date(),dim=new Date(n.getFullYear(),n.getMonth()+1,0).getDate(),dom=n.getDate(),up=all.filter(i=>!i.done&&i.next&&i.next<=addDays(30)).sort((a,b)=>a.next.localeCompare(b.next)),tot=spent||1;const m=(l,v,t)=>`<div class="panel metric"><div class="label">${l}</div><div class="value">${v}</div><div class="trend">${t}</div></div>`;return `<section class="section"><div class="eyebrow" style="margin-bottom:10px">Analysis</div><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${m('Free to spend',money(free),income>0?Math.round(free/income*100)+'% of income after spending and commitments':'Set your income baseline to see this')}${m('Recurring / month',money(Math.round(mEq)),money(Math.round(mEq*12))+' per year')}${m('Committed this month',money(com),'unpaid items due by month end')}${m('Recurring items',rec.length,'monthly · quarterly · yearly')}</div></section><section class="section grid grid-2"><div class="panel"><div class="panel-header"><h2>Spend share & pace</h2><small>where it goes</small></div>${state.budgets.map(b=>{const proj=b.spent/Math.max(1,dom)*dim,over=proj+committed(b)>b.limit;return `<div class="row"><div class="row-main"><div class="row-title">${esc(b.name)} · ${Math.round(b.spent/tot*100)}% of spend</div><div class="bar" style="margin-top:7px"><i style="width:${b.spent/tot*100}%"></i></div></div><span class="chip ${over?'warn':'good'}">${over?'over pace':'on pace'}</span></div>`}).join('')}</div><div class="panel"><div class="panel-header"><h2>Upcoming bills</h2><small>next 30 days</small></div>${up.length?up.map(i=>`<div class="row"><div class="row-main"><div class="row-title">${esc(i.title)}</div><div class="row-meta">${dateShort(i.next)} · ${esc(i.cat)} · ${i.repeat||'one-time'}</div></div><b class="pill-value">${money(i.amount)}</b></div>`).join(''):'<div class="empty"><strong>Nothing due.</strong>No bills in the next 30 days.</div>'}</div></section>`}
 function focusPill(){const f=state.focus;if(!f.active&&!f.paused)return '';const t=taskById(f.taskId);return `<button class="chip accent" style="cursor:pointer;max-width:240px;white-space:nowrap" onclick="setNav('focus')">${f.active?'● ':'⏸ '}<span id="status-focus">${fmtClock(f.seconds)}</span>${t?' · '+esc(t.title.slice(0,22)):''}</button>`}
 function tickClock(){const liveDate=isoDate(new Date());if(liveDate!==today){today=liveDate;render();}const c=document.getElementById('clock');if(c)c.textContent=appDateTime(Date.now(),{hour:'2-digit',minute:'2-digit',hour12:true});if(state.focus.active)syncFocusClock();const f=document.getElementById('status-focus');if(f)f.textContent=fmtClock(state.focus.seconds);renderFocusTimerOnly()}
@@ -4584,9 +4900,15 @@ function addImgFiles(fl){[...fl].filter(f=>{if(!f.type.startsWith('image/'))retu
 function pickImgs(){const i=document.createElement('input');i.type='file';i.accept='image/*';i.multiple=true;i.onchange=()=>addImgFiles(i.files);i.click()}
 function dropImgs(e){e.preventDefault();addImgFiles(e.dataTransfer.files)}
 const goalName=t=>state.goals.find(g=>g.id===t.goalId)?.title||'No goal';
-function renameBudget(id){const b=state.budgets.find(x=>x.id===id);if(!b)return;const n=(prompt('Rename category',b.name)||'').trim();if(!n)return;const l=Number(prompt('Monthly limit (₹)',b.limit));state.transactions.forEach(t=>{if(t.category===b.name)t.category=n});b.name=n;if(l>0)b.limit=l;openBud[id]=true;persist();render()}
+function renameBudget(id){if(budgetOf(id))bpSet(id,'cat')}
 function removeBudget(id){const b=state.budgets.find(x=>x.id===id);if(!b||!confirm('Delete "'+b.name+'" and its line items? Past transactions are kept.'))return;state.budgets=state.budgets.filter(x=>x.id!==id);persist();render()}
-function editItem(bid,iid){const b=state.budgets.find(x=>x.id===bid),i=b?.items.find(x=>x.id===iid);if(!i)return;if(i.done){toast('Untick it first to edit');return}const t=(prompt('Item name',i.title)||'').trim();if(!t)return;const a=Number(prompt('Amount (₹)',i.amount));i.title=t;if(a>0)i.amount=a;openBud[bid]=true;persist();render()}
+function editItem(bid,iid){const i=budgetOf(bid)?.items.find(x=>x.id===iid);if(!i)return;if(i.done)return toast('Untick it first to edit');bpSet(bid,'item',iid)}
+function bpSaveCat(e,bid){e.preventDefault();const b=budgetOf(bid);if(!b)return;const f=new FormData(e.target),name=String(f.get('name')||'').trim().slice(0,60),limit=Number(f.get('limit'));if(!name)return toast('Name the category first');if(state.budgets.some(x=>x!==b&&x.name.toLowerCase()===name.toLowerCase()))return toast('A category with that name already exists');if(!(limit>0))return toast('Enter a limit above 0');if(name!==b.name)state.transactions.forEach(t=>{if(t.category===b.name)t.category=name});b.name=name;b.limit=limit;bpMode={mode:null,itemId:null};afterBudgetChange(bid);toast('Category saved')}
+function bpDeleteCat(bid){closeModal();removeBudget(bid)}
+function newBudgetModal(){return `<div class="modal-inner"><div class="split"><div><div class="eyebrow">Budget</div><h2 id="modal-title" style="margin:4px 0">New category</h2></div><button class="btn icon-btn" type="button" onclick="closeModal()" aria-label="Close">×</button></div><form class="form" onsubmit="saveNewBudget(event)" style="margin-top:18px"><div class="field"><label for="nb-name">Category name</label><input id="nb-name" name="name" required maxlength="60" autocomplete="off" placeholder="e.g. Groceries"></div><div class="field"><label for="nb-limit">Monthly limit (₹)</label><input id="nb-limit" name="limit" type="number" min="1" step="1" required placeholder="5000"></div><div class="form-actions"><button type="button" class="btn" onclick="closeModal()">Cancel</button><button class="btn primary">Create category</button></div></form></div>`}
+function saveNewBudget(e){e.preventDefault();const f=new FormData(e.target),name=String(f.get('name')||'').trim().slice(0,60),limit=Number(f.get('limit'));if(!name)return toast('Name the category first');if(state.budgets.some(x=>x.name.toLowerCase()===name.toLowerCase()))return toast('A category with that name already exists');if(!(limit>0))return toast('Enter a valid limit');state.budgets.push({id:uid('b'),name,limit,spent:0,items:[]});persist();closeModal();render()}
+function resetBudgetSpend(bid){const b=budgetOf(bid);if(!b)return;if(!confirm(`Reset spending for "${b.name}"? Its recorded transactions are removed and paid one-time items become unpaid. The limit and line items stay.`))return;state.transactions=state.transactions.filter(t=>t.category!==b.name);b.spent=0;(b.items||[]).forEach(i=>{if(i.done){i.done=false;i.txId=null}});bpMode={mode:null,itemId:null};afterBudgetChange(bid);toast('Spending reset for '+b.name)}
+function resetAllExpenses(){if(!state.transactions.length&&!state.budgets.some(b=>b.spent>0))return toast('Nothing to reset');if(!confirm('Reset all expenses? This clears every recorded transaction and sets each category back to zero spent. Limits, line items and recurring schedules stay.'))return;state.transactions=[];state.budgets.forEach(b=>{b.spent=0;(b.items||[]).forEach(i=>{if(i.done){i.done=false;i.txId=null}})});persist();render();toast('All expenses reset')}
 function addHabit(){const t=(prompt('New habit')||'').trim();if(!t)return;const frequency=(prompt('Frequency: daily, weekly, monthly, or yearly','daily')||'daily').trim().toLowerCase();if(!['daily','weekly','monthly','yearly'].includes(frequency))return toast('Choose daily, weekly, monthly, or yearly');const h={id:uid('h'),title:t,frequency,done:false,streak:0};state.habits.push(h);state.habitLog[h.id]={};persist();render()}
 function renameHabit(id){const h=state.habits.find(x=>x.id===id);if(!h)return;const t=prompt('Rename habit',h.title);if(t===null)return;const title=t.trim();if(!title)return;const freq=prompt('Frequency: daily, weekly, monthly, or yearly',h.frequency||'daily');if(freq===null)return;const frequency=freq.trim().toLowerCase();if(!['daily','weekly','monthly','yearly'].includes(frequency))return toast('Choose daily, weekly, monthly, or yearly');h.title=title;h.frequency=frequency;persist();render()}
 function removeHabit(id){const h=state.habits.find(x=>x.id===id);if(!h||!confirm('Delete "'+h.title+'" and its history?'))return;state.habits=state.habits.filter(x=>x.id!==id);delete state.habitLog[id];persist();render()}
@@ -5288,7 +5610,7 @@ function deleteLoan(id){
   state.loans=(state.loans||[]).filter(x=>x.id!==id);
   persist();closeModal();render();
 }
-function viewMoney(){const income=Number(state.settings.incomeBaseline??120000),spent=state.transactions.reduce((a,t)=>a+t.amount,0);return `<div class="page"><div class="eyebrow">Money</div><div class="h1">Where do I stand?</div><div class="lead">Calm, data-forward financial awareness. Budget is intention, decision is anticipated choice, transaction is reality.</div><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="setNav('loans')">Loans calculator</button><button class="btn" onclick="openShopping()">Shopping list · ${state.wishlist.filter(w=>!w.bought).length} to buy</button></div><section class="section grid grid-3"><div class="panel metric"><div class="label">Income</div><div class="value">${state.settings.hideAmounts?'••••':money(income)}</div><div class="trend">monthly income baseline · <button class="btn mini" onclick="editIncomeBaseline()">Edit baseline</button></div></div><div class="panel metric"><div class="label">Spent</div><div class="value">${state.settings.hideAmounts?'••••':money(spent)}</div><div class="trend">recorded transactions</div></div><div class="panel metric"><div class="label">Room / pressure</div><div class="value">${facts().budgetPressure.length} signals</div><div class="trend">review configured limits</div></div></section>${moneyAnalysis()}<section class="section grid grid-2"><div class="panel"><div class="panel-header"><h2>Budgets</h2><button class="btn mini" onclick="addBudget()">+ Category</button></div>${budgetRows()}</div><div class="panel"><div class="panel-header"><h2>Decisions</h2><small>anticipated → actual</small></div>${state.decisions.map(d=>`<div class="row"><div class="row-main"><div class="row-title">${esc(d.title)}</div><div class="row-meta">Projected ${money(d.projected)} · Actual ${money(d.actual)}${d.review?` · ${esc(d.review.outcome)}`:''}${d.review?.lesson?` — ${esc(d.review.lesson)}`:''}${decisionReviewDue(d)?' · review due':''}</div></div>${decisionReviewDue(d)?`<button class="btn mini primary" onclick="openDecisionReview(${jarg(d.id)})">Review</button>`:''}<button class="btn mini ${d.status==='Reconciled'?'':'primary'}" onclick="${d.status==='Reconciled'?'toast(\'Already reconciled\')':`openDecision(${jarg(d.id)})`}">${d.status==='Reconciled'?'Reconciled':'Reconcile'}</button></div>`).join('')}</div></section><section class="section panel" aria-labelledby="wishlist-title"><div class="panel-header"><h2 id="wishlist-title">Things to buy</h2><button class="btn mini" onclick="openModal(wishlistModal)">+ Item</button></div>${wishlistRows()}</section><section class="section panel"><div class="panel-header"><h2>Transactions</h2><button class="btn mini" onclick="openModal(expenseModal)">+ Expense</button></div><table class="table"><thead><tr><th>Date</th><th>What</th><th>Category</th><th>Amount</th></tr></thead><tbody>${state.transactions.map(t=>`<tr><td>${dateShort(t.date)}</td><td>${esc(t.title)}</td><td>${esc(t.category)}</td><td class="pill-value">${state.settings.hideAmounts?'••••':money(t.amount)}</td></tr>`).join('')}</tbody></table></section></div>`}
+function viewMoney(){const income=Number(state.settings.incomeBaseline??120000),spent=state.transactions.reduce((a,t)=>a+t.amount,0);return `<div class="page"><div class="eyebrow">Money</div><div class="h1">Where do I stand?</div><div class="lead">Calm, data-forward financial awareness. Budget is intention, decision is anticipated choice, transaction is reality.</div><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="setNav('loans')">Loans calculator</button><button class="btn" onclick="openShopping()">Shopping list · ${state.wishlist.filter(w=>!w.bought).length} to buy</button></div><section class="section grid grid-3"><div class="panel metric"><div class="label">Income</div><div class="value">${state.settings.hideAmounts?'••••':money(income)}</div><div class="trend">monthly income baseline · <button class="btn mini" onclick="editIncomeBaseline()">Edit baseline</button></div></div><div class="panel metric"><div class="label">Spent</div><div class="value">${state.settings.hideAmounts?'••••':money(spent)}</div><div class="trend">recorded transactions</div></div><div class="panel metric"><div class="label">Room / pressure</div><div class="value">${facts().budgetPressure.length} signals</div><div class="trend">review configured limits</div></div></section>${moneyAnalysis()}<section class="section grid grid-2"><div class="panel"><div class="panel-header"><h2>Budgets</h2><button class="btn mini" onclick="addBudget()">+ Category</button></div>${budgetRows()}</div><div class="panel"><div class="panel-header"><h2>Decisions</h2><small>anticipated → actual</small></div>${state.decisions.map(d=>`<div class="row"><div class="row-main"><div class="row-title">${esc(d.title)}</div><div class="row-meta">Projected ${money(d.projected)} · Actual ${money(d.actual)}${d.review?` · ${esc(d.review.outcome)}`:''}${d.review?.lesson?` — ${esc(d.review.lesson)}`:''}${decisionReviewDue(d)?' · review due':''}</div></div>${decisionReviewDue(d)?`<button class="btn mini primary" onclick="openDecisionReview(${jarg(d.id)})">Review</button>`:''}<button class="btn mini ${d.status==='Reconciled'?'':'primary'}" onclick="${d.status==='Reconciled'?'toast(\'Already reconciled\')':`openDecision(${jarg(d.id)})`}">${d.status==='Reconciled'?'Reconciled':'Reconcile'}</button></div>`).join('')}</div></section><section class="section panel" aria-labelledby="wishlist-title"><div class="panel-header"><h2 id="wishlist-title">Things to buy</h2><button class="btn mini" onclick="openModal(wishlistModal)">+ Item</button></div>${wishlistRows()}</section><section class="section panel"><div class="panel-header" style="flex-wrap:wrap;gap:10px"><h2 style="margin:0">Transactions</h2><div class="row-actions" style="flex-wrap:wrap"><button class="btn mini" onclick="openModal(expenseModal)">+ Expense</button><button class="btn mini ghost" onclick="resetAllExpenses()">Reset expenses</button></div></div><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>What</th><th>Category</th><th>Amount</th></tr></thead><tbody>${state.transactions.map(t=>`<tr><td>${dateShort(t.date)}</td><td>${esc(t.title)}</td><td>${esc(t.category)}</td><td class="pill-value">${state.settings.hideAmounts?'••••':money(t.amount)}</td></tr>`).join('')}</tbody></table></div></section></div>`}
 // ---- Journal: one page per day, swipe to turn ----
 var JOURNAL_MOODS=['Rough','Low','Okay','Good','Great'];
 var JOURNAL_FIELDS=[['highlight','Best part of today','What stood out?'],['grateful','Three things I am grateful for','One per line'],['learned','What I learned','Any insight, fact or lesson'],['challenge','What was hard','It is fine to write it down'],['tomorrow','One thing for tomorrow','Keep it small'],['free','Anything else','Free writing']];
@@ -6119,7 +6441,7 @@ function tasksIcs(){
 }
 function exportTasksIcs(){const body=tasksIcs();downloadText(`astralsurge-tasks-${backupStamp()}.ics`,body);toast('Calendar file created')}
 function dueLabel(due){if(!due)return '';const diff=Math.round((new Date(due+'T12:00:00')-new Date(today+'T12:00:00'))/864e5);if(diff<0)return 'Overdue · '+dateShort(due);if(diff===0)return 'Due today';if(diff===1)return 'Due tomorrow';return 'Due '+dateShort(due)}
-function viewToday(){const f=facts(),rec=recommendation();const main=rec?rec.title:(f.focusActive?'Continue your focus':(f.openCount?'You have work worth moving':'Today is calm'));const mainTask=rec?taskById(rec.entityId):f.focusCompatible;return `<div class="page"><div class="split"><div><div class="eyebrow">${formatDay(today)}</div><div class="h1">${greeting()} <span aria-hidden="true">${greetingEmoji()}</span></div><div class="lead">Your day is a small system: intent first, then work, focus, and reality.</div></div></div>${!isInstalled()&&__installPrompt?`<section class="section install-strip"><div><b>Install AstralSurge OS on this device</b><span>Works offline and adds Quick Capture to your launcher shortcuts.</span></div><button class="btn primary" onclick="installPWA()">Install app</button></section>`:''}<form class="panel pad quick-capture" onsubmit="quickCapture(event)"><input name="qc" aria-label="Quick capture" maxlength="200" autocomplete="off" placeholder="Capture an idea, then press Enter"><button class="btn primary quick-capture-btn">Capture</button></form><div class="quick-actions"><button class="btn" onclick="openShopping()">Shopping list · ${state.wishlist.filter(w=>!w.bought).length} to buy</button></div><section class="section panel pad checkin-card"><div id="ck-card">${checkinCardInner()}</div></section>${morningPlanCard()}<section class="section"><div class="panel focus-panel"><div class="focus-row"><div><div class="eyebrow">${rec?'Next best action':'Current context'}</div><div class="focus-title">${esc(main)}</div><div class="lead">${rec?esc(rec.reason):(f.focusActive?'Your active session stays front and center until it ends.':`There are ${f.openCount} open tasks, ${f.importantUnscheduled} important task(s) without a block, and ${f.openWindow} minutes of open time.`)}</div>${rec?`<div class="reason"><b>Why:</b> ${rec.evidence.map(esc).join(' · ')} <button class="btn ghost mini" onclick="inspect('rule',${jarg(rec.ruleId)})">Why am I seeing this?</button></div>`:''}<div class="actions">${rec?`<button class="btn primary" onclick="actionForRec(recommendation())">${esc(rec.actionLabel)}</button>${rec.entityType==='task'?`<button class="btn" onclick="inspect('task',${jarg(rec.entityId)})">Open task</button>`:''}<button class="btn" onclick="dismissRecommendation(${jarg(rec.ruleId)})">Dismiss</button>`:mainTask?`<button class="btn primary" onclick="${f.focusActive?'setNav(\'focus\')':`startFocus(${jarg(mainTask.id)})`}">${f.focusActive?'Open Focus':'Start Focus'}</button><button class="btn" onclick="inspect('task',${jarg(mainTask.id)})">Inspect</button>`:'<button class="btn primary" onclick="globalCreate()">Capture something</button>'}</div></div><div style="min-width:210px"><div class="eyebrow">Workspace signal</div><div class="metric surface" style="margin-top:8px"><div class="label">Open time</div><div class="value">${openSlot(45)?'45m':'None'}</div><div class="trend">${openSlot(45)?'first window '+openSlot(45):'no open 45m window'}</div></div></div></div></div></section>${billsSoonSection()}${dailyProgress()}<section class="section grid grid-2"><div class="panel"><div class="panel-header"><h2>Today</h2><small>commitments</small></div><div class="timeline">${state.planner.slice().sort((a,b)=>a.time.localeCompare(b.time)).map(p=>`<div class="time-row"><div class="time">${esc(p.time)}</div><div class="event"><div class="event-title">${esc(p.title)}</div><div class="event-meta">${p.duration}m · ${esc(p.type)} ${p.taskId?'· task linked':''}</div></div></div>`).join('')}</div></div><div class="panel"><div class="panel-header"><h2>Quick capture</h2><small>organize later</small></div><div class="grid" style="padding:16px"><button class="btn" onclick="openModal(taskModal)">+ Task <span class="quiet">capture work</span></button><button class="btn" onclick="openModal(noteModal)">+ Note <span class="quiet">capture context</span></button><button class="btn" onclick="openModal(expenseModal)">+ Expense <span class="quiet">record reality</span></button><button class="btn" onclick="addReminder()">+ Reminder <span class="quiet">browser notification</span></button></div></div></section>${weeklyReviewCard()}<section class="section grid grid-3"><div class="panel metric"><div class="label">Needs attention</div><div class="value">${f.overdue}</div><div class="trend">overdue open tasks</div></div><div class="panel metric"><div class="label">Goal momentum</div><div class="value">${state.goals[0]?.progress||0}%</div><div class="trend">${esc(state.goals[0]?.title||'No active goal')}</div></div><div class="panel metric"><div class="label">Vault</div><div class="value">${state.vault.encryptionEnabled?'AES-GCM':'Local'}</div><div class="trend">${state.vault.encryptionEnabled?'encrypted':'browser storage'}</div></div></section></div>`}
+function viewToday(){const f=facts(),rec=recommendation();const main=rec?rec.title:(f.focusActive?'Continue your focus':(f.openCount?'You have work worth moving':'Today is calm'));const mainTask=rec?taskById(rec.entityId):f.focusCompatible;return `<div class="page"><div class="split"><div><div class="eyebrow">${formatDay(today)}</div><div class="greet-row"><div class="h1">${greeting()}</div><span class="greet-emoji" aria-hidden="true">${greetingEmoji()}</span></div><div class="lead">Your day is a small system: intent first, then work, focus, and reality.</div></div></div>${!isInstalled()&&__installPrompt?`<section class="section install-strip"><div><b>Install AstralSurge OS on this device</b><span>Works offline and adds Quick Capture to your launcher shortcuts.</span></div><button class="btn primary" onclick="installPWA()">Install app</button></section>`:''}<form class="panel pad quick-capture" onsubmit="quickCapture(event)"><input name="qc" aria-label="Quick capture" maxlength="200" autocomplete="off" placeholder="Capture an idea, then press Enter"><button class="btn primary quick-capture-btn">Capture</button></form><div class="quick-actions"><button class="btn" onclick="openShopping()">Shopping list · ${state.wishlist.filter(w=>!w.bought).length} to buy</button></div><section class="section panel pad checkin-card"><div id="ck-card">${checkinCardInner()}</div></section>${morningPlanCard()}<section class="section"><div class="panel focus-panel"><div class="focus-row"><div><div class="eyebrow">${rec?'Next best action':'Current context'}</div><div class="focus-title">${esc(main)}</div><div class="lead">${rec?esc(rec.reason):(f.focusActive?'Your active session stays front and center until it ends.':`There are ${f.openCount} open tasks, ${f.importantUnscheduled} important task(s) without a block, and ${f.openWindow} minutes of open time.`)}</div>${rec?`<div class="reason"><b>Why:</b> ${rec.evidence.map(esc).join(' · ')} <button class="btn ghost mini" onclick="inspect('rule',${jarg(rec.ruleId)})">Why am I seeing this?</button></div>`:''}<div class="actions">${rec?`<button class="btn primary" onclick="actionForRec(recommendation())">${esc(rec.actionLabel)}</button>${rec.entityType==='task'?`<button class="btn" onclick="inspect('task',${jarg(rec.entityId)})">Open task</button>`:''}<button class="btn" onclick="dismissRecommendation(${jarg(rec.ruleId)})">Dismiss</button>`:mainTask?`<button class="btn primary" onclick="${f.focusActive?'setNav(\'focus\')':`startFocus(${jarg(mainTask.id)})`}">${f.focusActive?'Open Focus':'Start Focus'}</button><button class="btn" onclick="inspect('task',${jarg(mainTask.id)})">Inspect</button>`:'<button class="btn primary" onclick="globalCreate()">Capture something</button>'}</div></div><div style="min-width:210px"><div class="eyebrow">Workspace signal</div><div class="metric surface" style="margin-top:8px"><div class="label">Open time</div><div class="value">${openSlot(45)?'45m':'None'}</div><div class="trend">${openSlot(45)?'first window '+openSlot(45):'no open 45m window'}</div></div></div></div></div></section>${billsSoonSection()}${dailyProgress()}<section class="section grid grid-2"><div class="panel"><div class="panel-header"><h2>Today</h2><small>commitments</small></div><div class="timeline">${state.planner.slice().sort((a,b)=>a.time.localeCompare(b.time)).map(p=>`<div class="time-row"><div class="time">${esc(p.time)}</div><div class="event"><div class="event-title">${esc(p.title)}</div><div class="event-meta">${p.duration}m · ${esc(p.type)} ${p.taskId?'· task linked':''}</div></div></div>`).join('')}</div></div><div class="panel"><div class="panel-header"><h2>Quick capture</h2><small>organize later</small></div><div class="grid" style="padding:16px"><button class="btn" onclick="openModal(taskModal)">+ Task <span class="quiet">capture work</span></button><button class="btn" onclick="openModal(noteModal)">+ Note <span class="quiet">capture context</span></button><button class="btn" onclick="openModal(expenseModal)">+ Expense <span class="quiet">record reality</span></button><button class="btn" onclick="addReminder()">+ Reminder <span class="quiet">browser notification</span></button></div></div></section>${weeklyReviewCard()}<section class="section grid grid-3"><div class="panel metric"><div class="label">Needs attention</div><div class="value">${f.overdue}</div><div class="trend">overdue open tasks</div></div><div class="panel metric"><div class="label">Goal momentum</div><div class="value">${state.goals[0]?.progress||0}%</div><div class="trend">${esc(state.goals[0]?.title||'No active goal')}</div></div><div class="panel metric"><div class="label">Vault</div><div class="value">${state.vault.encryptionEnabled?'AES-GCM':'Local'}</div><div class="trend">${state.vault.encryptionEnabled?'encrypted':'browser storage'}</div></div></section></div>`}
 
 function viewVault(){return `<div class="page"><div class="split"><div><div class="eyebrow">Vault</div><div class="h1">Private by construction, not by promise.</div><div class="lead">Workspace persistence is IndexedDB-first and local to this browser. JSON state is compressed; unencrypted image attachments are stored separately, while encrypted vaults keep their attachments inside the encrypted snapshot.</div></div><button class="btn primary" onclick="backupWorkspace()">${state.vault.encryptionEnabled?'Export encrypted backup':'Back up'}</button></div>${recoveryPanel()}<section class="section grid grid-2"><div class="panel pad"><div class="eyebrow">Encryption</div><h2 style="margin:7px 0">${state.vault.encryptionEnabled?'AES-GCM vault enabled':'Local vault not yet encrypted'}</h2><div class="muted-line">PBKDF2-SHA-256 derives a wrapping key from your passphrase; a random AES data key encrypts the workspace. The passphrase is never stored in app storage.</div><div class="actions">${state.vault.encryptionEnabled?`<button class="btn primary" onclick="toggleLock()">${state.vault.locked?'Unlock':'Lock vault'}</button><button class="btn" onclick="setPassphrase()">Change passphrase</button>`:`<button class="btn primary" onclick="setPassphrase()">Enable encrypted vault</button>`}<button class="btn" onclick="recoveryImport()">Unlock with recovery key</button></div><div class="notice-strip" style="margin-top:14px"><div><b>Threat-model boundary</b><span>Encryption does not protect data while the vault is unlocked or against a compromised browser/device/extension.</span></div></div></div><div class="panel pad"><div class="eyebrow">Storage health</div><h2 style="margin:7px 0">IndexedDB storage</h2><div id="storage-health" class="muted-line">Checking browser storage…</div><div class="storage-meter" style="margin-top:10px"><i id="storage-bar"></i></div><div class="field-help" style="margin-top:9px">IndexedDB is the primary workspace store, JSON is compressed when the browser supports CompressionStream, and image attachments are externalized for unencrypted workspaces. Persistent storage is requested where supported. Browser quota/eviction still cannot be guaranteed away, so keep portable backups for anything you cannot afford to lose.</div></div></section><section class="section panel"><div class="panel-header"><h2>Recovery & restore</h2><small>explicit, encrypted when possible</small></div><div style="padding:18px"><div class="feature-grid"><div class="feature-card"><div class="eyebrow">Checkpoint</div><div style="margin-top:6px">${dateShort(state.vault.lastCheckpoint)}</div><div class="field-help" style="margin-top:5px">${state.vault.encryptionEnabled?'Stored as an encrypted checkpoint while the vault is unlocked.':'Stored in IndexedDB for this browser profile.'}</div><div class="actions"><button class="btn mini" onclick="createCheckpoint()">Create</button><button class="btn mini" onclick="compareCheckpoint()">Compare</button></div></div><div class="feature-card"><div class="eyebrow">Portable backup</div><div style="margin-top:6px">${dateShort(state.vault.lastBackup)}</div><div class="field-help" style="margin-top:5px">${state.vault.encryptionEnabled?'Encrypted backup envelope.':'Readable JSON backup.'}</div><div class="actions"><button class="btn mini primary" onclick="backupWorkspace()">Export</button><button class="btn mini" onclick="exportRecoveryNoImages()">Recovery · no images</button><button class="btn mini" onclick="fileRestore()">Restore</button></div></div></div></div></section><section class="section panel"><div class="panel-header"><h2>Security notes</h2><small>honest boundaries</small></div><div class="row"><div><div class="row-title">Primary storage</div><div class="row-meta">This build persists the workspace in IndexedDB first; small compatibility metadata may still use localStorage. PWA assets may be cached by the service worker.</div></div><span class="chip good">local</span></div><div class="row"><div><div class="row-title">Recovery key</div><div class="row-meta">Exported once when encryption is enabled. The app does not intentionally retain the recovery key in browser storage.</div></div><span class="chip good">offline</span></div><div class="row"><div><div class="row-title">Plaintext checkpoints</div><div class="row-meta">Disabled while encrypted-vault mode is active; old plaintext checkpoint keys are removed when an encrypted envelope is detected.</div></div><span class="chip accent">hardened</span></div><div class="row"><div><div class="row-title">Offline / install</div><div class="row-meta">Offline behavior depends on a valid service worker and secure hosting. This HTML cannot guarantee OS background execution.</div></div><span class="chip">best effort</span></div></section></div>`}
 
@@ -6783,6 +7105,7 @@ Object.assign(window,{startFreeFocus,startFocusOverlayDrag,nudgeFocusOverlayKey,
   fileRestore,shiftCalendar,resetCalendar,viewProgress,viewRules,viewSettings,downloadState,viewLegal,viewCalendar,viewReminders,viewTimer,startStandaloneTimer,
   stopStandalone,resetStandaloneTimer,setStandaloneMinutes,copyTodaySummary,snoozeReminderTomorrow,exportTasksIcs,viewConvert,setConvert,setConvertValue,swapConvert,viewPrompts,generatePrompt,copyPrompt,openDecisionReview,saveDecisionReview,repeatLastWorkout,startStopwatch,pauseStopwatch,lapStopwatch,resetStopwatch,editIncomeBaseline,renameBudget,removeBudget,editItem,addHabit,renameHabit,removeHabit,delWorkout,renameWorkout,renameGoal,removeGoal,setAccent,setWall,pickWall,setAmbientEffect,setAmbientStrength,setAmbientOpacity,showImg,hideImg,pickImgs,dropImgs,rmImg,addSub,toggleSub,editSub,delSub,addItem,toggleItem,delItem,addBudget,setPassphrase,unlockVault,restoreCheckpoint,acceptBeta,showBeta,setFocusLen,toggleFocusPause,resetFocusTimer,toggleFocusMusic,hideFocusOverlay,openMinimalFocus,deleteTask,deleteNote,editNote,doneStep,executeStep,removeBlock,restorePreview,applyRestore,openSlot,dropBlocks,fmtClock,recommendationRaw,search,globalSearch,drawSearchResults,searchOpen,navItems,renderShell,moreIndex,render,bootAstral,exportRecoveryNoImages,morningWizard,saveMorningWizard,weeklyReviewModal,saveReview,addReminder,addQuickReminder,saveReminder,editReminder,snoozeReminder,doneReminder,deleteReminder,requestNotifications,installPWA,setPassphrase,unlockVault,toggleLock,recoveryImport,backupWorkspace,encryptedBackup,editWorkout,saveWorkout,workoutModal,logWorkout,viewLife,viewProgress,viewVault,viewReminders,viewSettings,viewDog,setScreenDensity});
 
+Object.assign(window,{openBudgetPopup,bpSet,bpSaveItem,bpSaveCat,bpDeleteCat,saveNewBudget,resetBudgetSpend,resetAllExpenses,addItem,toggleItem,delItem,addBudget,budgetPopupView});
 setInterval(tickClock,1000);bootAstral();
 })();
 </script>
