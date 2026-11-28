@@ -1,5 +1,6 @@
 """Loans screen: calculator, saved loans, schedule, validation, persistence and phone-width layout."""
 import os
+import re
 import sys
 
 from playwright.sync_api import sync_playwright
@@ -50,6 +51,15 @@ def fill_loan(page, name, principal, rate, months, emi=None, loan_type="Car"):
     page.wait_for_timeout(300)
 
 
+def set_slider(page, selector, value):
+    """Drive a range slider the way a user does: set the value, then fire input."""
+    page.evaluate(
+        """([sel, v]) => { const el = document.querySelector(sel); el.value = String(v);
+          el.dispatchEvent(new Event('input', { bubbles: true })); }""",
+        [selector, value],
+    )
+
+
 def run():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
@@ -65,19 +75,19 @@ def run():
         out = page.locator("#loan-calc-out").inner_text()
         check("default calculator shows the EMI for 20 lakh at 9% over 180 months", "20,285" in out, out[:120])
 
-        page.fill("#lc-p", "1000000")
+        set_slider(page, "#lc-p", 1000000)
         page.wait_for_timeout(100)
         out = page.locator("#loan-calc-out").inner_text()
         check("changing the amount updates the EMI live", "10,142" in out, out[:120])
 
         page.select_option("#lc-mode", "tenure")
         page.wait_for_timeout(200)
-        page.fill("#lc-x", "10142.67")
+        set_slider(page, "#lc-x", 10100)
         page.wait_for_timeout(100)
         out = page.locator("#loan-calc-out").inner_text()
-        check("time-to-repay mode returns about 15 years", "15 yr" in out, out[:160])
+        check("time-to-repay mode returns about 15 years", re.search(r"15(\.\d)? yr", out) is not None, out[:160])
 
-        page.fill("#lc-x", "100")
+        set_slider(page, "#lc-x", 5000)
         page.wait_for_timeout(100)
         out = page.locator("#loan-calc-out").inner_text()
         check("an EMI below the monthly interest is flagged", "never clears" in out, out[:160])

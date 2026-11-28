@@ -357,6 +357,9 @@ html[data-theme="light"] .btn.primary,html[data-theme="light"] .btn.primary:hove
 html[data-theme="light"] .btn.primary:hover{background:#2c313b;border-color:#2c313b}
 html[data-theme="light"] select[style*="background:#0f1216"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2366707d' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;background-position:right 13px center !important;background-size:12px 8px !important;background-repeat:no-repeat !important}
 .quick-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.loan-slider-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.loan-slider output{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.loan-slider input[type=range]{width:100%;accent-color:var(--accent);min-height:32px;margin:6px 0 0}
 .plan-priorities{display:grid}
 .plan-priority{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
 .plan-priority:last-child{border-bottom:0}
@@ -4637,9 +4640,29 @@ function loanCardHtml(l){
   const pen=penaltyText(l);
   return `<div class="row"><div class="row-main"><div class="row-title">${esc(l.name)} <span class="chip">${esc(l.type)}</span> <span class="chip">${esc(String(l.rate))}% ${esc(l.rateType)}</span></div><div class="row-meta">EMI ${fmtMoneyOrDash(s.emi)} · ${ends}${asOf}${differs}</div><div class="row-meta">Interest left ${fmtMoneyOrDash(s.totalInterest)} · total payable ${fmtMoneyOrDash(s.totalPayable)}</div>${pen?`<div class="row-meta">${esc(pen)}</div>`:''}${loanCardAdvice(l)}</div><div class="row-actions"><button class="btn mini" onclick="openPrepay(${jarg(l.id)})">Prepay or close</button><button class="btn mini" onclick="openLoanSchedule(${jarg(l.id)})">Schedule</button><button class="btn mini" onclick="openModal(loanModal,findLoan(${jarg(l.id)}))">Edit</button></div></div>`;
 }
+const loanFmt={
+  amount:v=>money(v),
+  emi:v=>money(v),
+  pct:v=>Number(v).toFixed(2)+'%',
+  months:v=>{const m=Math.round(Number(v));return m+(m===1?' month':' months')+(m>=12?' · '+(m/12).toFixed(m%12?1:0)+' yr':'')}
+};
+function loanSlider(id,label,fmt,min,max,step,value){
+  const v=Math.min(Math.max(Number(value)||min,min),max);
+  const shown=loanFmt[fmt](v);
+  return `<div class="field loan-slider"><div class="loan-slider-head"><label for="${id}">${label}</label><output id="${id}-out" for="${id}">${esc(shown)}</output></div><input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${v}" data-fmt="${fmt}" aria-valuetext="${esc(shown)}" oninput="loanSliderInput(this)"></div>`;
+}
+function loanSliderInput(el){
+  const out=document.getElementById(el.id+'-out');
+  if(out)out.textContent=loanFmt[el.dataset.fmt](Number(el.value));
+  el.setAttribute('aria-valuetext',out?out.textContent:el.value);
+  loanCalcRead();
+}
+Object.assign(window,{loanSliderInput});
 function loanCalcForm(){
   const c=loanCalc;
-  return `<div class="grid grid-2"><div class="field"><label for="lc-p">Amount (₹)</label><input id="lc-p" type="number" min="1" step="any" inputmode="decimal" value="${esc(c.principal)}" oninput="loanCalcRead()"></div><div class="field"><label for="lc-r">Interest rate (% a year)</label><input id="lc-r" type="number" min="0" max="60" step="0.01" inputmode="decimal" value="${esc(c.rate)}" oninput="loanCalcRead()"></div></div><div class="grid grid-2"><div class="field"><label for="lc-mode">Solve for</label><select id="lc-mode" onchange="loanCalcRead(true)"><option value="emi" ${c.mode==='emi'?'selected':''}>Monthly EMI</option><option value="tenure" ${c.mode==='tenure'?'selected':''}>Time to repay</option></select></div>${c.mode==='emi'?`<div class="field"><label for="lc-x">Tenure (months)</label><input id="lc-x" type="number" min="1" max="600" step="1" inputmode="numeric" value="${esc(c.months)}" oninput="loanCalcRead()"></div>`:`<div class="field"><label for="lc-x">Monthly EMI (₹)</label><input id="lc-x" type="number" min="1" step="any" inputmode="decimal" value="${esc(c.emi)}" oninput="loanCalcRead()"></div>`}</div>`;
+  const pMax=Math.max(50000000,Number(c.principal)||0);
+  const xMax=c.mode==='emi'?Math.max(360,Number(c.months)||0):Math.max(500000,Number(c.emi)||0);
+  return `<div class="grid grid-2">${loanSlider('lc-p','Amount (₹)','amount',10000,pMax,1000,c.principal)}${loanSlider('lc-r','Interest rate (% a year)','pct',0,40,0.05,c.rate)}</div><div class="grid grid-2"><div class="field"><label for="lc-mode">Solve for</label><select id="lc-mode" onchange="loanCalcRead(true)"><option value="emi" ${c.mode==='emi'?'selected':''}>Monthly EMI</option><option value="tenure" ${c.mode==='tenure'?'selected':''}>Time to repay</option></select></div>${c.mode==='emi'?loanSlider('lc-x','Tenure','months',1,xMax,1,c.months):loanSlider('lc-x','Monthly EMI (₹)','emi',500,xMax,500,c.emi)}</div>`;
 }
 function loanCalcRead(structural){
   const g=id=>document.getElementById(id);
