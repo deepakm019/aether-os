@@ -985,6 +985,28 @@ html .minimal-app .minimal-item .minimal-actions .btn{margin:0}
 .ck-rule span{display:flex;justify-content:space-between;gap:8px;font-size:13px}
 .ck-rule input{width:100%}
 </style>
+<style id="minimal-light">
+/* Scribbles screen: calmer and lighter. Selects get enough height for their text. */
+html.minimal-mode-active #ambient-canvas{display:none!important}
+.minimal-app{padding-top:clamp(28px,6vh,56px);padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+.minimal-app .minimal-head{padding-bottom:14px}
+.minimal-app .minimal-head .h1{font-size:clamp(30px,8vw,40px)}
+.minimal-app .minimal-sticky{padding-top:4px}
+.minimal-app .minimal-mode-row{border:1px solid var(--min-line);border-radius:18px;padding:12px 16px;margin:0}
+.minimal-app .minimal-compose{padding:18px 0;border-bottom:0}
+.minimal-app .minimal-label{margin-bottom:6px;font-weight:500;color:var(--min-muted)}
+.minimal-app .minimal-field .minimal-label{font-size:11px}
+.minimal-app .minimal-compose-meta{gap:10px;margin-top:4px}
+.minimal-app textarea.minimal-control{min-height:96px;margin-bottom:12px}
+.minimal-app .minimal-control{border-radius:14px}
+html .minimal-app select.minimal-control{height:50px !important;min-height:50px !important;line-height:normal !important;padding:0 40px 0 14px !important;font-size:15px}
+html .minimal-app input.minimal-control[type=date]{height:50px;min-height:50px;padding:0 14px;line-height:normal;font-size:15px}
+.minimal-app .minimal-compose-row{gap:8px;margin-top:12px}
+.minimal-app .minimal-compose-row .btn{min-height:44px}
+.minimal-app .minimal-compose-row .minimal-stamp{font-size:12px}
+.minimal-app .minimal-empty{border:0;background:transparent;min-height:24vh}
+.minimal-app .minimal-footer{border-top:0;padding-top:12px}
+</style>
 <style id="uniform-layout">
 /* One rhythm across pages: same button heights and same gap between sections. Icon buttons keep their size. */
 .btn:not(.icon-btn):not(.mini){min-height:42px}
